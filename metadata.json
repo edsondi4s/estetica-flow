@@ -1,0 +1,5 @@
+{
+  "name": "EstéticaFlow",
+  "description": "Sistema de gestão completo para clínicas de estética com dashboard, agenda, clientes, serviços e financeiro.",
+  "requestFramePermissions": []
+}
