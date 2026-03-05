@@ -3,20 +3,30 @@
 
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
-  --color-primary: #f0abfc;
-  --color-primary-dark: #d946ef;
-  --color-primary-light: #fce7f3;
+  --color-primary: var(--primary);
+  --color-primary-dark: var(--primary-dark);
+  --color-primary-light: var(--primary-light);
   --color-background-light: #f8f5f8;
+
+  /* Dark Mode support */
+  --color-slate-900: #0f172a;
+  --color-slate-800: #1e293b;
 }
 
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  --primary: #f0abfc;
-  --primary-dark: #d946ef;
+  --primary: #db2777;
+  --primary-dark: #be185d;
 }
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: var(--color-background-light);
+  @apply bg-slate-50 text-slate-900 transition-colors duration-200;
+}
+
+.dark body {
+  @apply bg-slate-950 text-slate-50;
 }
 
 /* Custom scrollbar */
@@ -24,13 +34,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: #cbd5e1;
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
 }
