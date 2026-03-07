@@ -65,6 +65,23 @@ export const Agenda = () => {
     const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
     const [dragOverSlot, setDragOverSlot] = useState<string | null>(null);
 
+    const isPastSlot = (dateString: string, timeString?: string) => {
+        const now = new Date();
+        const currentDateString = formatToISODate(now);
+
+        if (dateString < currentDateString) {
+            return true;
+        }
+
+        if (dateString === currentDateString && timeString) {
+            const currentTimeString = now.toTimeString().substring(0, 5);
+            if (timeString < currentTimeString) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     useEffect(() => {
         if (isModalOpen) fetchFormData();
     }, [isModalOpen]);
@@ -338,7 +355,11 @@ export const Agenda = () => {
         setDraggedAppId(null);
     };
 
-    const handleDragOver = (e: React.DragEvent, slotId: string) => {
+    const handleDragOver = (e: React.DragEvent, slotId: string, date: string, time?: string) => {
+        if (isPastSlot(date, time)) {
+            e.dataTransfer.dropEffect = 'none';
+            return;
+        }
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
         setDragOverSlot(slotId);
@@ -351,6 +372,12 @@ export const Agenda = () => {
     const handleDrop = (e: React.DragEvent, newDate: string, newTime: string) => {
         e.preventDefault();
         setDragOverSlot(null);
+
+        if (isPastSlot(newDate, newTime)) {
+            toast.error('Não é possível mover para datas ou horários passados.');
+            return;
+        }
+
         const appointmentId = e.dataTransfer.getData('appointmentId');
         const appt = appointments.find(a => a.id === appointmentId);
 
@@ -515,8 +542,8 @@ export const Agenda = () => {
                             return (
                                 <div
                                     key={i}
-                                    className={`min-h-[120px] border-r border-b border-slate-100 dark:border-slate-800 p-2 transition-colors ${!isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''} ${dragOverSlot === dayFormatted ? 'bg-primary/10' : ''}`}
-                                    onDragOver={(e) => handleDragOver(e, dayFormatted)}
+                                    className={`min-h-[120px] border-r border-b border-slate-100 dark:border-slate-800 p-2 transition-colors ${!isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''} ${dragOverSlot === dayFormatted ? 'bg-primary/10' : ''} ${isPastSlot(dayFormatted) ? 'bg-slate-100/30 dark:bg-slate-800/30 cursor-not-allowed' : ''}`}
+                                    onDragOver={(e) => handleDragOver(e, dayFormatted, dayFormatted)}
                                     onDragLeave={handleDragLeave}
                                     onDrop={(e) => handleDrop(e, dayFormatted, '')}
                                 >
@@ -573,11 +600,12 @@ export const Agenda = () => {
                                         const hour = (j + 8).toString().padStart(2, '0') + ':00';
                                         const slotId = `${formatToISODate(dayDate)}-${hour}`;
                                         const isOver = dragOverSlot === slotId;
+                                        const isPast = isPastSlot(formatToISODate(dayDate), hour);
                                         return (
                                             <div
                                                 key={j}
-                                                className={`h-20 border-b border-slate-100 dark:border-slate-800 transition-colors ${isOver ? 'bg-primary/10' : ''}`}
-                                                onDragOver={(e) => handleDragOver(e, slotId)}
+                                                className={`h-20 border-b border-slate-100 dark:border-slate-800 transition-colors ${isOver ? 'bg-primary/10' : ''} ${isPast ? 'bg-slate-50/50 dark:bg-slate-800/30 cursor-not-allowed' : ''}`}
+                                                onDragOver={(e) => handleDragOver(e, slotId, formatToISODate(dayDate), hour)}
                                                 onDragLeave={handleDragLeave}
                                                 onDrop={(e) => handleDrop(e, formatToISODate(dayDate), hour)}
                                             ></div>
