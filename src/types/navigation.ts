@@ -20,9 +20,9 @@ export const menuItems: MenuItem[] = [
     { id: 'dashboard', label: 'Visão Geral', icon: LayoutDashboard },
     { id: 'agenda', label: 'Agenda', icon: Calendar },
     { id: 'clientes', label: 'Clientes', icon: Users },
+    { id: 'chat', label: 'Chat', icon: MessageSquare },
     { id: 'servicos', label: 'Serviços', icon: Scissors },
     { id: 'profissionais', label: 'Profissionais', icon: UserRound },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
-    { id: 'chat', label: 'Chat', icon: MessageSquare },
     { id: 'configuracoes', label: 'Configurações', icon: Settings },
 ];

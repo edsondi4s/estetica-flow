@@ -15,6 +15,23 @@ import { StatusBadge } from '../components/ui/StatusBadge';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../lib/supabase';
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                        {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">agendamentos</span>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 interface DashboardProps {
     onPageChange?: (page: string) => void;
 }
@@ -24,8 +41,11 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const [chartView, setChartView] = useState<'week' | 'month' | 'year'>('week');
     const [stats, setStats] = useState({
         appointmentsCount: 0,
+        appointmentsTrend: '0%',
         clientsCount: 0,
-        revenue: 0
+        clientsTrend: '0%',
+        revenue: 0,
+        revenueTrend: '0%'
     });
     const [recentAppointments, setRecentAppointments] = useState<any[]>([]);
     const [popularServices, setPopularServices] = useState<any[]>([]);
@@ -43,32 +63,72 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const fetchDashboardData = async () => {
         setIsLoading(true);
         try {
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date();
+            const todayStr = today.toISOString().split('T')[0];
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
 
             // 1. Core Stats
-            const { count: appCount } = await supabase
+            const { count: appCountToday } = await supabase
                 .from('appointments')
                 .select('*', { count: 'exact', head: true })
-                .eq('appointment_date', today);
+                .eq('appointment_date', todayStr);
 
-            const { count: clientsCount } = await supabase
+            const { count: appCountYesterday } = await supabase
+                .from('appointments')
+                .select('*', { count: 'exact', head: true })
+                .eq('appointment_date', yesterdayStr);
+
+            const { count: totalClients } = await supabase
                 .from('clients')
                 .select('*', { count: 'exact', head: true });
 
-            const firstDayOfMonth = new Date();
-            firstDayOfMonth.setDate(1);
-            const { data: revenueData } = await supabase
+            const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+            const firstDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+            const { count: clientsThisMonth } = await supabase
+                .from('clients')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', firstDayOfMonth.toISOString().split('T')[0]);
+
+            const { count: clientsLastMonth } = await supabase
+                .from('clients')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', firstDayOfPrevMonth.toISOString().split('T')[0])
+                .lte('created_at', lastDayOfPrevMonth.toISOString().split('T')[0] + 'T23:59:59');
+
+            const { data: revenueDataThisMonth } = await supabase
                 .from('appointments')
                 .select('services(price)')
                 .gte('appointment_date', firstDayOfMonth.toISOString().split('T')[0])
                 .not('status', 'eq', 'Cancelado');
 
-            const totalRevenue = revenueData?.reduce((acc, curr: any) => acc + (curr.services?.price || 0), 0) || 0;
+            const { data: revenueDataLastMonth } = await supabase
+                .from('appointments')
+                .select('services(price)')
+                .gte('appointment_date', firstDayOfPrevMonth.toISOString().split('T')[0])
+                .lte('appointment_date', lastDayOfPrevMonth.toISOString().split('T')[0])
+                .not('status', 'eq', 'Cancelado');
+
+            const revenueThisMonth = revenueDataThisMonth?.reduce((acc, curr: any) => acc + (curr.services?.price || 0), 0) || 0;
+            const revenueLastMonth = revenueDataLastMonth?.reduce((acc, curr: any) => acc + (curr.services?.price || 0), 0) || 0;
+
+            const calculateTrend = (current: number, previous: number) => {
+                if (previous === 0) return current > 0 ? '+100%' : '0%';
+                const change = ((current - previous) / previous) * 100;
+                const sign = change > 0 ? '+' : '';
+                return `${sign}${Math.round(change)}%`;
+            };
 
             setStats({
-                appointmentsCount: appCount || 0,
-                clientsCount: clientsCount || 0,
-                revenue: totalRevenue
+                appointmentsCount: appCountToday || 0,
+                appointmentsTrend: calculateTrend(appCountToday || 0, appCountYesterday || 0),
+                clientsCount: totalClients || 0,
+                clientsTrend: calculateTrend(clientsThisMonth || 0, clientsLastMonth || 0),
+                revenue: revenueThisMonth,
+                revenueTrend: calculateTrend(revenueThisMonth, revenueLastMonth)
             });
 
             // 2. Recent activity
@@ -212,25 +272,28 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
         <div className="flex flex-col gap-4 md:gap-8">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
+                    onClick={() => onPageChange?.('agenda')}
                     label="Próximos Agendamentos"
                     value={stats.appointmentsCount.toString()}
                     subtitle="Hoje"
                     icon={Calendar}
-                    trend="+5%"
+                    trend={stats.appointmentsTrend}
                     color="indigo"
                 />
                 <StatCard
+                    onClick={() => onPageChange?.('clientes')}
                     label="Total de Clientes"
                     value={stats.clientsCount.toLocaleString()}
                     icon={Users}
-                    trend="+12%"
+                    trend={stats.clientsTrend}
                     color="emerald"
                 />
                 <StatCard
+                    onClick={() => onPageChange?.('financeiro')}
                     label="Receita do Mês"
                     value={`R$ ${stats.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                     icon={DollarSign}
-                    trend="+8%"
+                    trend={stats.revenueTrend}
                     color="amber"
                 />
             </div>
@@ -278,14 +341,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                     tickLine={false}
                                     tick={{ fontSize: 10, fill: '#64748B' }}
                                 />
-                                <Tooltip
-                                    contentStyle={{
-                                        backgroundColor: '#FFF',
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)'
-                                    }}
-                                />
+                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(226, 232, 240, 0.5)', strokeWidth: 1, strokeDasharray: '3 3' }} />
                                 <Area
                                     type="monotone"
                                     dataKey="total"

@@ -43,6 +43,51 @@ function AppContent() {
       setSession(session);
     });
 
+    // Fetch and Apply SEO Settings
+    const applySEO = async () => {
+      try {
+        const { data } = await supabase.from('settings').select('seo_title, seo_description, seo_keywords, favicon_url, favicon_url_dark').single();
+        if (data) {
+          if (data.seo_title) document.title = data.seo_title;
+
+          if (data.seo_description) {
+            let descMeta = document.querySelector('meta[name="description"]');
+            if (!descMeta) {
+              descMeta = document.createElement('meta');
+              descMeta.setAttribute('name', 'description');
+              document.head.appendChild(descMeta);
+            }
+            descMeta.setAttribute('content', data.seo_description);
+          }
+
+          if (data.seo_keywords) {
+            let keyMeta = document.querySelector('meta[name="keywords"]');
+            if (!keyMeta) {
+              keyMeta = document.createElement('meta');
+              keyMeta.setAttribute('name', 'keywords');
+              document.head.appendChild(keyMeta);
+            }
+            keyMeta.setAttribute('content', data.seo_keywords);
+          }
+
+          const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          let currentFavicon = isDark && data.favicon_url_dark ? data.favicon_url_dark : data.favicon_url;
+          if (currentFavicon) {
+            let link = document.querySelector('link[rel="icon"]') || document.querySelector('link[rel="shortcut icon"]');
+            if (!link) {
+              link = document.createElement('link');
+              link.setAttribute('rel', 'icon');
+              document.head.appendChild(link);
+            }
+            link.setAttribute('href', currentFavicon);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to apply SEO', e);
+      }
+    };
+    applySEO();
+
     return () => subscription.unsubscribe();
   }, []);
 

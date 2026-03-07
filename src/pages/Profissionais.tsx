@@ -332,7 +332,7 @@ export const Profissionais = () => {
             </div>
 
             {/* Quick Metrics Summary */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                 <Card className="p-5 border-slate-200/60 dark:border-slate-800/60 hover:shadow-md transition-all">
                     <div className="flex items-center gap-4">
                         <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shrink-0 border border-primary/10">
@@ -370,11 +370,11 @@ export const Profissionais = () => {
                         </div>
                         <div className="min-w-0 flex-1">
                             <p className="text-sm font-bold text-slate-500 uppercase tracking-wider mb-0.5">Destaque do Mês</p>
-                            <div className="flex items-baseline gap-2">
+                            <div className="flex flex-col items-start gap-1">
                                 <span className="text-lg font-black text-slate-900 dark:text-white truncate block">
                                     {globalStats.starPro.name}
                                 </span>
-                                <span className="text-xs font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded shrink-0">
+                                <span className="text-xs font-bold text-amber-600 bg-amber-500/10 px-2 py-0.5 rounded shrink-0 inline-block">
                                     {globalStats.starPro.count} atendimentos
                                 </span>
                             </div>
@@ -382,53 +382,6 @@ export const Profissionais = () => {
                     </div>
                 </Card>
             </div>
-
-            {/* Comparative View Chart */}
-            {globalStats.chartData.length > 0 && (
-                <Card className="p-6 border-slate-200/60 dark:border-slate-800/60">
-                    <div className="flex items-center gap-2 mb-6">
-                        <BarChart3 className="w-5 h-5 text-primary" />
-                        <h3 className="font-bold text-slate-900 dark:text-white">Desempenho Comparativo (Mês Atual)</h3>
-                    </div>
-                    <div className="h-[250px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={globalStats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
-                                />
-                                <Tooltip
-                                    cursor={{ fill: 'transparent' }}
-                                    contentStyle={{
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                        background: 'rgba(255,255,255,0.95)',
-                                        fontSize: '12px'
-                                    }}
-                                />
-                                <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={40}>
-                                    {globalStats.chartData.map((_, index) => (
-                                        <Cell
-                                            key={`cell-${index}`}
-                                            fill={index === 0 ? 'var(--primary)' : 'var(--primary-light)'}
-                                            fillOpacity={1 - (index * 0.15)}
-                                        />
-                                    ))}
-                                </Bar>
-                            </BarChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
-            )}
 
             {isLoading ? (
                 <div className="flex items-center justify-center py-20">
@@ -534,6 +487,53 @@ export const Profissionais = () => {
                         </div>
                     )}
                 </div>
+            )}
+
+            {/* Comparative View Chart Moved Below List */}
+            {globalStats.chartData.length > 0 && (
+                <Card className="p-6 border-slate-200/60 dark:border-slate-800/60">
+                    <div className="flex items-center gap-2 mb-6">
+                        <BarChart3 className="w-5 h-5 text-primary" />
+                        <h3 className="font-bold text-slate-900 dark:text-white">Desempenho Comparativo (Mês Atual)</h3>
+                    </div>
+                    <div className="h-[250px] w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={globalStats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+                                <XAxis
+                                    dataKey="name"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
+                                />
+                                <YAxis
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fontWeight: 600, fill: '#64748b' }}
+                                />
+                                <Tooltip
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{
+                                        borderRadius: '12px',
+                                        border: 'none',
+                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                        background: 'rgba(255,255,255,0.95)',
+                                        fontSize: '12px'
+                                    }}
+                                />
+                                <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={40}>
+                                    {globalStats.chartData.map((_, index) => (
+                                        <Cell
+                                            key={`cell-${index}`}
+                                            fill={index === 0 ? 'var(--primary)' : 'var(--primary-light)'}
+                                            fillOpacity={1 - (index * 0.15)}
+                                        />
+                                    ))}
+                                </Bar>
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </div>
+                </Card>
             )}
 
             <Modal

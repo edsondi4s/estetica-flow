@@ -9,20 +9,39 @@ import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 
-// Função auxiliar para aplicar a máscara (XX) XXXXX-XXXX
 const formatPhone = (value: string) => {
     if (!value) return '';
-    const cleaned = value.replace(/\D/g, '');
+
+    // Remove tudo que não for número
+    let cleaned = value.replace(/\D/g, '');
+
+    // Se começar com 55 e tiver 12 ou 13 caracteres, removemos o 55 para tratar o DDD
+    if (cleaned.startsWith('55') && cleaned.length >= 12) {
+        cleaned = cleaned.substring(2);
+    }
+
+    // Limita a quantidade de números (DDD 2 + Numero 9 = 11)
+    if (cleaned.length > 11) cleaned = cleaned.substring(0, 11);
+
     let formatted = cleaned;
+    let countryCode = '+55 ';
+
     if (cleaned.length > 2) {
         formatted = `(${cleaned.substring(0, 2)}) `;
-        if (cleaned.length > 7) {
-            formatted += `${cleaned.substring(2, 7)}-${cleaned.substring(7, 11)}`;
+        if (cleaned.length > 6) {
+            // Formato com 9 dígitos ou 8 dígitos
+            if (cleaned.length === 11) {
+                formatted += `${cleaned.substring(2, 7)}-${cleaned.substring(7, 11)}`;
+            } else {
+                formatted += `${cleaned.substring(2, 6)}-${cleaned.substring(6, 10)}`;
+            }
         } else {
             formatted += cleaned.substring(2);
         }
     }
-    return formatted;
+
+    // Só formata país se já tem algo digitado além do DDD (ou pode deixar fixo)
+    return cleaned.length > 0 ? countryCode + formatted : formatted;
 };
 
 export const Clientes = () => {
@@ -161,6 +180,35 @@ export const Clientes = () => {
         c.phone?.includes(searchTerm)
     );
 
+    const handleExportCSV = () => {
+        const headers = ['Nome', 'Telefone', 'Email', 'Data de Cadastro', 'Observações'];
+        const csvRows = [];
+        csvRows.push(headers.join(','));
+
+        for (const client of filteredClients) {
+            const row = [
+                `"${client.name || ''}"`,
+                `"${client.phone ? formatPhone(client.phone) : ''}"`,
+                `"${client.email || ''}"`,
+                `"${new Date(client.created_at).toLocaleDateString()}"`,
+                `"${(client.notes || '').replace(/"/g, '""')}"` // escape double quotes
+            ];
+            csvRows.push(row.join(','));
+        }
+
+        const csvContent = csvRows.join('\n');
+        // Usar UTF-8 BOM para forçar o Excel a ler acentos corretamente
+        const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'clientes.csv');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast.success('Lista de clientes exportada!');
+    };
+
     const getStatusIcon = (status: string) => {
         switch (status) {
             case 'Confirmado': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
@@ -182,9 +230,14 @@ export const Clientes = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
-                <Button onClick={() => handleOpenModal()} className="gap-2">
-                    <Plus className="w-5 h-5" /> Adicionar Cliente
-                </Button>
+                <div className="flex items-center gap-3 w-full md:w-auto">
+                    <Button variant="outline" onClick={handleExportCSV} className="gap-2 flex-1 md:flex-none">
+                        <ClipboardList className="w-5 h-5" /> Exportar CSV
+                    </Button>
+                    <Button onClick={() => handleOpenModal()} className="gap-2 flex-1 md:flex-none">
+                        <Plus className="w-5 h-5" /> Adicionar Cliente
+                    </Button>
+                </div>
             </div>
 
             <Card noPadding>
@@ -292,9 +345,9 @@ export const Clientes = () => {
                     <InputField
                         label="Telefone"
                         type="tel"
-                        placeholder="(00) 00000-0000"
+                        placeholder="+55 (00) 00000-0000"
                         value={phone}
-                        onChange={(e) => setPhone(e.target.value)}
+                        onChange={(e) => setPhone(formatPhone(e.target.value))}
                     />
                     <InputField
                         label="Email"

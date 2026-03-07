@@ -1,128 +1,144 @@
-import React, { useState, useEffect } from 'react';
-import { Building2, TrendingUp, TrendingDown, Plus, Loader2, Filter, DollarSign, Wallet, FileText, CheckCircle2, ChevronDown } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Building2, TrendingUp, TrendingDown, Loader2, Filter, Wallet, FileText, CheckCircle2, ChevronDown, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { StatCard } from '../components/ui/StatCard';
 import { Card } from '../components/ui/Card';
 import { supabase } from '../lib/supabase';
 import { Button } from '../components/ui/Button';
-import { InputField } from '../components/ui/InputField';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 
-type Transaction = {
+type AppointmentFinance = {
     id: string;
-    type: 'Receita' | 'Despesa';
-    amount: number;
-    category: string;
-    description: string | null;
-    transaction_date: string;
-    status: 'Concluído' | 'Pendente' | 'Cancelado';
-    created_at: string;
+    appointment_date: string;
+    status: 'Confirmado' | 'Pendente' | 'Cancelado';
+    services: {
+        name: string;
+        price: number;
+    } | null;
+    professionals: {
+        name: string;
+    } | null;
+    clients: {
+        name: string;
+    } | null;
 };
 
 export const Financeiro = () => {
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [appointments, setAppointments] = useState<AppointmentFinance[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [dateFilter, setDateFilter] = useState<'7' | '15' | '30' | 'all'>('30');
 
-    // Modal State
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
+    // Filters
+    const [startDate, setStartDate] = useState(() => {
+        const d = new Date();
+        d.setDate(1); // Start of current month
+        return d.toISOString().split('T')[0];
+    });
+    const [endDate, setEndDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() + 1);
+        d.setDate(0); // End of current month
+        return d.toISOString().split('T')[0];
+    });
 
-    // Form State
-    const [type, setType] = useState<'Receita' | 'Despesa'>('Receita');
-    const [amount, setAmount] = useState('');
-    const [category, setCategory] = useState('');
-    const [description, setDescription] = useState('');
-    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-    const [status, setStatus] = useState<'Concluído' | 'Pendente' | 'Cancelado'>('Concluído');
+    // Chart Grouping
+    const [chartGroup, setChartGroup] = useState<'diario' | 'semanal' | 'mensal'>('diario');
+
+    // Pagination
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     useEffect(() => {
-        fetchTransactions();
-    }, [dateFilter]);
+        fetchData();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [startDate, endDate]);
 
-    const fetchTransactions = async () => {
+    const fetchData = async () => {
         setIsLoading(true);
         try {
-            let query = supabase.from('transactions').select('*').order('transaction_date', { ascending: false });
+            const { data, error } = await supabase
+                .from('appointments')
+                .select(`
+                    id,
+                    appointment_date,
+                    status,
+                    services ( name, price ),
+                    professionals ( name ),
+                    clients ( name )
+                `)
+                .gte('appointment_date', startDate)
+                .lte('appointment_date', endDate)
+                .order('appointment_date', { ascending: false });
 
-            if (dateFilter !== 'all') {
-                const pastDate = new Date();
-                pastDate.setDate(pastDate.getDate() - parseInt(dateFilter));
-                query = query.gte('transaction_date', pastDate.toISOString().split('T')[0]);
-            }
-
-            const { data, error } = await query;
             if (error) throw error;
-            setTransactions(data || []);
+            setAppointments(data as any[] || []);
+            // reset pagination
+            setCurrentPage(1);
         } catch (error: any) {
-            console.error('Erro ao buscar transações:', error);
-            toast.error('Não foi possível carregar as transações.');
+            console.error('Erro ao buscar dados financeiros:', error);
+            toast.error('Não foi possível carregar os dados financeiros.');
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleSave = async (e: React.FormEvent) => {
-        e.preventDefault();
-        setIsSaving(true);
-        try {
-            const numAmount = parseFloat(amount.replace(',', '.'));
-            if (isNaN(numAmount) || numAmount <= 0) throw new Error('Valor inválido.');
-            if (!category) throw new Error('Categoria é obrigatória.');
+    // Resumos - apenas baseados no selected date range
+    const confirmedApps = appointments.filter(a => a.status === 'Confirmado');
+    const pendingApps = appointments.filter(a => a.status === 'Pendente');
 
-            const { error } = await supabase.from('transactions').insert([{
-                type,
-                amount: numAmount,
-                category,
-                description,
-                transaction_date: date,
-                status
-            }]);
+    // Saldo Total = Apenas Confirmados
+    const totalBalance = confirmedApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
+    // Projeção = Confirmados + Pendentes
+    const projectedBalance = totalBalance + pendingApps.reduce((acc, curr) => acc + (curr.services?.price || 0), 0);
 
-            if (error) throw error;
-
-            toast.success('Transação salva com sucesso!');
-            setIsModalOpen(false);
-            resetForm();
-            fetchTransactions();
-        } catch (error: any) {
-            toast.error('Erro ao salvar transação: ' + error.message);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const resetForm = () => {
-        setType('Receita');
-        setAmount('');
-        setCategory('');
-        setDescription('');
-        setDate(new Date().toISOString().split('T')[0]);
-        setStatus('Concluído');
-    };
-
-    // Resumos
-    const completedTransactions = transactions.filter(t => t.status === 'Concluído');
-    const totalIncomes = completedTransactions.filter(t => t.type === 'Receita').reduce((acc, curr) => acc + curr.amount, 0);
-    const totalExpenses = completedTransactions.filter(t => t.type === 'Despesa').reduce((acc, curr) => acc + curr.amount, 0);
-    const balance = totalIncomes - totalExpenses;
+    // Pagination Logic for Confirmed Appointments Table
+    const confirmedTableData = confirmedApps.sort((a, b) => new Date(b.appointment_date).getTime() - new Date(a.appointment_date).getTime());
+    const totalPages = Math.ceil(confirmedTableData.length / itemsPerPage);
+    const paginatedData = confirmedTableData.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
     // Dados para o Gráfico
-    const chartDataMap = new Map<string, { name: string, Receitas: number, Despesas: number }>();
-    completedTransactions.forEach(t => {
-        const d = new Date(t.transaction_date + 'T00:00:00');
-        const key = `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}`;
+    const chartData = useMemo(() => {
+        const map = new Map<string, { label: string, sortKey: string, Confirmado: number, Pendente: number }>();
 
-        if (!chartDataMap.has(key)) {
-            chartDataMap.set(key, { name: key, Receitas: 0, Despesas: 0 });
-        }
+        appointments.forEach(a => {
+            if (a.status === 'Cancelado') return;
+            const price = a.services?.price || 0;
+            const dateObj = new Date(a.appointment_date + 'T12:00:00');
 
-        const dataPoint = chartDataMap.get(key)!;
-        if (t.type === 'Receita') dataPoint.Receitas += t.amount;
-        else dataPoint.Despesas += t.amount;
-    });
+            let key = '';
+            let label = '';
+            let sortKey = '';
 
-    const chartData = Array.from(chartDataMap.values()).reverse();
+            if (chartGroup === 'diario') {
+                key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}-${dateObj.getDate().toString().padStart(2, '0')}`;
+                label = `${dateObj.getDate().toString().padStart(2, '0')}/${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+                sortKey = key;
+            } else if (chartGroup === 'semanal') {
+                // Determine the week of the year
+                const firstDayOfYear = new Date(dateObj.getFullYear(), 0, 1);
+                const pastDaysOfYear = (dateObj.getTime() - firstDayOfYear.getTime()) / 86400000;
+                const weekNum = Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+                key = `${dateObj.getFullYear()}-W${weekNum}`;
+                label = `Semana ${weekNum}`;
+                sortKey = key;
+            } else {
+                key = `${dateObj.getFullYear()}-${(dateObj.getMonth() + 1).toString().padStart(2, '0')}`;
+                label = dateObj.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+                sortKey = key;
+            }
+
+            if (!map.has(key)) {
+                map.set(key, { label, sortKey, Confirmado: 0, Pendente: 0 });
+            }
+
+            const dataPoint = map.get(key)!;
+            if (a.status === 'Confirmado') dataPoint.Confirmado += price;
+            if (a.status === 'Pendente') dataPoint.Pendente += price;
+        });
+
+        // Convert to array and sort by sortKey ascending
+        return Array.from(map.values()).sort((a, b) => a.sortKey.localeCompare(b.sortKey));
+    }, [appointments, chartGroup]);
+
 
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
@@ -130,48 +146,63 @@ export const Financeiro = () => {
 
     return (
         <div className="flex flex-col gap-8 pb-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg">
                         <Wallet className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Visão Geral</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Acompanhe as movimentações do seu negócio</p>
+                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Financeiro Baseado em Atendimentos</h2>
+                        <p className="text-sm text-slate-500 dark:text-slate-400">Acompanhe suas receitas confirmadas e pendentes</p>
                     </div>
                 </div>
 
-                <div className="flex items-center gap-3 w-full sm:w-auto">
-                    <div className="flex items-center bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-1 shadow-sm shrink-0">
-                        <Filter className="w-4 h-4 text-slate-400 ml-2 mr-1" />
-                        <select
-                            className="bg-transparent text-sm font-medium text-slate-700 dark:text-slate-200 py-1.5 pr-2 outline-none cursor-pointer"
-                            value={dateFilter}
-                            onChange={(e) => setDateFilter(e.target.value as any)}
-                        >
-                            <option value="7">Últimos 7 dias</option>
-                            <option value="15">Últimos 15 dias</option>
-                            <option value="30">Últimos 30 dias</option>
-                            <option value="all">Todo o período</option>
-                        </select>
+                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
+                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 shadow-sm w-full sm:w-auto">
+                        <CalendarIcon className="w-4 h-4 text-slate-400" />
+                        <div className="flex items-center gap-1">
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none"
+                                value={startDate}
+                                onChange={(e) => setStartDate(e.target.value)}
+                            />
+                            <span className="text-slate-400">até</span>
+                            <input
+                                type="date"
+                                className="bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none"
+                                value={endDate}
+                                onChange={(e) => setEndDate(e.target.value)}
+                            />
+                        </div>
                     </div>
-
-                    <Button onClick={() => setIsModalOpen(true)} className="gap-2 whitespace-nowrap hidden sm:flex">
-                        <Plus className="w-4 h-4" /> Nova Movimentação
-                    </Button>
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard label="Saldo Total" value={formatCurrency(balance)} icon={Building2} color="blue" />
-                <StatCard label="Receitas" value={formatCurrency(totalIncomes)} icon={TrendingUp} color="emerald" />
-                <StatCard label="Despesas" value={formatCurrency(totalExpenses)} icon={TrendingDown} color="rose" />
-                <Button onClick={() => setIsModalOpen(true)} className="gap-2 w-full sm:hidden">
-                    <Plus className="w-4 h-4" /> Nova Movimentação
-                </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <StatCard label="Saldo Total (Confirmados)" value={formatCurrency(totalBalance)} icon={CheckCircle2} color="emerald" />
+                <StatCard label="Projeção (Confirmados + Pendentes)" value={formatCurrency(projectedBalance)} icon={TrendingUp} color="blue" />
             </div>
 
-            <Card title="Fluxo de Caixa Diário" className="p-6">
+            <Card className="p-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+                    <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-primary" />
+                        <h3 className="font-bold text-slate-900 dark:text-white">Receita por Período</h3>
+                    </div>
+                    <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-slate-50 dark:bg-slate-900/50">
+                        {(['diario', 'semanal', 'mensal'] as const).map(group => (
+                            <button
+                                key={group}
+                                onClick={() => setChartGroup(group)}
+                                className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-colors ${chartGroup === group ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                            >
+                                {group}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
                 {isLoading ? (
                     <div className="h-72 flex items-center justify-center">
                         <Loader2 className="w-8 h-8 animate-spin text-primary" />
@@ -179,149 +210,163 @@ export const Financeiro = () => {
                 ) : chartData.length === 0 ? (
                     <div className="h-72 flex flex-col items-center justify-center text-slate-400 gap-3">
                         <FileText className="w-12 h-12 opacity-20" />
-                        <p>Nenhuma transação concluída no período selecionado.</p>
+                        <p>Nenhuma receita registrada no período selecionado.</p>
                     </div>
                 ) : (
                     <div className="h-80 w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="name" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
+                                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
                                 <YAxis tickFormatter={(value) => `R$${value}`} tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dx={-10} />
-                                <Tooltip cursor={{ fill: 'transparent' }} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} formatter={(value: number) => [formatCurrency(value)]} />
-                                <Bar dataKey="Receitas" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} />
-                                <Bar dataKey="Despesas" fill="#f43f5e" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                                <Tooltip
+                                    cursor={{ fill: 'transparent' }}
+                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
+                                    formatter={(value: number, name: string) => [formatCurrency(value), name]}
+                                />
+                                <Bar name="Receita Confirmada" dataKey="Confirmado" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
+                                <Bar name="Receita Pendente" dataKey="Pendente" fill="#fbbf24" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 )}
             </Card>
 
-            <Card title="Últimas Movimentações">
+            <Card title="Atendimentos Confirmados">
+
+
                 {isLoading ? (
                     <div className="h-40 flex items-center justify-center">
                         <Loader2 className="w-6 h-6 animate-spin text-primary" />
                     </div>
-                ) : transactions.length === 0 ? (
+                ) : confirmedTableData.length === 0 ? (
                     <div className="p-8 text-center text-slate-500 text-sm border-t border-slate-100 dark:border-slate-800">
-                        Nenhuma movimentação encontrada neste período.
+                        Nenhum atendimento confirmado neste período.
                     </div>
                 ) : (
-                    <div className="overflow-x-auto border-t border-slate-100 dark:border-slate-800">
-                        <table className="w-full text-sm text-left">
-                            <thead className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 uppercase border-b border-slate-100 dark:border-slate-800">
-                                <tr>
-                                    <th className="px-6 py-4 font-semibold">Descrição / Categoria</th>
-                                    <th className="px-6 py-4 font-semibold">Data</th>
-                                    <th className="px-6 py-4 font-semibold">Status</th>
-                                    <th className="px-6 py-4 font-semibold text-right">Valor</th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {transactions.map(t => (
-                                    <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className={`p-2 rounded-lg shrink-0 ${t.type === 'Receita' ? 'bg-emerald-100/50 text-emerald-600' : 'bg-rose-100/50 text-rose-600'}`}>
-                                                    {t.type === 'Receita' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-slate-900 dark:text-white capitalize">{t.description || t.category}</p>
-                                                    {t.description && <p className="text-xs text-slate-500 capitalize">{t.category}</p>}
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                                            {new Date(t.transaction_date + 'T00:00:00').toLocaleDateString()}
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold
-                                                ${t.status === 'Concluído' ? 'bg-emerald-100/80 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400' :
-                                                    t.status === 'Pendente' ? 'bg-amber-100/80 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400' :
-                                                        'bg-rose-100/80 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400'}`}>
-                                                {t.status === 'Concluído' && <CheckCircle2 className="w-3 h-3 mr-1" />}
-                                                {t.status}
-                                            </span>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-slate-900 dark:text-white">
-                                            <span className={t.type === 'Receita' ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}>
-                                                {t.type === 'Receita' ? '+' : '-'} {formatCurrency(t.amount)}
-                                            </span>
-                                        </td>
+                    <>
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-sm text-left">
+                                <thead className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 uppercase border-b border-slate-100 dark:border-slate-800">
+                                    <tr>
+                                        <th className="px-6 py-4 font-semibold">Data</th>
+                                        <th className="px-6 py-4 font-semibold">Cliente</th>
+                                        <th className="px-6 py-4 font-semibold">Serviço</th>
+                                        <th className="px-6 py-4 font-semibold">Profissional</th>
+                                        <th className="px-6 py-4 font-semibold text-right">Valor Pago</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                    {paginatedData.map(t => (
+                                        <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
+                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                                {new Date(t.appointment_date + 'T12:00:00').toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 dark:text-white">
+                                                {t.clients?.name || 'Cliente Removido'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                                {t.services?.name || 'Serviço Removido'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
+                                                {t.professionals?.name || 'Profissional Removido'}
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-emerald-600 dark:text-emerald-400">
+                                                {formatCurrency(t.services?.price || 0)}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
+                            <div className="flex items-center gap-2">
+                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mostrar</span>
+                                <select
+                                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 py-1.5 px-2 rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                >
+                                    <option value={5}>5</option>
+                                    <option value={10}>10</option>
+                                    <option value={20}>20</option>
+                                    <option value={50}>50</option>
+                                </select>
+                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">itens</span>
+                            </div>
+                            <span className="text-sm text-slate-500 font-medium">
+                                Total Encontrado: {confirmedTableData.length}
+                            </span>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 rounded-b-xl">
+                                <p className="text-sm text-slate-500">
+                                    Mostrando <span className="font-medium text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-medium text-slate-900 dark:text-white">{Math.min(currentPage * itemsPerPage, confirmedTableData.length)}</span> de <span className="font-medium text-slate-900 dark:text-white">{confirmedTableData.length}</span> resultados
+                                </p>
+                                <div className="flex items-center gap-2">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-2"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </Button>
+
+                                    <div className="flex gap-1">
+                                        {Array.from({ length: totalPages }, (_, i) => i + 1).filter(page => {
+                                            // Show first, last, current, and one before/after current
+                                            return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
+                                        }).map((page, index, array) => {
+                                            // Add ellipsis logic
+                                            if (index > 0 && page - array[index - 1] > 1) {
+                                                return (
+                                                    <React.Fragment key={`ellipsis-${page}`}>
+                                                        <span className="px-2 py-1 text-slate-400">...</span>
+                                                        <button
+                                                            onClick={() => setCurrentPage(page)}
+                                                            className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors ${currentPage === page ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                        >
+                                                            {page}
+                                                        </button>
+                                                    </React.Fragment>
+                                                );
+                                            }
+                                            return (
+                                                <button
+                                                    key={page}
+                                                    onClick={() => setCurrentPage(page)}
+                                                    className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors ${currentPage === page ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                >
+                                                    {page}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-2"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </Card>
-
-            {isModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                <DollarSign className="w-5 h-5 text-primary" /> Nova Movimentação
-                            </h3>
-                            <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300">
-                                Fechar
-                            </button>
-                        </div>
-                        <form onSubmit={handleSave} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
-                                <button type="button" onClick={() => setType('Receita')} className={`py-2 text-sm font-semibold rounded-lg transition-all ${type === 'Receita' ? 'bg-white dark:bg-slate-700 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Receita</button>
-                                <button type="button" onClick={() => setType('Despesa')} className={`py-2 text-sm font-semibold rounded-lg transition-all ${type === 'Despesa' ? 'bg-white dark:bg-slate-700 text-rose-600 dark:text-rose-400 shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}>Despesa</button>
-                            </div>
-                            <InputField label={`Valor (${type})`} type="number" step="0.01" placeholder="0,00" value={amount} onChange={(e) => setAmount(e.target.value)} required />
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Categoria *</label>
-                                    <div className="relative">
-                                        <select className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white appearance-none" value={category} onChange={(e) => setCategory(e.target.value)} required>
-                                            <option value="">Selecione...</option>
-                                            {type === 'Receita' ? (
-                                                <>
-                                                    <option value="Serviços">Serviços</option>
-                                                    <option value="Produtos">Produtos</option>
-                                                    <option value="Outros">Outras Entradas</option>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <option value="Fornecedores">Fornecedores</option>
-                                                    <option value="Impostos">Impostos</option>
-                                                    <option value="Salários">Salários</option>
-                                                    <option value="Gastos Fixos">Gastos Fixos (Água, Luz)</option>
-                                                    <option value="Outros">Outras Saídas</option>
-                                                </>
-                                            )}
-                                        </select>
-                                        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                    </div>
-                                </div>
-                                <InputField label="Data" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
-                            </div>
-                            <InputField label="Descrição (Opcional)" type="text" placeholder="Ex: Conta de Luz / Pagamento Maria" value={description} onChange={(e) => setDescription(e.target.value)} />
-                            <div className="space-y-1">
-                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Status</label>
-                                <div className="relative">
-                                    <select className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white appearance-none" value={status} onChange={(e) => setStatus(e.target.value as any)}>
-                                        <option value="Concluído">Pago / Recebido</option>
-                                        <option value="Pendente">A Pagar / A Receber</option>
-                                    </select>
-                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                                </div>
-                            </div>
-                            <div className="pt-4 flex gap-3">
-                                <Button type="button" variant="outline" className="flex-1" onClick={() => setIsModalOpen(false)}>Cancelar</Button>
-                                <Button type="submit" className="flex-1 gap-2" disabled={isSaving}>
-                                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
-                                    Salvar
-                                </Button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
+

@@ -1,4 +1,4 @@
-import { LucideIcon, TrendingUp } from 'lucide-react';
+import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface StatCardProps {
     label: string;
@@ -7,6 +7,7 @@ interface StatCardProps {
     icon: LucideIcon;
     trend?: string;
     color?: 'indigo' | 'emerald' | 'amber' | 'blue' | 'rose';
+    onClick?: () => void;
 }
 
 export const StatCard = ({
@@ -15,7 +16,8 @@ export const StatCard = ({
     subtitle,
     icon: Icon,
     trend,
-    color = 'indigo'
+    color = 'indigo',
+    onClick
 }: StatCardProps) => {
     const colors = {
         indigo: {
@@ -50,15 +52,23 @@ export const StatCard = ({
         },
     };
 
+    const isNegativeTrend = trend?.startsWith('-');
+
     return (
-        <div className="bg-white dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/60 hover:shadow-xl hover:shadow-primary/5 transition-all duration-300 group">
+        <div
+            onClick={onClick}
+            className={`bg-white dark:bg-slate-900/50 backdrop-blur-sm rounded-2xl p-5 shadow-sm border border-slate-100 dark:border-slate-800/60 transition-all duration-300 group ${onClick ? 'cursor-pointer hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1' : 'hover:shadow-xl hover:shadow-primary/5'}`}
+        >
             <div className="flex justify-between items-start mb-5">
                 <div className={`w-14 h-14 rounded-2xl ${colors[color].bg} ${colors[color].border} border flex items-center justify-center ${colors[color].bgHover} transition-all duration-300 shadow-sm shadow-black/5`}>
                     <Icon className={`${colors[color].icon} w-7 h-7`} />
                 </div>
                 {trend && (
-                    <span className="bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1 border border-emerald-500/10">
-                        <TrendingUp className="w-3 h-3" /> {trend}
+                    <span className={`text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg flex items-center gap-1 border ${isNegativeTrend
+                            ? 'bg-rose-100 dark:bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/10'
+                            : 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/10'
+                        }`}>
+                        {isNegativeTrend ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />} {trend}
                     </span>
                 )}
             </div>

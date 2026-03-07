@@ -14,6 +14,7 @@ interface InputFieldProps extends InputHTMLAttributes<HTMLInputElement> {
     required?: boolean;
     defaultValue?: string;
     step?: string;
+    maxLength?: number;
 }
 
 export const InputField = ({

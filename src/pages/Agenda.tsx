@@ -54,12 +54,14 @@ export const Agenda = () => {
     const [selectedClientId, setSelectedClientId] = useState('');
     const [selectedServiceId, setSelectedServiceId] = useState('');
     const [selectedProId, setSelectedProId] = useState('');
+    const [selectedAddressId, setSelectedAddressId] = useState('');
     const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     const [time, setTime] = useState('09:00');
     const [newClientName, setNewClientName] = useState('');
     const [isAddingClient, setIsAddingClient] = useState(false);
 
     const [professionals, setProfessionals] = useState<any[]>([]);
+    const [addresses, setAddresses] = useState<any[]>([]);
     const [businessHours, setBusinessHours] = useState<any[]>([]);
     const [availableTimes, setAvailableTimes] = useState<string[]>([]);
     const [draggedAppId, setDraggedAppId] = useState<string | null>(null);
@@ -93,14 +95,34 @@ export const Agenda = () => {
     const fetchFormData = async () => {
         const { data: clientsData } = await supabase.from('clients').select('id, name').order('name');
         const { data: servicesData } = await supabase.from('services').select('id, name, duration_minutes').eq('is_active', true).order('name');
-        const { data: prosData } = await supabase.from('professionals').select('id, name, is_active').eq('is_active', true).order('name');
+        const { data: prosData } = await supabase.from('professionals').select('id, name, is_active, professional_services(service_id)').eq('is_active', true).order('name');
         const { data: bhData } = await supabase.from('business_hours').select('*');
+        const { data: addressesData } = await supabase.from('addresses').select('id, street, number, city, state, is_main').order('is_main', { ascending: false });
 
         setClients(clientsData || []);
         setServices(servicesData || []);
         setProfessionals(prosData || []);
         setBusinessHours(bhData || []);
+
+        const adds = addressesData || [];
+        setAddresses(adds);
+        if (adds.length > 0 && !editingAppointmentId) {
+            setSelectedAddressId(adds.find((a: any) => a.is_main)?.id || adds[0].id);
+        }
     };
+
+    const filteredProfessionals = React.useMemo(() => {
+        if (!selectedServiceId) return professionals;
+        return professionals.filter(p => p.professional_services?.some((ps: any) => ps.service_id === selectedServiceId));
+    }, [professionals, selectedServiceId]);
+
+    const filteredServices = React.useMemo(() => {
+        if (!selectedProId) return services;
+        const pro = professionals.find(p => p.id === selectedProId);
+        if (!pro || !pro.professional_services) return services;
+        const validServiceIds = pro.professional_services.map((ps: any) => ps.service_id);
+        return services.filter(s => validServiceIds.includes(s.id));
+    }, [services, professionals, selectedProId]);
 
     const fetchAppointments = async () => {
         setIsLoadingAppointments(true);
@@ -155,6 +177,7 @@ export const Agenda = () => {
         setSelectedClientId(app.client_id);
         setSelectedServiceId(app.service_id);
         setSelectedProId(app.professional_id);
+        setSelectedAddressId(app.address_id || '');
         setDate(app.appointment_date);
         setTime(app.appointment_time.substring(0, 5));
         setNewClientName('');
@@ -296,6 +319,7 @@ export const Agenda = () => {
                 client_id: clientId,
                 service_id: selectedServiceId,
                 professional_id: selectedProId,
+                address_id: selectedAddressId || null,
                 appointment_date: date,
                 appointment_time: time,
                 status: 'Pendente'
@@ -321,6 +345,7 @@ export const Agenda = () => {
             setIsAddingClient(false);
             setSelectedServiceId('');
             setSelectedProId('');
+            if (addresses.length > 0) setSelectedAddressId(addresses.find(a => a.is_main)?.id || addresses[0].id);
 
             fetchAppointments();
 
@@ -731,7 +756,7 @@ export const Agenda = () => {
                                         required
                                     >
                                         <option value="">Selecione um serviço...</option>
-                                        {services.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                                        {filteredServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                     </select>
                                 </div>
                                 <div className="space-y-1">
@@ -743,7 +768,18 @@ export const Agenda = () => {
                                         required
                                     >
                                         <option value="">Selecione um profissional...</option>
-                                        {professionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                        {filteredProfessionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Local de Atendimento</label>
+                                    <select
+                                        className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/50"
+                                        value={selectedAddressId}
+                                        onChange={(e) => setSelectedAddressId(e.target.value)}
+                                    >
+                                        <option value="">Endereço padrão</option>
+                                        {addresses.map(a => <option key={a.id} value={a.id}>{a.street}, {a.number} - {a.city}/{a.state}</option>)}
                                     </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
@@ -899,7 +935,7 @@ export const Agenda = () => {
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <p className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-primary">{appt.services?.name}</p>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${appt.status === 'Pendente' ? 'bg-yellow-100 text-yellow-800' : appt.status === 'Concluído' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${appt.status === 'Pendente' ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' : (appt.status === 'Concluído' || appt.status === 'Confirmado') ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'}`}>
                                             {appt.status}
                                         </span>
                                     </div>

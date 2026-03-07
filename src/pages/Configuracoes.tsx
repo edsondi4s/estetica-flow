@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, Bot, MessageSquare, Key, Link as LinkIcon, FileText, Trash2, Info, ChevronRight, ChevronLeft, Check } from 'lucide-react';
+import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, Bot, MessageSquare, Key, Link as LinkIcon, FileText, Trash2, Info, ChevronRight, ChevronLeft, Check, Globe, Map as MapIcon, Search } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { InputField } from '../components/ui/InputField';
 import { Card } from '../components/ui/Card';
@@ -32,8 +32,20 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         whatsapp_provider_instance: '',
         whatsapp_provider_token: '',
         reminder_active: false,
-        reminder_minutes: 60
+        reminder_minutes: 60,
+        seo_title: '',
+        seo_description: '',
+        seo_keywords: '',
+        tracking_code: '',
+        tracking_code_body: '',
+        favicon_url: '',
+        favicon_url_dark: '',
     });
+
+    const [addresses, setAddresses] = useState<any[]>([]);
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [addressForm, setAddressForm] = useState({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: false });
+    const [isSearchingCep, setIsSearchingCep] = useState(false);
 
     // Legacy support state
     const [agentSettings, setAgentSettings] = useState<any>({});
@@ -72,7 +84,102 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         fetchBusinessHours();
         fetchAgentSettings();
         fetchKnowledgeBase();
+        fetchAddresses();
     }, []);
+
+    const fetchAddresses = async () => {
+        try {
+            const { data, error } = await supabase.from('addresses').select('*').order('created_at', { ascending: false });
+            if (error) throw error;
+            setAddresses(data || []);
+        } catch (error) {
+            console.error('Erro ao buscar endereços:', error);
+        }
+    };
+
+    const handleCepSearch = async (cep: string) => {
+        const cleanCep = cep.replace(/\D/g, '');
+        if (cleanCep.length !== 8) return;
+        setIsSearchingCep(true);
+        try {
+            const res = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+            const data = await res.json();
+            if (!data.erro) {
+                setAddressForm(prev => ({
+                    ...prev,
+                    zip_code: data.cep,
+                    street: data.logradouro,
+                    neighborhood: data.bairro,
+                    city: data.localidade,
+                    state: data.uf
+                }));
+            } else {
+                toast.error('CEP não encontrado.');
+            }
+        } catch (error) {
+            toast.error('Erro ao buscar CEP');
+            console.error(error);
+        } finally {
+            setIsSearchingCep(false);
+        }
+    };
+
+    const handleSaveAddress = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSaving(true);
+        try {
+            if (addressForm.id) {
+                if (addressForm.is_main) {
+                    await supabase.from('addresses').update({ is_main: false }).neq('id', addressForm.id);
+                }
+                const { error } = await supabase.from('addresses').update({
+                    zip_code: addressForm.zip_code,
+                    street: addressForm.street,
+                    number: addressForm.number,
+                    complement: addressForm.complement,
+                    neighborhood: addressForm.neighborhood,
+                    city: addressForm.city,
+                    state: addressForm.state,
+                    is_main: addressForm.is_main
+                }).eq('id', addressForm.id);
+                if (error) throw error;
+            } else {
+                if (addressForm.is_main || addresses.length === 0) {
+                    await supabase.from('addresses').update({ is_main: false }).neq('id', '00000000-0000-0000-0000-000000000000');
+                }
+                const { error } = await supabase.from('addresses').insert([{
+                    zip_code: addressForm.zip_code,
+                    street: addressForm.street,
+                    number: addressForm.number,
+                    complement: addressForm.complement,
+                    neighborhood: addressForm.neighborhood,
+                    city: addressForm.city,
+                    state: addressForm.state,
+                    is_main: addressForm.is_main || addresses.length === 0
+                }]);
+                if (error) throw error;
+            }
+            toast.success('Endereço salvo com sucesso!');
+            setIsAddressModalOpen(false);
+            fetchAddresses();
+        } catch (error: any) {
+            toast.error('Erro ao salvar endereço: ' + error.message);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleDeleteAddress = async (id: string) => {
+        if (!confirm('Deseja realmente excluir este endereço?')) return;
+        try {
+            const { error } = await supabase.from('addresses').delete().eq('id', id);
+            if (error) throw error;
+            toast.success('Endereço excluído.');
+            fetchAddresses();
+        } catch (error: any) {
+            toast.error('Erro ao excluir: ' + error.message);
+        }
+    };
 
     const fetchOpenRouterModels = async (apiKey?: string) => {
         setIsFetchingModels(true);
@@ -213,14 +320,14 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         }
     };
 
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'light' | 'dark' = 'light') => {
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'light' | 'dark' | 'favicon-light' | 'favicon-dark' = 'light') => {
         const file = e.target.files?.[0];
         if (!file) return;
 
         setIsUploadingLogo(true);
         try {
             const fileExt = file.name.split('.').pop();
-            const fileName = `logo-${type}-${Math.random()}.${fileExt}`;
+            const fileName = `${type}-${Math.random()}.${fileExt}`;
             const filePath = `${fileName}`;
 
             const { error: uploadError } = await supabase.storage
@@ -235,12 +342,16 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
             if (type === 'light') {
                 setSettings({ ...settings, logo_url: publicUrl });
-            } else {
+            } else if (type === 'dark') {
                 setSettings({ ...settings, logo_url_dark: publicUrl });
+            } else if (type === 'favicon-light') {
+                setSettings({ ...settings, favicon_url: publicUrl });
+            } else if (type === 'favicon-dark') {
+                setSettings({ ...settings, favicon_url_dark: publicUrl });
             }
-            toast.success(`Logo ${type === 'light' ? 'clara' : 'escura'} carregada temporariamente. Salve para confirmar.`);
+            toast.success(`Upload de imagem (${type}) concluído. Salve para confirmar.`);
         } catch (error: any) {
-            toast.error('Erro ao carregar logo: ' + error.message);
+            toast.error('Erro ao fazer upload: ' + error.message);
         } finally {
             setIsUploadingLogo(false);
         }
@@ -360,7 +471,14 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         whatsapp_provider_instance: settings.whatsapp_provider_instance,
                         whatsapp_provider_token: settings.whatsapp_provider_token,
                         reminder_active: settings.reminder_active,
-                        reminder_minutes: settings.reminder_minutes
+                        reminder_minutes: settings.reminder_minutes,
+                        seo_title: settings.seo_title,
+                        seo_description: settings.seo_description,
+                        seo_keywords: settings.seo_keywords,
+                        tracking_code: settings.tracking_code,
+                        tracking_code_body: settings.tracking_code_body,
+                        favicon_url: settings.favicon_url,
+                        favicon_url_dark: settings.favicon_url_dark,
                     })
                     .eq('id', settings.id);
                 if (error) throw error;
@@ -380,7 +498,14 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         whatsapp_provider_instance: settings.whatsapp_provider_instance,
                         whatsapp_provider_token: settings.whatsapp_provider_token,
                         reminder_active: settings.reminder_active,
-                        reminder_minutes: settings.reminder_minutes
+                        reminder_minutes: settings.reminder_minutes,
+                        seo_title: settings.seo_title,
+                        seo_description: settings.seo_description,
+                        seo_keywords: settings.seo_keywords,
+                        tracking_code: settings.tracking_code,
+                        tracking_code_body: settings.tracking_code_body,
+                        favicon_url: settings.favicon_url,
+                        favicon_url_dark: settings.favicon_url_dark,
                     }]);
                 if (error) throw error;
             }
@@ -389,6 +514,42 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 .from('business_hours')
                 .upsert(businessHours);
             if (hoursError) throw hoursError;
+
+            // Apply SEO dynamically on save
+            if (settings.seo_title) document.title = settings.seo_title;
+
+            if (settings.seo_description) {
+                let descMeta = document.querySelector('meta[name="description"]');
+                if (!descMeta) {
+                    descMeta = document.createElement('meta');
+                    descMeta.setAttribute('name', 'description');
+                    document.head.appendChild(descMeta);
+                }
+                descMeta.setAttribute('content', settings.seo_description);
+            }
+
+            if (settings.seo_keywords) {
+                let keyMeta = document.querySelector('meta[name="keywords"]');
+                if (!keyMeta) {
+                    keyMeta = document.createElement('meta');
+                    keyMeta.setAttribute('name', 'keywords');
+                    document.head.appendChild(keyMeta);
+                }
+                keyMeta.setAttribute('content', settings.seo_keywords);
+            }
+
+            // Apply Favicon dynamically on save
+            const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+            let currentFavicon = isDark && settings.favicon_url_dark ? settings.favicon_url_dark : settings.favicon_url;
+            if (currentFavicon) {
+                let link = document.querySelector('link[rel="icon"]') || document.querySelector('link[rel="shortcut icon"]');
+                if (!link) {
+                    link = document.createElement('link');
+                    link.setAttribute('rel', 'icon');
+                    document.head.appendChild(link);
+                }
+                link.setAttribute('href', currentFavicon);
+            }
 
             toast.success('Configurações salvas com sucesso!');
             // Re-fetch instead of reload to avoid losing state if not necessary
@@ -402,28 +563,40 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
     return (
         <div className="max-w-4xl mx-auto w-full space-y-6">
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-fit">
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full overflow-x-auto no-scrollbar">
                 <button
                     onClick={() => setActiveTab('info')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'info' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'info' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                     Informações Gerais
                 </button>
                 <button
+                    onClick={() => setActiveTab('enderecos')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'enderecos' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                    Endereços
+                </button>
+                <button
                     onClick={() => setActiveTab('branding')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'branding' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'branding' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                     Personalização Visual
                 </button>
                 <button
+                    onClick={() => setActiveTab('seo')}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'seo' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                >
+                    SEO & Web
+                </button>
+                <button
                     onClick={() => setActiveTab('hours')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'hours' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'hours' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                     Horários
                 </button>
                 <button
                     onClick={() => setActiveTab('ai_agent')}
-                    className={`px-6 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2 ${activeTab === 'ai_agent' ? 'bg-primary dark:bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'ai_agent' ? 'bg-primary dark:bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
                 >
                     <Bot className="w-4 h-4" /> Assistente IA
                 </button>
@@ -432,36 +605,6 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
             <Card noPadding>
                 {activeTab === 'info' && (
                     <div className="p-8 space-y-6">
-                        <div className="mb-6 flex flex-col sm:flex-row items-center gap-6 p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <div className="relative group cursor-pointer">
-                                <div className="w-24 h-24 rounded-full bg-white dark:bg-slate-900 flex items-center justify-center border-4 border-white dark:border-slate-700 shadow-sm overflow-hidden">
-                                    {settings.logo_url ? (
-                                        <img src={settings.logo_url} className="w-full h-full object-cover" alt="Logo" />
-                                    ) : (
-                                        <Camera className="w-8 h-8 text-slate-400" />
-                                    )}
-                                </div>
-                                <input
-                                    type="file"
-                                    id="logo-upload"
-                                    className="hidden"
-                                    accept="image/*"
-                                    onChange={handleLogoUpload}
-                                    disabled={isUploadingLogo}
-                                />
-                                <label
-                                    htmlFor="logo-upload"
-                                    className="absolute inset-0 flex items-center justify-center rounded-full bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                                >
-                                    {isUploadingLogo ? <Loader2 className="text-white animate-spin" /> : <Plus className="text-white" />}
-                                </label>
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-slate-900 dark:text-white">Logotipo e Nome</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">Este logotipo aparecerá na Sidebar e na tela de Login.</p>
-                            </div>
-                        </div>
-
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <InputField
                                 label="Nome da Clínica"
@@ -486,16 +629,132 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                     onChange={(e) => setSettings({ ...settings, email: e.target.value })}
                                 />
                             </div>
-                            <div className="md:col-span-2">
+                        </div>
+                    </div>
+                )}
+
+                {activeTab === 'enderecos' && (
+                    <div className="p-8 space-y-6">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h4 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                                    <MapIcon className="w-5 h-5 text-primary" /> Endereços da Clínica
+                                </h4>
+                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerencie os locais de atendimento</p>
+                            </div>
+                            <Button className="gap-2" onClick={() => {
+                                setAddressForm({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: addresses.length === 0 });
+                                setIsAddressModalOpen(true);
+                            }}>
+                                <Plus className="w-4 h-4" /> Adicionar
+                            </Button>
+                        </div>
+
+                        {addresses.length === 0 ? (
+                            <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
+                                <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-3" />
+                                <p className="text-sm text-slate-500">Nenhum endereço cadastrado.</p>
+                            </div>
+                        ) : (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {addresses.map((addr) => (
+                                    <div key={addr.id} className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative group overflow-hidden">
+                                        {addr.is_main && (
+                                            <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg">PRICIPAL</div>
+                                        )}
+                                        <div className="flex gap-3 mb-2">
+                                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0 h-fit">
+                                                <MapPin className="w-4 h-4 text-slate-500" />
+                                            </div>
+                                            <div>
+                                                <h5 className="font-bold text-slate-900 dark:text-white text-sm">{addr.street}, {addr.number}</h5>
+                                                <p className="text-xs text-slate-500">
+                                                    {addr.neighborhood} - {addr.city}/{addr.state} <br />
+                                                    CEP: {addr.zip_code} {addr.complement && `(${addr.complement})`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2 justify-end mt-4">
+                                            <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => {
+                                                setAddressForm(addr);
+                                                setIsAddressModalOpen(true);
+                                            }}>Editar</Button>
+                                            <Button variant="danger" size="sm" className="h-7 text-xs px-2 bg-rose-50 text-rose-600 border-transparent hover:bg-rose-100 dark:bg-rose-900/20" onClick={() => handleDeleteAddress(addr.id)}>Remover</Button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {activeTab === 'seo' && (
+                    <div className="p-8 space-y-8">
+                        <div>
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
+                                <Globe className="w-5 h-5 text-primary" /> SEO & Web
+                            </h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
+                                Configure as informações do seu site para aparecer corretamente no Google e redes sociais.
+                            </p>
+
+                            <div className="grid grid-cols-1 gap-6">
                                 <InputField
-                                    label="Endereço Completo"
-                                    icon={MapPin}
-                                    as="textarea"
-                                    rows={3}
-                                    placeholder="Rua, Número, Bairro, Cidade - UF, CEP"
-                                    value={settings.address}
-                                    onChange={(e) => setSettings({ ...settings, address: e.target.value })}
+                                    label="Título do Site (Title Tag)"
+                                    placeholder="Ex: EstéticaFlow - Clínica de Estética Avançada"
+                                    value={settings.seo_title || ''}
+                                    onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
                                 />
+
+                                <div className="space-y-1">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Descrição (Meta Description)</label>
+                                    <textarea
+                                        rows={3}
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
+                                        placeholder="Um resumo de 1 ou 2 frases sobre a clínica, usado pelo Google..."
+                                        value={settings.seo_description || ''}
+                                        onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
+                                    />
+                                </div>
+
+                                <div className="space-y-1">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Palavras-chave (Keywords)</label>
+                                    <textarea
+                                        rows={2}
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
+                                        placeholder="estética, botox, preenchimento, clínica em são paulo, harmonização..."
+                                        value={settings.seo_keywords || ''}
+                                        onChange={(e) => setSettings({ ...settings, seo_keywords: e.target.value })}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
+                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Scripts e Analytics</h4>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Insira códigos de rastreamento (Google Analytics, Pixel do Facebook, etc).</p>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div className="space-y-1">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scripts no &lt;head&gt;</label>
+                                    <textarea
+                                        rows={6}
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
+                                        placeholder="<!-- Scripts que carregam antes do body -->"
+                                        value={settings.tracking_code || ''}
+                                        onChange={(e) => setSettings({ ...settings, tracking_code: e.target.value })}
+                                    />
+                                </div>
+                                <div className="space-y-1">
+                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scripts no &lt;body&gt;</label>
+                                    <textarea
+                                        rows={6}
+                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
+                                        placeholder="<!-- Scripts no final do body (GTM NoScript, etc) -->"
+                                        value={settings.tracking_code_body || ''}
+                                        onChange={(e) => setSettings({ ...settings, tracking_code_body: e.target.value })}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -602,6 +861,67 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                             >
                                                 {isUploadingLogo ? <Loader2 className="animate-spin" /> : <Plus className="w-5 h-5" />}
                                                 {settings.logo_url_dark ? 'Trocar Logo' : 'Adicionar Logo'}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800 mt-8">
+                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-6">Favicon (Ícone do Navegador)</h4>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    {/* Light Favicon */}
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Claro</label>
+                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden">
+                                            {settings.favicon_url ? (
+                                                <img src={settings.favicon_url} className="w-12 h-12 object-contain" alt="Favicon Light" />
+                                            ) : (
+                                                <div className="text-center">
+                                                    <ImageIcon className="w-6 h-6 text-slate-400 mx-auto" />
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                id="favicon-light-upload"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={(e) => handleLogoUpload(e, 'favicon-light')}
+                                                disabled={isUploadingLogo}
+                                            />
+                                            <label
+                                                htmlFor="favicon-light-upload"
+                                                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold"
+                                            >
+                                                {isUploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* Dark Favicon */}
+                                    <div className="space-y-4">
+                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Escuro</label>
+                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-800 overflow-hidden">
+                                            {settings.favicon_url_dark ? (
+                                                <img src={settings.favicon_url_dark} className="w-12 h-12 object-contain" alt="Favicon Dark" />
+                                            ) : (
+                                                <div className="text-center">
+                                                    <ImageIcon className="w-6 h-6 text-slate-600 mx-auto" />
+                                                </div>
+                                            )}
+                                            <input
+                                                type="file"
+                                                id="favicon-dark-upload"
+                                                className="hidden"
+                                                accept="image/*"
+                                                onChange={(e) => handleLogoUpload(e, 'favicon-dark')}
+                                                disabled={isUploadingLogo}
+                                            />
+                                            <label
+                                                htmlFor="favicon-dark-upload"
+                                                className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold"
+                                            >
+                                                {isUploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                                             </label>
                                         </div>
                                     </div>
@@ -1199,6 +1519,117 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 message={`Tem certeza que deseja excluir o agente "${agentToDelete?.name}"? Esta ação não pode ser desfeita.`}
                 confirmLabel="Excluir Agente"
             />
+
+            {/* Modal de Endereço */}
+            <Modal
+                isOpen={isAddressModalOpen}
+                onClose={() => setIsAddressModalOpen(false)}
+                title={addressForm.id ? 'Editar Endereço' : 'Novo Endereço'}
+                description="Preencha os dados do local de atendimento."
+            >
+                <form onSubmit={handleSaveAddress} className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1 relative">
+                            <InputField
+                                label="CEP"
+                                value={addressForm.zip_code}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setAddressForm({ ...addressForm, zip_code: val });
+                                    if (val.replace(/\D/g, '').length === 8) {
+                                        handleCepSearch(val);
+                                    }
+                                }}
+                                placeholder="00000-000"
+                                required
+                            />
+                            {isSearchingCep && (
+                                <Loader2 className="absolute right-3 top-9 w-4 h-4 text-slate-400 animate-spin" />
+                            )}
+                        </div>
+                        <div className="md:col-span-2">
+                            <InputField
+                                label="Logradouro"
+                                value={addressForm.street}
+                                onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
+                                placeholder="Rua, Avenida..."
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1">
+                            <InputField
+                                label="Número"
+                                value={addressForm.number}
+                                onChange={(e) => setAddressForm({ ...addressForm, number: e.target.value })}
+                                placeholder="123"
+                                required
+                            />
+                        </div>
+                        <div className="md:col-span-2">
+                            <InputField
+                                label="Complemento"
+                                value={addressForm.complement}
+                                onChange={(e) => setAddressForm({ ...addressForm, complement: e.target.value })}
+                                placeholder="Sala, Andar, Bloco..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="md:col-span-1">
+                            <InputField
+                                label="Bairro"
+                                value={addressForm.neighborhood}
+                                onChange={(e) => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <InputField
+                                label="Cidade"
+                                value={addressForm.city}
+                                onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
+                                required
+                            />
+                        </div>
+                        <div className="md:col-span-1">
+                            <InputField
+                                label="Estado (UF)"
+                                value={addressForm.state}
+                                onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
+                                placeholder="SP"
+                                maxLength={2}
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 pt-2">
+                        <input
+                            type="checkbox"
+                            id="is_main"
+                            className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
+                            checked={addressForm.is_main}
+                            onChange={(e) => setAddressForm({ ...addressForm, is_main: e.target.checked })}
+                            disabled={addresses.length === 0} // Primeiro endereço é sempre principal
+                        />
+                        <label htmlFor="is_main" className="text-sm font-medium text-slate-700 dark:text-slate-300">
+                            Definir como endereço principal
+                        </label>
+                    </div>
+
+                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
+                        <Button type="button" variant="ghost" onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
+                        <Button type="submit" disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                            Salvar Endereço
+                        </Button>
+                    </div>
+                </form>
+            </Modal>
         </div >
     );
 };

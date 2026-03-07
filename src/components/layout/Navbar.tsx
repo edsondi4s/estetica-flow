@@ -208,9 +208,7 @@ export const Navbar = ({ currentPageId, user, onMenuClick }: NavbarProps) => {
                     >
                         <Bell className="w-5 h-5" />
                         {unreadCount > 0 && (
-                            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-[10px] text-white font-bold rounded-full flex items-center justify-center border border-white dark:border-slate-900">
-                                {unreadCount > 9 ? '9+' : unreadCount}
-                            </span>
+                            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
                         )}
                     </button>
 
@@ -251,9 +249,6 @@ export const Navbar = ({ currentPageId, user, onMenuClick }: NavbarProps) => {
                         </>
                     )}
                 </div>
-                <button className="p-2 text-slate-500 hover:text-primary transition-colors rounded-full hover:bg-slate-50 dark:hover:bg-slate-800">
-                    <Settings className="w-5 h-5" />
-                </button>
             </div>
 
             {/* Quick View Modal */}

@@ -25,7 +25,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
     const fetchNotifications = async () => {
         const { data: { user } } = await supabase.auth.getUser();
-        if (!user) return;
+        if (!user) {
+            setNotifications([]);
+            return;
+        }
 
         const { data, error } = await supabase
             .from('notifications')
@@ -39,18 +42,37 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     };
 
     useEffect(() => {
-        fetchNotifications();
+        let channel: any;
 
-        // Subscribe to real-time notifications
-        const channel = supabase
-            .channel('notifications_changes')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
-                fetchNotifications();
-            })
-            .subscribe();
+        const init = async () => {
+            await fetchNotifications();
+            if (!channel) {
+                channel = supabase
+                    .channel('notifications_changes')
+                    .on('postgres_changes', { event: '*', schema: 'public', table: 'notifications' }, () => {
+                        fetchNotifications();
+                    })
+                    .subscribe();
+            }
+        };
+
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            if (session?.user) {
+                init();
+            } else {
+                setNotifications([]);
+                if (channel) {
+                    supabase.removeChannel(channel);
+                    channel = null;
+                }
+            }
+        });
+
+        init();
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) supabase.removeChannel(channel);
+            subscription.unsubscribe();
         };
     }, []);
 

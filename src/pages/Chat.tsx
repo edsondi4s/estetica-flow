@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { MessageSquare, Search, Phone, RefreshCw, Send, Bot, User, Loader2, ChevronLeft } from 'lucide-react';
+import { MessageSquare, Search, Phone, RefreshCw, Send, Bot, User, Loader2, ChevronLeft, Wifi } from 'lucide-react';
 
 interface ChatMessage {
     id: string;
@@ -13,7 +13,7 @@ interface Contact {
     sender_number: string;
     last_message: string;
     last_message_at: string;
-    unread: boolean;
+    unread_count: number;
     client_name?: string;
 }
 
@@ -43,72 +43,85 @@ export function Chat() {
     const [isLoadingContacts, setIsLoadingContacts] = useState(true);
     const [isLoadingMessages, setIsLoadingMessages] = useState(false);
     const [showMobileChat, setShowMobileChat] = useState(false);
+    const [isAiTyping, setIsAiTyping] = useState(false);
+    const [realtimeConnected, setRealtimeConnected] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+    const selectedContactRef = useRef<Contact | null>(null);
     const lastMessageIdRef = useRef<string | null>(null);
+    const lastUserMsgRef = useRef<string | null>(null);
+    // Track viewed contacts to manage unread counts
+    const viewedTimestampsRef = useRef<Record<string, string>>({});
 
     const fetchContacts = useCallback(async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        // Get unique contacts with their last message
         const { data } = await supabase
             .from('ai_chat_history')
             .select('sender_number, content, created_at, role')
             .eq('user_id', user.id)
+            .in('role', ['user', 'assistant'])
             .order('created_at', { ascending: false });
 
         if (!data) return;
 
-        // Deduplicate by sender_number keeping the most recent message
+        // Deduplicate by sender_number
         const seen = new Set<string>();
-        const uniqueContacts: Contact[] = [];
+        const uniqueContacts: Omit<Contact, 'client_name'>[] = [];
+        const unreadMap: Record<string, number> = {};
+
         for (const row of data) {
-            if (!seen.has(row.sender_number)) {
-                seen.add(row.sender_number);
+            const num = row.sender_number;
+            if (!seen.has(num)) {
+                seen.add(num);
                 uniqueContacts.push({
-                    sender_number: row.sender_number,
+                    sender_number: num,
                     last_message: row.content,
                     last_message_at: row.created_at,
-                    unread: false,
+                    unread_count: 0,
                 });
+            }
+            // Count unread (user messages after last viewed timestamp)
+            const viewedAt = viewedTimestampsRef.current[num];
+            if (row.role === 'user' && (!viewedAt || row.created_at > viewedAt)) {
+                unreadMap[num] = (unreadMap[num] || 0) + 1;
             }
         }
 
         // Enrich with client names
         const phones = uniqueContacts.map(c => c.sender_number.split('@')[0]);
-        const { data: clients } = await supabase
-            .from('clients')
-            .select('phone, name')
-            .in('phone', phones)
-            .eq('user_id', user.id);
-
+        const { data: clients } = await supabase.from('clients').select('phone, name').in('phone', phones).eq('user_id', user.id);
         const clientMap = new Map((clients || []).map(c => [c.phone, c.name]));
-        const enriched = uniqueContacts.map(c => ({
+
+        const enriched: Contact[] = uniqueContacts.map(c => ({
             ...c,
             client_name: clientMap.get(c.sender_number.split('@')[0]) || undefined,
+            unread_count: unreadMap[c.sender_number] || 0,
         }));
 
         setContacts(enriched);
-        setFilteredContacts(enriched);
-        setIsLoadingContacts(false);
-    }, []);
-
-    useEffect(() => {
-        fetchContacts();
-    }, [fetchContacts]);
-
-    useEffect(() => {
-        const q = search.toLowerCase();
-        if (!q) {
-            setFilteredContacts(contacts);
-        } else {
-            setFilteredContacts(contacts.filter(c =>
+        setFilteredContacts(prev => {
+            const q = search.toLowerCase();
+            if (!q) return enriched;
+            return enriched.filter(c =>
                 c.sender_number.includes(q) ||
                 (c.client_name || '').toLowerCase().includes(q) ||
                 c.last_message.toLowerCase().includes(q)
-            ));
-        }
+            );
+        });
+        setIsLoadingContacts(false);
+    }, [search]);
+
+    useEffect(() => { fetchContacts(); }, [fetchContacts]);
+
+    useEffect(() => {
+        const q = search.toLowerCase();
+        if (!q) setFilteredContacts(contacts);
+        else setFilteredContacts(contacts.filter(c =>
+            c.sender_number.includes(q) ||
+            (c.client_name || '').toLowerCase().includes(q) ||
+            c.last_message.toLowerCase().includes(q)
+        ));
     }, [search, contacts]);
 
     const fetchMessages = useCallback(async (contact: Contact, isInitial = false) => {
@@ -121,41 +134,99 @@ export function Chat() {
             .select('id, role, content, created_at')
             .eq('user_id', user.id)
             .eq('sender_number', contact.sender_number)
+            .in('role', ['user', 'assistant'])
             .order('created_at', { ascending: true });
 
         const fetched = (data as ChatMessage[]) || [];
         const lastId = fetched[fetched.length - 1]?.id ?? null;
 
-        // Only update state and scroll if there truly are new messages
         if (lastId !== lastMessageIdRef.current) {
             lastMessageIdRef.current = lastId;
             setMessages(fetched);
-            // Scroll to bottom on new messages
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: lastId ? 'smooth' : 'auto' }), 50);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
+            // Detectar se IA acabou de responder (para apagar indicador de digitando)
+            const lastMsg = fetched[fetched.length - 1];
+            if (lastMsg?.role === 'assistant') {
+                setIsAiTyping(false);
+                lastUserMsgRef.current = null;
+            }
         }
 
         if (isInitial) setIsLoadingMessages(false);
     }, []);
 
+    // Realtime subscription
     useEffect(() => {
-        if (selectedContact) {
-            lastMessageIdRef.current = null; // reset on contact switch
-            fetchMessages(selectedContact, true);
-            pollingRef.current = setInterval(() => fetchMessages(selectedContact), 8000);
-        }
-        return () => {
-            if (pollingRef.current) clearInterval(pollingRef.current);
-        };
-    }, [selectedContact, fetchMessages]);
+        if (!selectedContact) return;
 
+        selectedContactRef.current = selectedContact;
+        lastMessageIdRef.current = null;
+        lastUserMsgRef.current = null;
+        setIsAiTyping(false);
+
+        // Mark contact as viewed
+        viewedTimestampsRef.current[selectedContact.sender_number] = new Date().toISOString();
+
+        fetchMessages(selectedContact, true);
+
+        const channel = supabase
+            .channel(`chat_${selectedContact.sender_number}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'ai_chat_history',
+                    filter: `sender_number=eq.${selectedContact.sender_number}`,
+                },
+                (payload) => {
+                    const newMsg = payload.new as ChatMessage;
+                    if (!newMsg || !['user', 'assistant'].includes(newMsg.role)) return;
+
+                    if (newMsg.role === 'user') {
+                        // Mostrar indicador de digitando da IA
+                        setIsAiTyping(true);
+                        lastUserMsgRef.current = newMsg.id;
+                    }
+
+                    setMessages(prev => {
+                        if (prev.some(m => m.id === newMsg.id)) return prev;
+                        const updated = [...prev, newMsg];
+                        lastMessageIdRef.current = newMsg.id;
+                        if (newMsg.role === 'assistant') setIsAiTyping(false);
+                        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+                        return updated;
+                    });
+
+                    // Atualizar lista de contatos
+                    fetchContacts();
+                }
+            )
+            .subscribe((status) => {
+                setRealtimeConnected(status === 'SUBSCRIBED');
+            });
+
+        return () => {
+            supabase.removeChannel(channel);
+            setRealtimeConnected(false);
+        };
+    }, [selectedContact, fetchMessages, fetchContacts]);
 
     const handleSelectContact = (contact: Contact) => {
         setSelectedContact(contact);
         setShowMobileChat(true);
+        // Mark as read
+        viewedTimestampsRef.current[contact.sender_number] = new Date().toISOString();
+        setContacts(prev => prev.map(c =>
+            c.sender_number === contact.sender_number ? { ...c, unread_count: 0 } : c
+        ));
     };
 
     const displayName = (contact: Contact) =>
         contact.client_name || formatPhone(contact.sender_number);
+
+    const totalUnread = contacts.reduce((sum, c) => sum + c.unread_count, 0);
 
     return (
         <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800">
@@ -168,8 +239,13 @@ export function Chat() {
                 <div className="p-4 border-b border-slate-100 dark:border-slate-800">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-xl">
+                            <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-xl relative">
                                 <MessageSquare className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                {totalUnread > 0 && (
+                                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                        {totalUnread > 9 ? '9+' : totalUnread}
+                                    </span>
+                                )}
                             </div>
                             <div>
                                 <h2 className="text-base font-bold text-slate-900 dark:text-white">Chat WhatsApp</h2>
@@ -225,14 +301,19 @@ export function Chat() {
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-0.5">
-                                        <span className="text-sm font-semibold text-slate-900 dark:text-white truncate">
+                                        <span className={`text-sm truncate ${contact.unread_count > 0 ? 'font-bold text-slate-900 dark:text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>
                                             {displayName(contact)}
                                         </span>
-                                        <span className="text-xs text-slate-400 shrink-0 ml-2">
-                                            {formatTime(contact.last_message_at)}
-                                        </span>
+                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+                                            <span className="text-xs text-slate-400">{formatTime(contact.last_message_at)}</span>
+                                            {contact.unread_count > 0 && (
+                                                <span className="w-5 h-5 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                                    {contact.unread_count > 9 ? '9+' : contact.unread_count}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                                    <p className={`text-xs truncate ${contact.unread_count > 0 ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
                                         {contact.last_message}
                                     </p>
                                 </div>
@@ -276,6 +357,13 @@ export function Chat() {
                                     <p className="text-xs text-slate-500">{formatPhone(selectedContact.sender_number)}</p>
                                 </div>
                             </div>
+                            {/* Realtime indicator */}
+                            <div className="flex items-center gap-1.5">
+                                <Wifi className={`w-3.5 h-3.5 ${realtimeConnected ? 'text-green-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                                <span className={`text-xs ${realtimeConnected ? 'text-green-500' : 'text-slate-400'}`}>
+                                    {realtimeConnected ? 'Ao vivo' : 'Conectando...'}
+                                </span>
+                            </div>
                             <button
                                 onClick={() => selectedContact && fetchMessages(selectedContact)}
                                 className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
@@ -311,19 +399,13 @@ export function Chat() {
                                                 </div>
                                             )}
                                             <div className={`flex items-end gap-2 ${isUser ? 'flex-row' : 'flex-row-reverse'}`}>
-                                                {/* Avatar */}
                                                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm mb-1
                                                     ${isUser
                                                         ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white'
                                                         : 'bg-gradient-to-br from-violet-500 to-purple-700 text-white'
                                                     }`}>
-                                                    {isUser
-                                                        ? <User className="w-3.5 h-3.5" />
-                                                        : <Bot className="w-3.5 h-3.5" />
-                                                    }
+                                                    {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                                                 </div>
-
-                                                {/* Bubble */}
                                                 <div className={`max-w-[72%] ${isUser ? 'items-start' : 'items-end'} flex flex-col`}>
                                                     <div className={`px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words
                                                         ${isUser
@@ -341,6 +423,23 @@ export function Chat() {
                                     );
                                 })
                             )}
+
+                            {/* AI Typing Indicator */}
+                            {isAiTyping && (
+                                <div className="flex items-end gap-2 flex-row-reverse">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shrink-0 shadow-sm mb-1">
+                                        <Bot className="w-3.5 h-3.5 text-white" />
+                                    </div>
+                                    <div className="bg-gradient-to-br from-violet-500 to-purple-600 px-4 py-3 rounded-2xl rounded-tr-sm shadow-sm">
+                                        <div className="flex gap-1 items-center h-4">
+                                            <span className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                            <span className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                            <span className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce" />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
                             <div ref={messagesEndRef} />
                         </div>
 
