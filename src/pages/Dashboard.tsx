@@ -627,20 +627,20 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                         <div className="relative z-10">
                             <h3 className="text-lg font-bold mb-1">Ações Rápidas</h3>
                             <p className="text-white/80 font-medium text-[11px] mb-4 leading-tight">Gestão eficiente com atalhos.</p>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 gap-2">
                                 <button
                                     onClick={() => onPageChange?.('agenda')}
-                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
+                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex items-center gap-3 shadow-sm"
                                 >
-                                    <CalendarPlus className="w-5 h-5 text-white" />
-                                    <span className="text-[10px] font-bold">Novo Agend.</span>
+                                    <CalendarPlus className="w-5 h-5 text-white shrink-0" />
+                                    <span className="text-[11px] font-bold">Novo Agendamento</span>
                                 </button>
                                 <button
                                     onClick={() => onPageChange?.('clientes')}
-                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
+                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex items-center gap-3 shadow-sm"
                                 >
-                                    <UserPlus className="w-5 h-5 text-white" />
-                                    <span className="text-[10px] font-bold">Add Cliente</span>
+                                    <UserPlus className="w-5 h-5 text-white shrink-0" />
+                                    <span className="text-[11px] font-bold">Adicionar Cliente</span>
                                 </button>
                             </div>
                         </div>

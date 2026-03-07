@@ -41,6 +41,7 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
             const { data, error } = await supabase
                 .from('ai_chat_history')
                 .select('sender_number')
+                .eq('user_id', user.id)
                 .neq('role', '__rstate__');
 
             if (!error && data) {
@@ -114,8 +115,8 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
 
                             {item.id === 'chat' && chatCount > 0 && (
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${currentPage === 'chat'
-                                        ? 'bg-white text-primary'
-                                        : 'bg-primary text-white shadow-sm'
+                                    ? 'bg-white text-primary'
+                                    : 'bg-primary text-white shadow-sm'
                                     }`}>
                                     {chatCount}
                                 </span>

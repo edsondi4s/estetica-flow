@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
-import { MessageSquare, Search, Phone, RefreshCw, Send, Bot, User, Loader2, ChevronLeft, Wifi } from 'lucide-react';
+import { MessageSquare, Search, Phone, RefreshCw, Send, Bot, User, Loader2, ChevronLeft, Wifi, Trash2, CheckSquare, Square, X, Check } from 'lucide-react';
 
 interface ChatMessage {
     id: string;
@@ -45,11 +45,14 @@ export function Chat() {
     const [showMobileChat, setShowMobileChat] = useState(false);
     const [isAiTyping, setIsAiTyping] = useState(false);
     const [realtimeConnected, setRealtimeConnected] = useState(false);
+    const [isSelectionMode, setIsSelectionMode] = useState(false);
+    const [selectedNumbers, setSelectedNumbers] = useState<Set<string>>(new Set());
+    const [isDeleting, setIsDeleting] = useState(false);
+
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const selectedContactRef = useRef<Contact | null>(null);
     const lastMessageIdRef = useRef<string | null>(null);
     const lastUserMsgRef = useRef<string | null>(null);
-    // Track viewed contacts to manage unread counts
     const viewedTimestampsRef = useRef<Record<string, string>>({});
 
     const fetchContacts = useCallback(async () => {
@@ -65,7 +68,6 @@ export function Chat() {
 
         if (!data) return;
 
-        // Deduplicate by sender_number
         const seen = new Set<string>();
         const uniqueContacts: Omit<Contact, 'client_name'>[] = [];
         const unreadMap: Record<string, number> = {};
@@ -81,14 +83,12 @@ export function Chat() {
                     unread_count: 0,
                 });
             }
-            // Count unread (user messages after last viewed timestamp)
             const viewedAt = viewedTimestampsRef.current[num];
             if (row.role === 'user' && (!viewedAt || row.created_at > viewedAt)) {
                 unreadMap[num] = (unreadMap[num] || 0) + 1;
             }
         }
 
-        // Enrich with client names
         const phones = uniqueContacts.map(c => c.sender_number.split('@')[0]);
         const { data: clients } = await supabase.from('clients').select('phone, name').in('phone', phones).eq('user_id', user.id);
         const clientMap = new Map((clients || []).map(c => [c.phone, c.name]));
@@ -145,7 +145,6 @@ export function Chat() {
             setMessages(fetched);
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
 
-            // Detectar se IA acabou de responder (para apagar indicador de digitando)
             const lastMsg = fetched[fetched.length - 1];
             if (lastMsg?.role === 'assistant') {
                 setIsAiTyping(false);
@@ -156,7 +155,6 @@ export function Chat() {
         if (isInitial) setIsLoadingMessages(false);
     }, []);
 
-    // Realtime subscription
     useEffect(() => {
         if (!selectedContact) return;
 
@@ -165,7 +163,6 @@ export function Chat() {
         lastUserMsgRef.current = null;
         setIsAiTyping(false);
 
-        // Mark contact as viewed
         viewedTimestampsRef.current[selectedContact.sender_number] = new Date().toISOString();
 
         fetchMessages(selectedContact, true);
@@ -185,7 +182,6 @@ export function Chat() {
                     if (!newMsg || !['user', 'assistant'].includes(newMsg.role)) return;
 
                     if (newMsg.role === 'user') {
-                        // Mostrar indicador de digitando da IA
                         setIsAiTyping(true);
                         lastUserMsgRef.current = newMsg.id;
                     }
@@ -199,7 +195,6 @@ export function Chat() {
                         return updated;
                     });
 
-                    // Atualizar lista de contatos
                     fetchContacts();
                 }
             )
@@ -214,13 +209,66 @@ export function Chat() {
     }, [selectedContact, fetchMessages, fetchContacts]);
 
     const handleSelectContact = (contact: Contact) => {
+        if (isSelectionMode) {
+            toggleNumberSelection(contact.sender_number);
+            return;
+        }
         setSelectedContact(contact);
         setShowMobileChat(true);
-        // Mark as read
         viewedTimestampsRef.current[contact.sender_number] = new Date().toISOString();
         setContacts(prev => prev.map(c =>
             c.sender_number === contact.sender_number ? { ...c, unread_count: 0 } : c
         ));
+    };
+
+    const toggleNumberSelection = (num: string) => {
+        setSelectedNumbers(prev => {
+            const next = new Set(prev);
+            if (next.has(num)) next.delete(num);
+            else next.add(num);
+            return next;
+        });
+    };
+
+    const handleSelectAll = () => {
+        if (selectedNumbers.size === filteredContacts.length) {
+            setSelectedNumbers(new Set());
+        } else {
+            setSelectedNumbers(new Set(filteredContacts.map(c => c.sender_number)));
+        }
+    };
+
+    const handleDeleteSelected = async () => {
+        if (selectedNumbers.size === 0) return;
+        if (!confirm(`Deseja excluir as ${selectedNumbers.size} conversas selecionadas? Esta ação não pode ser desfeita.`)) return;
+
+        setIsDeleting(true);
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            const { error } = await supabase
+                .from('ai_chat_history')
+                .delete()
+                .eq('user_id', user.id)
+                .in('sender_number', Array.from(selectedNumbers));
+
+            if (error) throw error;
+
+            if (selectedContact && selectedNumbers.has(selectedContact.sender_number)) {
+                setSelectedContact(null);
+                setMessages([]);
+            }
+
+            setSelectedNumbers(new Set());
+            setIsSelectionMode(false);
+            await fetchContacts();
+        } catch (err) {
+            console.error('Error deleting chats:', err);
+            alert('Erro ao excluir conversas.');
+        } finally {
+            setIsDeleting(false);
+        }
     };
 
     const displayName = (contact: Contact) =>
@@ -236,7 +284,7 @@ export function Chat() {
                 ${showMobileChat ? 'hidden md:flex' : 'flex'}
             `}>
                 {/* Header */}
-                <div className="p-4 border-b border-slate-100 dark:border-slate-800">
+                <div className="p-4 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 relative z-10">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-xl relative">
@@ -252,13 +300,25 @@ export function Chat() {
                                 <p className="text-xs text-slate-500">{contacts.length} conversa{contacts.length !== 1 ? 's' : ''}</p>
                             </div>
                         </div>
-                        <button
-                            onClick={fetchContacts}
-                            className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                            title="Atualizar"
-                        >
-                            <RefreshCw className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => {
+                                    setIsSelectionMode(!isSelectionMode);
+                                    setSelectedNumbers(new Set());
+                                }}
+                                className={`p-2 rounded-lg transition-colors ${isSelectionMode ? 'bg-slate-100 dark:bg-slate-800 text-primary' : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                title={isSelectionMode ? "Cancelar seleção" : "Selecionar conversas"}
+                            >
+                                {isSelectionMode ? <X className="w-4 h-4" /> : <CheckSquare className="w-4 h-4" />}
+                            </button>
+                            <button
+                                onClick={fetchContacts}
+                                className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Atualizar"
+                            >
+                                <RefreshCw className="w-4 h-4" />
+                            </button>
+                        </div>
                     </div>
 
                     {/* Search */}
@@ -273,6 +333,30 @@ export function Chat() {
                         />
                     </div>
                 </div>
+
+                {/* Bulk Actions Bar */}
+                {isSelectionMode && (
+                    <div className="bg-slate-50 dark:bg-slate-800/50 px-4 py-2 flex items-center justify-between border-b border-slate-100 dark:border-slate-800 animate-in slide-in-from-top duration-200">
+                        <button
+                            onClick={handleSelectAll}
+                            className="text-xs font-bold text-primary flex items-center gap-2 hover:opacity-80"
+                        >
+                            {selectedNumbers.size === filteredContacts.length ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                            {selectedNumbers.size === filteredContacts.length ? 'Desmarcar Tudo' : 'Selecionar Tudo'}
+                        </button>
+                        <div className="flex items-center gap-3">
+                            <span className="text-[10px] font-bold text-slate-500">{selectedNumbers.size} selecionadas</span>
+                            <button
+                                onClick={handleDeleteSelected}
+                                disabled={selectedNumbers.size === 0 || isDeleting}
+                                className="flex items-center gap-1.5 px-2.5 py-1.5 bg-red-50 to-red-100 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
+                                Excluir
+                            </button>
+                        </div>
+                    </div>
+                )}
 
                 {/* Contact List */}
                 <div className="flex-1 overflow-y-auto">
@@ -292,26 +376,32 @@ export function Chat() {
                                 key={contact.sender_number}
                                 onClick={() => handleSelectContact(contact)}
                                 className={`w-full flex items-center gap-3 px-4 py-3.5 text-left border-b border-slate-50 dark:border-slate-800/50 transition-all hover:bg-slate-50 dark:hover:bg-slate-800/50
-                                    ${selectedContact?.sender_number === contact.sender_number ? 'bg-green-50 dark:bg-green-900/10 border-l-2 border-l-green-500' : ''}
+                                    ${selectedContact?.sender_number === contact.sender_number && !isSelectionMode ? 'bg-green-50 dark:bg-green-900/10 border-l-2 border-l-green-500' : ''}
+                                    ${isSelectionMode && selectedNumbers.has(contact.sender_number) ? 'bg-primary/5' : ''}
                                 `}
                             >
+                                {/* Selection Indicator */}
+                                {isSelectionMode && (
+                                    <div className={`shrink-0 w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${selectedNumbers.has(contact.sender_number) ? 'bg-primary border-primary text-white' : 'border-slate-300 dark:border-slate-600'}`}>
+                                        {selectedNumbers.has(contact.sender_number) && <Check className="w-3 h-3 stroke-[3]" />}
+                                    </div>
+                                )}
+
                                 {/* Avatar */}
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm relative">
                                     {(contact.client_name || contact.sender_number).charAt(0).toUpperCase()}
+                                    {contact.unread_count > 0 && !isSelectionMode && (
+                                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-slate-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                            {contact.unread_count > 9 ? '9+' : contact.unread_count}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <div className="flex justify-between items-baseline mb-0.5">
                                         <span className={`text-sm truncate ${contact.unread_count > 0 ? 'font-bold text-slate-900 dark:text-white' : 'font-semibold text-slate-700 dark:text-slate-200'}`}>
                                             {displayName(contact)}
                                         </span>
-                                        <div className="flex items-center gap-1.5 shrink-0 ml-2">
-                                            <span className="text-xs text-slate-400">{formatTime(contact.last_message_at)}</span>
-                                            {contact.unread_count > 0 && (
-                                                <span className="w-5 h-5 bg-green-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                                                    {contact.unread_count > 9 ? '9+' : contact.unread_count}
-                                                </span>
-                                            )}
-                                        </div>
+                                        <span className="text-[10px] text-slate-400 shrink-0 ml-2">{formatTime(contact.last_message_at)}</span>
                                     </div>
                                     <p className={`text-xs truncate ${contact.unread_count > 0 ? 'text-slate-700 dark:text-slate-300 font-medium' : 'text-slate-500 dark:text-slate-400'}`}>
                                         {contact.last_message}
@@ -357,20 +447,32 @@ export function Chat() {
                                     <p className="text-xs text-slate-500">{formatPhone(selectedContact.sender_number)}</p>
                                 </div>
                             </div>
-                            {/* Realtime indicator */}
-                            <div className="flex items-center gap-1.5">
-                                <Wifi className={`w-3.5 h-3.5 ${realtimeConnected ? 'text-green-500' : 'text-slate-300 dark:text-slate-600'}`} />
-                                <span className={`text-xs ${realtimeConnected ? 'text-green-500' : 'text-slate-400'}`}>
-                                    {realtimeConnected ? 'Ao vivo' : 'Conectando...'}
-                                </span>
+
+                            <div className="flex items-center gap-2">
+                                {/* Realtime indicator */}
+                                <div className="hidden sm:flex items-center gap-1.5 mr-2">
+                                    <Wifi className={`w-3.5 h-3.5 ${realtimeConnected ? 'text-green-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                                    <span className={`text-[10px] uppercase tracking-wider font-bold ${realtimeConnected ? 'text-green-500' : 'text-slate-400'}`}>
+                                        {realtimeConnected ? 'Conectado' : 'Conectando'}
+                                    </span>
+                                </div>
+
+                                <button
+                                    onClick={() => handleDeleteSelected()}
+                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                    title="Excluir conversa"
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+
+                                <button
+                                    onClick={() => selectedContact && fetchMessages(selectedContact)}
+                                    className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                                    title="Atualizar mensagens"
+                                >
+                                    <RefreshCw className="w-4 h-4" />
+                                </button>
                             </div>
-                            <button
-                                onClick={() => selectedContact && fetchMessages(selectedContact)}
-                                className="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-                                title="Atualizar mensagens"
-                            >
-                                <RefreshCw className="w-4 h-4" />
-                            </button>
                         </div>
 
                         {/* Messages */}
