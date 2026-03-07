@@ -10,6 +10,23 @@ import { supabase } from '../lib/supabase';
 import { compressImage } from '../lib/image-utils';
 import toast from 'react-hot-toast';
 
+const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-primary"></div>
+                    <p className="text-sm font-bold text-slate-900 dark:text-white">
+                        {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">atendimentos</span>
+                    </p>
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 export const Profissionais = () => {
     const [professionals, setProfessionals] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -513,13 +530,7 @@ export const Profissionais = () => {
                                 />
                                 <Tooltip
                                     cursor={{ fill: 'transparent' }}
-                                    contentStyle={{
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-                                        background: 'rgba(255,255,255,0.95)',
-                                        fontSize: '12px'
-                                    }}
+                                    content={<CustomTooltip />}
                                 />
                                 <Bar dataKey="count" radius={[6, 6, 0, 0]} barSize={40}>
                                     {globalStats.chartData.map((_, index) => (

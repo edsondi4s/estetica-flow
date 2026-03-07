@@ -51,6 +51,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const [popularServices, setPopularServices] = useState<any[]>([]);
     const [proRanking, setProRanking] = useState<any[]>([]);
     const [chartData, setChartData] = useState<any[]>([]);
+    const [heatmapData, setHeatmapData] = useState<any[]>([]);
 
     // Pagination state for Recent Activity
     const [currentPage, setCurrentPage] = useState(1);
@@ -198,6 +199,49 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
             // 5. Chart Data (Week/Month/Year)
             await fetchChartData();
+
+            // 6. Weekly Frequency (Heatmap 2.0 - Hours x Days)
+            const ninetyDaysAgo = new Date();
+            ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+            const { data: hData } = await supabase
+                .from('appointments')
+                .select('appointment_date, appointment_time')
+                .gte('appointment_date', ninetyDaysAgo.toISOString().split('T')[0])
+                .not('status', 'eq', 'Cancelado');
+
+            // Grid: Rows (Hours 08-19) x Cols (Days 0-6)
+            const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8, 9, ..., 19
+            const days = [0, 1, 2, 3, 4, 5, 6];
+
+            const grid: any[] = hours.map(hour => ({
+                hour: `${hour.toString().padStart(2, '0')}:00`,
+                days: days.map(day => ({ day, count: 0 }))
+            }));
+
+            hData?.forEach(item => {
+                const date = new Date(item.appointment_date + 'T12:00:00');
+                const day = date.getDay();
+                const hour = parseInt(item.appointment_time?.split(':')[0] || '0');
+
+                if (hour >= 8 && hour <= 19) {
+                    grid[hour - 8].days[day].count++;
+                }
+            });
+
+            // Calculate global max for intensity
+            let globalMax = 0;
+            grid.forEach(row => row.days.forEach((d: any) => {
+                if (d.count > globalMax) globalMax = d.count;
+            }));
+
+            setHeatmapData(grid.map(row => ({
+                ...row,
+                days: row.days.map((d: any) => ({
+                    ...d,
+                    intensity: globalMax > 0 ? d.count / globalMax : 0
+                }))
+            })));
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
@@ -499,54 +543,110 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-                <Card title="Serviços Populares" extra={<button className="text-slate-400 hover:text-primary transition-colors"><MoreHorizontal className="w-5 h-5" /></button>}>
-                    <div className="space-y-4">
-                        {popularServices.map((service, i) => (
-                            <div key={i}>
-                                <div className="flex items-center justify-between mb-2">
-                                    <div className="flex items-center gap-4">
-                                        <div className={`w-12 h-12 rounded-2xl ${service.bg} border ${service.bg.replace('bg-', 'border-').split(' ')[0]}/20 flex items-center justify-center ${service.color} shrink-0 shadow-sm shadow-black/5`}>
-                                            <service.icon className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{service.name}</p>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400">{service.count} agendamentos esta semana</p>
-                                        </div>
-                                    </div>
-                                    <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{service.percent}%</span>
-                                </div>
-                                <div className="w-full bg-slate-100 rounded-full h-2">
-                                    <div className="bg-primary h-2 rounded-full" style={{ width: `${service.percent}%` }}></div>
+                <Card title="🔥 Horários de Pico">
+                    <div className="flex flex-col gap-4 py-2">
+                        <p className="text-xs text-slate-500 mb-2 leading-relaxed">Frequência por horário e dia da semana (últmos 90 dias)</p>
+                        <div className="flex gap-4">
+                            {/* Time labels column */}
+                            <div className="flex flex-col justify-between py-1 text-[9px] font-bold text-slate-400 w-8">
+                                <span>08h</span>
+                                <span>12h</span>
+                                <span>16h</span>
+                                <span>19h</span>
+                            </div>
+
+                            {/* Heatmap Grid */}
+                            <div className="flex-1">
+                                <div className="grid grid-cols-7 gap-1">
+                                    {/* Day labels header */}
+                                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
+                                        <div key={i} className="text-[10px] font-black text-slate-400 text-center mb-1">{d}</div>
+                                    ))}
+
+                                    {/* Grid cells (rendered by hour, then by day) */}
+                                    {heatmapData.map((row, hIdx) => (
+                                        row.days.map((day: any, dIdx: number) => (
+                                            <div
+                                                key={`${hIdx}-${dIdx}`}
+                                                className="w-full h-3.5 md:h-4.5 rounded-[1px] cursor-help transition-all hover:scale-110 relative group"
+                                                style={{
+                                                    backgroundColor: `var(--primary)`,
+                                                    opacity: day.count === 0 ? 0.05 : Math.max(day.intensity, 0.2)
+                                                }}
+                                            >
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[9px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30 shadow-xl border border-white/10">
+                                                    {day.count} agendamentos às {row.hour}
+                                                </div>
+                                            </div>
+                                        ))
+                                    ))}
                                 </div>
                             </div>
-                        ))}
+                        </div>
+
+                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
+                            <span className="text-[9px] text-slate-400 font-medium italic">Frequência:</span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-[9px] text-slate-400 mr-1">Menor</span>
+                                {[0.2, 0.4, 0.6, 0.8, 1].map((op, i) => (
+                                    <div key={i} className="w-2 h-2 rounded-[1px] bg-primary" style={{ opacity: op }}></div>
+                                ))}
+                                <span className="text-[9px] text-slate-400 ml-1">Maior</span>
+                            </div>
+                        </div>
                     </div>
                 </Card>
 
-                <div className="bg-gradient-to-br from-primary to-purple-600 rounded-xl shadow-lg p-6 text-white relative overflow-hidden">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
-                    <div className="relative z-10">
-                        <h3 className="text-xl font-bold mb-2">Ações Rápidas</h3>
-                        <p className="text-white/80 font-medium text-sm mb-6">Gerencie sua clínica de forma eficiente com esses atalhos.</p>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <button
-                                onClick={() => onPageChange?.('agenda')}
-                                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
-                            >
-                                <CalendarPlus className="w-6 h-6 text-white" />
-                                <span className="text-sm font-bold">Novo Agendamento</span>
-                            </button>
-                            <button
-                                onClick={() => onPageChange?.('clientes')}
-                                className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
-                            >
-                                <UserPlus className="w-6 h-6 text-white" />
-                                <span className="text-sm font-bold">Adicionar Cliente</span>
-                            </button>
+                <div className="flex flex-col gap-6">
+                    <Card title="Serviços Populares" extra={<button className="text-slate-400 hover:text-primary transition-colors"><MoreHorizontal className="w-5 h-5" /></button>}>
+                        <div className="space-y-4">
+                            {popularServices.map((service, i) => (
+                                <div key={i}>
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-10 h-10 rounded-xl ${service.bg} border ${service.bg.replace('bg-', 'border-').split(' ')[0]}/20 flex items-center justify-center ${service.color} shrink-0 shadow-sm shadow-black/5`}>
+                                                <service.icon className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-1">{service.name}</p>
+                                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{service.count} agendamentos</p>
+                                            </div>
+                                        </div>
+                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{service.percent}%</span>
+                                    </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
+                                        <div className="bg-primary h-1.5 rounded-full" style={{ width: `${service.percent}%` }}></div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <div className="bg-gradient-to-br from-primary to-purple-600 rounded-xl shadow-lg p-5 text-white relative overflow-hidden flex-1 flex flex-col justify-center min-h-[160px]">
+                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
+                        <div className="relative z-10">
+                            <h3 className="text-lg font-bold mb-1">Ações Rápidas</h3>
+                            <p className="text-white/80 font-medium text-[11px] mb-4 leading-tight">Gestão eficiente com atalhos.</p>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => onPageChange?.('agenda')}
+                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
+                                >
+                                    <CalendarPlus className="w-5 h-5 text-white" />
+                                    <span className="text-[10px] font-bold">Novo Agend.</span>
+                                </button>
+                                <button
+                                    onClick={() => onPageChange?.('clientes')}
+                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex flex-col gap-2 shadow-sm"
+                                >
+                                    <UserPlus className="w-5 h-5 text-white" />
+                                    <span className="text-[10px] font-bold">Add Cliente</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

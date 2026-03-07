@@ -7,6 +7,27 @@ import { Button } from '../components/ui/Button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import toast from 'react-hot-toast';
 
+const CustomTooltip = ({ active, payload, label, formatCurrency }: any) => {
+    if (active && payload && payload.length) {
+        return (
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
+                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">{label}</p>
+                <div className="space-y-1.5">
+                    {payload.map((entry: any, index: number) => (
+                        <div key={index} className="flex items-center gap-2">
+                            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.fill }}></div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">
+                                {formatCurrency(entry.value)} <span className="text-[10px] font-medium text-slate-500 dark:text-slate-400">({entry.name})</span>
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+    return null;
+};
+
 type AppointmentFinance = {
     id: string;
     appointment_date: string;
@@ -221,8 +242,7 @@ export const Financeiro = () => {
                                 <YAxis tickFormatter={(value) => `R$${value}`} tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dx={-10} />
                                 <Tooltip
                                     cursor={{ fill: 'transparent' }}
-                                    contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }}
-                                    formatter={(value: number, name: string) => [formatCurrency(value), name]}
+                                    content={<CustomTooltip formatCurrency={formatCurrency} />}
                                 />
                                 <Bar name="Receita Confirmada" dataKey="Confirmado" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
                                 <Bar name="Receita Pendente" dataKey="Pendente" fill="#fbbf24" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
