@@ -43,6 +43,33 @@ export function timeToMinutes(timeStr: string) {
     return h * 60 + m;
 }
 
+/**
+ * Busca um cliente comparando apenas os dígitos finais (ignorando formatação e prefixo de país)
+ */
+export async function findClientByPhone(supabase: any, userId: string, rawPhone: string) {
+    const cleanWhatsApp = rawPhone.replace(/\D/g, '');
+    // Se for um número brasileiro com 55 e tiver 12 ou 13 dígitos, pegamos os últimos 10 ou 11
+    const searchTarget = (cleanWhatsApp.startsWith('55') && (cleanWhatsApp.length === 12 || cleanWhatsApp.length === 13))
+        ? cleanWhatsApp.substring(2)
+        : cleanWhatsApp;
+
+    // Buscamos todos os clientes do usuário (é mais seguro que ILIKE complexos)
+    const { data: clients } = await supabase.from('clients').select('id, name, phone').eq('user_id', userId);
+    if (!clients) return null;
+
+    // Tentamos encontrar um match comparando apenas os números
+    return clients.find((c: any) => {
+        if (!c.phone) return false;
+        const cleanDb = c.phone.replace(/\D/g, '');
+        const dbTarget = (cleanDb.startsWith('55') && (cleanDb.length === 12 || cleanDb.length === 13))
+            ? cleanDb.substring(2)
+            : cleanDb;
+
+        // Se os últimos 8 dígitos baterem, é muito provável que seja a mesma pessoa (evita problemas com 9 digit)
+        return dbTarget === searchTarget || (dbTarget.slice(-8) === searchTarget.slice(-8) && searchTarget.length >= 8);
+    });
+}
+
 export function proServicesForService(proServicesData: any[], proId: string, serviceId: string): boolean {
     if (!proServicesData || proServicesData.length === 0) return true;
     const proRows = proServicesData.filter((ps: any) => ps.professional_id === proId);
@@ -170,7 +197,7 @@ export async function handleBookAppointment(supabase: any, userId: string, args:
     const professional_name = args.professional_name || args.pro || args.professional || "";
     const cleanNumber = senderJid.split('@')[0];
 
-    let { data: client } = await supabase.from('clients').select('id').eq('phone', cleanNumber).eq('user_id', userId).single();
+    let client = await findClientByPhone(supabase, userId, cleanNumber);
     if (!client) {
         const { data: newClient } = await supabase.from('clients').insert({ name: client_name || "Cliente", phone: cleanNumber, user_id: userId }).select().single();
         client = newClient;
@@ -209,7 +236,7 @@ export async function handleBookAppointment(supabase: any, userId: string, args:
 }
 
 export async function handleGetClientAppointments(supabase: any, userId: string, cleanPhone: string) {
-    const { data: client } = await supabase.from('clients').select('id, name').eq('phone', cleanPhone).eq('user_id', userId).single();
+    const client = await findClientByPhone(supabase, userId, cleanPhone);
     if (!client) return { appointments: [], message: "Nenhum cadastro encontrado para este número." };
 
     const today = new Date().toISOString().split('T')[0];

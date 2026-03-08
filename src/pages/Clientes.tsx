@@ -56,6 +56,10 @@ export const Clientes = () => {
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
     const [clientRanking, setClientRanking] = useState<any[]>([]);
     const [isRankingLoading, setIsRankingLoading] = useState(false);
+    const [activitySearch, setActivitySearch] = useState('');
+    const [activityStatus, setActivityStatus] = useState('Todos');
+    const [activityDateStart, setActivityDateStart] = useState('');
+    const [activityDateEnd, setActivityDateEnd] = useState('');
 
     // Confirmation Modal state
     const [confirmDelete, setConfirmDelete] = useState<{ isOpen: boolean; id: string | null }>({
@@ -542,18 +546,18 @@ export const Clientes = () => {
                 title="Ficha do Cliente"
             >
                 {selectedClient && (
-                    <div className="space-y-10 py-4 reveal-content overflow-hidden">
+                    <div className="space-y-8 py-2 reveal-content overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
-                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 p-10 bg-white dark:bg-slate-950 text-slate-950 dark:text-white rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl">
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 p-6 bg-white dark:bg-slate-950 text-slate-950 dark:text-white rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-xl">
                             <Avatar
                                 size="lg"
-                                className="w-24 h-24 ring-4 ring-primary/20 rounded-sm"
+                                className="w-16 h-16 ring-4 ring-primary/10 rounded-sm"
                                 name={selectedClient.name}
                                 initials={selectedClient.name?.split(' ')?.map((n: any) => n[0]).join('').toUpperCase() || '?'}
                             />
                             <div className="text-center md:text-left flex-1">
-                                <h3 className="text-4xl font-black uppercase tracking-tighter leading-none mb-2">{selectedClient.name}</h3>
+                                <h3 className="text-2xl font-black uppercase tracking-tighter leading-none mb-2">{selectedClient.name}</h3>
                                 <div className="flex flex-wrap justify-center md:justify-start gap-4">
                                     <span className="text-[10px] font-black uppercase tracking-[0.2em] text-primary flex items-center gap-2">
                                         <Phone className="w-3 h-3" /> {selectedClient.phone ? formatPhone(selectedClient.phone) : 'Sem Contato'}
@@ -576,7 +580,75 @@ export const Clientes = () => {
                             </div>
                         )}
 
-                        <div className="space-y-8 relative z-10">
+                        <div className="space-y-8 relative z-10 p-1">
+                            {/* Filtros Avançados de Atividades */}
+                            <div className="bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 rounded-sm space-y-6">
+                                <div className="flex flex-col md:flex-row gap-4 items-end">
+                                    <div className="flex-1 space-y-2">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Buscar por Serviço ou Profissional</label>
+                                        <div className="relative">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="PESQUISAR..."
+                                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[11px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/30 text-slate-900 dark:text-white"
+                                                value={activitySearch}
+                                                onChange={(e) => setActivitySearch(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="w-full md:w-48 space-y-2">
+                                        <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Filtrar Status</label>
+                                        <select
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[11px] font-black uppercase tracking-widest outline-none focus:ring-1 focus:ring-primary/30 text-slate-900 dark:text-white appearance-none cursor-pointer"
+                                            value={activityStatus}
+                                            onChange={(e) => setActivityStatus(e.target.value)}
+                                        >
+                                            <option value="Todos">TODOS STATUS</option>
+                                            <option value="Confirmado">CONFIRMADOS</option>
+                                            <option value="Pendente">PENDENTES</option>
+                                            <option value="Cancelado">CANCELADOS</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col md:flex-row gap-4 items-end">
+                                    <div className="flex-1 grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Período De</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[11px] font-black outline-none focus:ring-1 focus:ring-primary/30 text-slate-900 dark:text-white"
+                                                value={activityDateStart}
+                                                onChange={(e) => setActivityDateStart(e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest px-1">Até</label>
+                                            <input
+                                                type="date"
+                                                className="w-full px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[11px] font-black outline-none focus:ring-1 focus:ring-primary/30 text-slate-900 dark:text-white"
+                                                value={activityDateEnd}
+                                                onChange={(e) => setActivityDateEnd(e.target.value)}
+                                            />
+                                        </div>
+                                    </div>
+                                    {(activitySearch || activityStatus !== 'Todos' || activityDateStart || activityDateEnd) && (
+                                        <button
+                                            onClick={() => {
+                                                setActivitySearch('');
+                                                setActivityStatus('Todos');
+                                                setActivityDateStart('');
+                                                setActivityDateEnd('');
+                                            }}
+                                            className="text-[9px] font-black text-primary uppercase tracking-[0.25em] hover:underline underline-offset-4 pb-4 px-2"
+                                        >
+                                            Limpar Filtros
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-950 dark:text-white flex items-center gap-2 mb-6">
                                     <Clock className="w-4 h-4 text-primary" /> Próximas Atividades
@@ -588,7 +660,20 @@ export const Clientes = () => {
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
 
-                                    const openList = clientHistory.filter(h => {
+                                    const filtered = clientHistory.filter(h => {
+                                        const matchesSearch = !activitySearch ||
+                                            h.services?.name?.toLowerCase().includes(activitySearch.toLowerCase()) ||
+                                            h.professionals?.name?.toLowerCase().includes(activitySearch.toLowerCase());
+                                        const matchesStatus = activityStatus === 'Todos' || h.status === activityStatus;
+
+                                        const apptDateStr = h.appointment_date;
+                                        const matchesDateStart = !activityDateStart || apptDateStr >= activityDateStart;
+                                        const matchesDateEnd = !activityDateEnd || apptDateStr <= activityDateEnd;
+
+                                        return matchesSearch && matchesStatus && matchesDateStart && matchesDateEnd;
+                                    });
+
+                                    const openList = filtered.filter(h => {
                                         const apptDate = new Date(h.appointment_date + 'T12:00:00');
                                         apptDate.setHours(0, 0, 0, 0);
                                         return apptDate >= today && h.status !== 'Cancelado';
@@ -632,7 +717,20 @@ export const Clientes = () => {
                                     const today = new Date();
                                     today.setHours(0, 0, 0, 0);
 
-                                    const pastList = clientHistory.filter(h => {
+                                    const filtered = clientHistory.filter(h => {
+                                        const matchesSearch = !activitySearch ||
+                                            h.services?.name?.toLowerCase().includes(activitySearch.toLowerCase()) ||
+                                            h.professionals?.name?.toLowerCase().includes(activitySearch.toLowerCase());
+                                        const matchesStatus = activityStatus === 'Todos' || h.status === activityStatus;
+
+                                        const apptDateStr = h.appointment_date;
+                                        const matchesDateStart = !activityDateStart || apptDateStr >= activityDateStart;
+                                        const matchesDateEnd = !activityDateEnd || apptDateStr <= activityDateEnd;
+
+                                        return matchesSearch && matchesStatus && matchesDateStart && matchesDateEnd;
+                                    });
+
+                                    const pastList = filtered.filter(h => {
                                         const apptDate = new Date(h.appointment_date + 'T12:00:00');
                                         apptDate.setHours(0, 0, 0, 0);
                                         return apptDate < today || h.status === 'Cancelado';

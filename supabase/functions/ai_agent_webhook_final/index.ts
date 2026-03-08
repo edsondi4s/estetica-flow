@@ -55,6 +55,28 @@ function proServicesForService(proServicesData: any[], proId: string, serviceId:
     return proRows.some((ps: any) => ps.service_id === serviceId);
 }
 
+/**
+ * Busca um cliente comparando apenas os dígitos finais (ignorando formatação e prefixo de país)
+ */
+async function findClientByPhone(supabase: any, userId: string, rawPhone: string) {
+    const cleanWhatsApp = rawPhone.replace(/\D/g, '');
+    const searchTarget = (cleanWhatsApp.startsWith('55') && (cleanWhatsApp.length === 12 || cleanWhatsApp.length === 13))
+        ? cleanWhatsApp.substring(2)
+        : cleanWhatsApp;
+
+    const { data: clients } = await supabase.from('clients').select('id, name, phone').eq('user_id', userId);
+    if (!clients) return null;
+
+    return clients.find((c: any) => {
+        if (!c.phone) return false;
+        const cleanDb = c.phone.replace(/\D/g, '');
+        const dbTarget = (cleanDb.startsWith('55') && (cleanDb.length === 12 || cleanDb.length === 13))
+            ? cleanDb.substring(2)
+            : cleanDb;
+        return dbTarget === searchTarget || (dbTarget.slice(-8) === searchTarget.slice(-8) && searchTarget.length >= 8);
+    });
+}
+
 async function handleCheckAvailability(supabase: any, userId: string, args: any, services: any, pros: any, hours: any, proServicesData?: any) {
     const { date, time } = args;
     const service_name = args.service_name || args.service || "";
@@ -169,44 +191,44 @@ async function handleListAvailableSlots(supabase: any, userId: string, args: any
     };
 }
 
-async function handleBookAppointment(supabase: any, userId: string, args: any, services: any, pros: any, senderJid: string) {
+async function handleBookAppointment(supabase: any, userId: string, args: any, services: any, pros: any, hours: any, senderJid: string, proServicesData?: any) {
     const { date, time, client_name } = args;
     const service_name = args.service_name || args.service || "";
     const professional_name = args.professional_name || args.pro || args.professional || "";
     const cleanNumber = senderJid.split('@')[0];
 
-    let { data: client } = await supabase.from('clients').select('id').eq('phone', cleanNumber).eq('user_id', userId).single();
+    // 1. Validar disponibilidade tecnicamente antes de agendar
+    const avail = await handleCheckAvailability(supabase, userId, args, services, pros, hours, proServicesData);
+    if (!avail.available) return { success: false, reason: avail.reason };
+
+    // 2. Localizar ou criar cliente de forma robusta
+    let client = await findClientByPhone(supabase, userId, cleanNumber);
     if (!client) {
-        const { data: newClient } = await supabase.from('clients').insert({ name: client_name || "Cliente", phone: cleanNumber, user_id: userId }).select().single();
+        const { data: newClient } = await supabase.from('clients').insert({
+            name: client_name || "Cliente",
+            phone: cleanNumber,
+            user_id: userId
+        }).select().single();
         client = newClient;
     }
 
-    let service = services?.find((s: any) => args.service_id ? s.id === args.service_id : s.name?.toLowerCase().includes(service_name.toLowerCase?.() || ""));
-    let pro = null;
-    if (args.professional_id) pro = pros?.find((p: any) => p.id === args.professional_id);
-    else if (professional_name && professional_name !== "Assistente") pro = pros?.find((p: any) => p.name?.toLowerCase().includes(professional_name.toLowerCase?.() || ""));
-    if (!pro && pros?.length === 1) pro = pros[0];
-
-    if (!service) return { success: false, reason: "Serviço não encontrado." };
-
-    const cleanTime = time.length === 5 ? time + ":00" : time;
     const { error } = await supabase.from('appointments').insert({
         user_id: userId,
         client_id: client.id,
-        service_id: service.id,
-        professional_id: pro?.id || null,
-        pro_name: pro?.name || professional_name || "A definir",
+        service_id: avail.service_id,
+        professional_id: avail.professional_id,
+        pro_name: (pros?.find((p: any) => p.id === avail.professional_id))?.name || "Profissional",
         appointment_date: date,
-        appointment_time: cleanTime,
+        appointment_time: time.length === 5 ? time + ":00" : time,
         status: 'Confirmado'
     });
 
     if (error) return { success: false, reason: error.message };
-    return { success: true, message: "Agendamento realizado!" };
+    return { success: true, message: "Agendamento realizado com sucesso!" };
 }
 
 async function handleGetClientAppointments(supabase: any, userId: string, cleanPhone: string) {
-    const { data: client } = await supabase.from('clients').select('id, name').eq('phone', cleanPhone).eq('user_id', userId).single();
+    const client = await findClientByPhone(supabase, userId, cleanPhone);
     if (!client) return { appointments: [], message: "Nenhum cadastro encontrado." };
 
     const today = new Date().toISOString().split('T')[0];
@@ -403,7 +425,7 @@ Deno.serve(async (req: Request) => {
         const msgNorm = textMessage.trim().toUpperCase();
 
         if (['SIM', 'OK', 'CONFIRMO'].some(k => msgNorm.startsWith(k))) {
-            const { data: client } = await supabase.from('clients').select('id').eq('phone', cleanPhone).eq('user_id', st.user_id).single();
+            const client = await findClientByPhone(supabase, st.user_id, cleanPhone);
             if (client) {
                 const today = new Date().toISOString().split('T')[0];
                 const { data: appt } = await supabase.from('appointments').select('id').eq('client_id', client.id).eq('reminder_sent', true).gte('appointment_date', today).limit(1).single();
@@ -418,15 +440,19 @@ Deno.serve(async (req: Request) => {
         const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', senderNumber).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(20);
         const history = (hs || []).filter((h: any) => h.role === 'user' || h.role === 'assistant').reverse();
 
-        const [kb, serv, hrs, proD] = await Promise.all([
+        const [kb, serv, hrs, proD, proServData] = await Promise.all([
             supabase.from('ai_knowledge_base').select('content').eq('user_id', st.user_id),
             supabase.from('services').select('*').eq('user_id', st.user_id).eq('is_active', true),
             supabase.from('business_hours').select('*').eq('user_id', st.user_id),
-            supabase.from('professionals').select('*').eq('user_id', st.user_id).eq('is_active', true)
+            supabase.from('professionals').select('*').eq('user_id', st.user_id).eq('is_active', true),
+            supabase.from('professional_services').select('*')
         ]);
 
         const context = `Contexto:\nServiços: ${JSON.stringify(serv.data)}\nHorários: ${JSON.stringify(hrs.data)}\nProfissionais: ${JSON.stringify(proD.data)}\nInfo: ${kb.data?.map(k => k.content).join(' ')}`;
-        const systemPrompt = `${st.system_prompt}\n${context}\nHoje é ${new Date().toISOString().split('T')[0]}. Remova "*" asteriscos e evite negrito. USE SEMPRE AS FERRAMENTAS PARA CONSULTAS E AGENDAMENTOS!`;
+        const now = new Date();
+        const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
+        const dateStr = `${days[now.getUTCDay()]}, ${now.getUTCDate().toString().padStart(2, '0')}/${(now.getUTCMonth() + 1).toString().padStart(2, '0')}/2026`;
+        const systemPrompt = `${st.system_prompt}\n${context}\nDATA ATUAL: ${dateStr}. IMPORTANTE: Estamos no ano de 2026. NÃO ofereça agendamentos para dias que a clínica está fechada (conforme horários no contexto). Remova "*" asteriscos e evite negrito. USE SEMPRE AS FERRAMENTAS PARA CONSULTAS E AGENDAMENTOS!`;
 
         const aiClient = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
         const aiModel = st.ai_model || 'gpt-4o-mini';
@@ -461,9 +487,9 @@ Deno.serve(async (req: Request) => {
 
             await logToDb(supabase, 'INFO', `Tool Call: ${tc.function.name}`, { args }, st);
 
-            if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data);
-            else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data);
-            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, senderNumber);
+            if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
+            else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
+            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderNumber, proServData.data);
             else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, cleanPhone);
             else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, cleanPhone);
             else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, cleanPhone);

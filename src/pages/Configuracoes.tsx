@@ -575,13 +575,18 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center gap-3 px-6 py-3 rounded-none text-[10px] font-black uppercase tracking-[0.2em] transition-all
+                        className={`flex items-center justify-center gap-3 h-12 rounded-none text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ease-in-out
                             ${activeTab === tab.id
-                                ? (tab.highlight ? 'bg-primary text-slate-950' : 'bg-slate-100 dark:bg-white text-slate-950')
-                                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-950 dark:hover:text-white'}`}
+                                ? 'bg-primary text-slate-950 px-8 flex-1 sm:flex-none'
+                                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 px-5 w-14'}`}
+                        title={tab.label}
                     >
-                        <tab.icon className="w-4 h-4" />
-                        {tab.label}
+                        <tab.icon className={`w-5 h-5 transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'scale-100'}`} />
+                        {activeTab === tab.id && (
+                            <span className="whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-300">
+                                {tab.label}
+                            </span>
+                        )}
                     </button>
                 ))}
             </div>
@@ -620,16 +625,6 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             </div>
                         </div>
 
-                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                            <Button
-                                onClick={handleSave}
-                                isLoading={isSaving}
-                                className="group bg-slate-950 text-white rounded-none border border-slate-900 px-10 py-6 hover:bg-slate-900 transition-all font-black uppercase tracking-widest text-[11px]"
-                            >
-                                <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform text-primary" />
-                                Sincronizar Banco de Dados
-                            </Button>
-                        </div>
                     </div>
                 )}
 
