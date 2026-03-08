@@ -456,11 +456,97 @@ Deno.serve(async (req: Request) => {
     try {
         const payload = await req.json();
         const instanceName = payload.instance;
-        const msgData = payload.data?.messages?.[0] || payload.data;
 
-        if (!msgData || msgData.key?.fromMe) return new Response('skip', { headers: corsHeaders });
+        let msgData = payload.data?.messages?.[0] || payload.data;
 
-        const senderNumber = msgData.key.remoteJid;
+        // Suporte para o formato do snippet do usuário (target/response como string)
+        if (!msgData && payload.response) {
+            try {
+                if (typeof payload.response === 'string') {
+                    const parsed = JSON.parse(payload.response);
+                    msgData = parsed.data?.messages?.[0] || parsed.data || parsed;
+                } else {
+                    msgData = payload.response.data?.messages?.[0] || payload.response.data || payload.response;
+                }
+            } catch (e) { /* ignore */ }
+        }
+
+        // Se ainda não temos msgData, pulamos
+        if (!msgData && !payload.target) return new Response('invalid payload', { headers: corsHeaders });
+
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!;
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        if (msgData) {
+            await supabase.from('debug_logs').insert({
+                level: 'DEBUG',
+                message: `Webhook Received: ${instanceName}`,
+                payload: {
+                    remoteJid: msgData.key?.remoteJid,
+                    participant: msgData.participant || msgData.key?.participant,
+                    pushName: msgData.pushName,
+                    instance: instanceName,
+                    full: msgData // Log completo para rastrear campos novos
+                }
+            });
+        }
+
+        // Função interna para extrair o melhor JID (priorizando @s.whatsapp.net sobre @lid)
+        const getBestJid = (p: any, msg: any): { sender: string, chat: string } => {
+            const chatFromKey = msg?.key?.remoteJid || "";
+            const altChat = msg?.key?.remoteJidAlt || "";
+            const participant = msg?.participant || msg?.key?.participant || "";
+            const rawEventSender = p?.data?.sender || "";
+            const targetRaw = p?.target || "";
+
+            // Candidatos em ordem de preferência de campo
+            const allCandidates = [
+                chatFromKey,   // Preferência do usuário
+                targetRaw,
+                participant,
+                altChat,
+                rawEventSender
+            ].map(j => {
+                if (!j || typeof j !== 'string') return "";
+                if (!j.includes('@') && /^\d+$/.test(j)) return `${j}@s.whatsapp.net`;
+                return j;
+            }).filter(j => j && j.includes('@'));
+
+            // 1. Prioridade Absoluta: O que termina com @s.whatsapp.net
+            let winner = allCandidates.find(j => j.split(':')[0].endsWith('@s.whatsapp.net') && !j.includes('status'));
+
+            // 2. Limpeza de dispositivo se necessário
+            if (winner && winner.includes(':')) {
+                winner = winner.split(':')[0] + '@s.whatsapp.net';
+            }
+
+            // 3. Se ainda não temos um vencedor real, pegamos o primeiro que NÃO seja LID
+            if (!winner) {
+                winner = allCandidates.find(j => !j.includes('@lid'));
+            }
+
+            // 4. Última instância (pode ser o LID se for a única coisa que veio)
+            const finalSender = winner || allCandidates[0] || chatFromKey;
+
+            return { sender: finalSender, chat: chatFromKey || targetRaw || finalSender };
+        };
+
+        const { sender: senderJid, chat: chatJid } = getBestJid(payload, msgData);
+
+        // Log de Auditoria de Identidade
+        await supabase.from('debug_logs').insert({
+            level: 'DEBUG',
+            message: `Identity Contest: Winner=${senderJid}`,
+            payload: {
+                chosen: senderJid,
+                chat: chatJid,
+                target: payload.target,
+                remoteJid: msgData?.key?.remoteJid,
+                alt: msgData?.key?.remoteJidAlt
+            }
+        });
+
         const textMessage = msgData.message?.conversation || msgData.message?.extendedTextMessage?.text || payload.data?.content || '';
 
         if (!textMessage) return new Response('no text', { headers: corsHeaders });
@@ -468,7 +554,7 @@ Deno.serve(async (req: Request) => {
         const { data: st } = await supabase.from('ai_agent_settings').select('*').eq('provider_instance', instanceName).eq('is_active', true).single();
         if (!st) return new Response('inactive', { headers: corsHeaders });
 
-        const cleanPhone = senderNumber.split('@')[0];
+        const cleanPhone = senderJid.split('@')[0];
         const msgNorm = textMessage.trim().toUpperCase();
 
         if (['SIM', 'OK', 'CONFIRMO'].some(k => msgNorm.startsWith(k))) {
@@ -478,13 +564,13 @@ Deno.serve(async (req: Request) => {
                 const { data: appt } = await supabase.from('appointments').select('id').eq('client_id', client.id).eq('reminder_sent', true).gte('appointment_date', today).limit(1).single();
                 if (appt) {
                     await supabase.from('appointments').update({ status: 'Confirmado' }).eq('id', appt.id);
-                    await sendWhatsApp(supabase, st, instanceName, senderNumber, "✅ Confirmado! Te esperamos.");
+                    await sendWhatsApp(supabase, st, instanceName, chatJid, "✅ Confirmado! Te esperamos.");
                     return new Response('ok', { headers: corsHeaders });
                 }
             }
         }
 
-        const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', senderNumber).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(20);
+        const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', chatJid).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(20);
         const history = (hs || []).filter((h: any) => h.role === 'user' || h.role === 'assistant').reverse();
 
         const [kb, serv, hrs, proD, proServData] = await Promise.all([
@@ -539,7 +625,7 @@ Deno.serve(async (req: Request) => {
 
             if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
-            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderNumber, proServData.data);
+            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderJid, proServData.data);
             else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, cleanPhone);
             else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, cleanPhone);
             else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, cleanPhone);
@@ -558,8 +644,8 @@ Deno.serve(async (req: Request) => {
         }
 
         aiText = aiText.replace(/\*/g, '').trim();
-        await supabase.from('ai_chat_history').insert([{ user_id: st.user_id, sender_number: senderNumber, role: 'user', content: textMessage }, { user_id: st.user_id, sender_number: senderNumber, role: 'assistant', content: aiText }]);
-        await sendWhatsApp(supabase, st, instanceName, senderNumber, aiText);
+        await supabase.from('ai_chat_history').insert([{ user_id: st.user_id, sender_number: chatJid, role: 'user', content: textMessage }, { user_id: st.user_id, sender_number: chatJid, role: 'assistant', content: aiText }]);
+        await sendWhatsApp(supabase, st, instanceName, chatJid, aiText);
 
         return new Response('ok', { headers: corsHeaders });
     } catch (e: any) {
