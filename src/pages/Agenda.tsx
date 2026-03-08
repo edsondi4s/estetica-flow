@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { ChevronLeft, ChevronRight, Clock, Plus, Loader2, X, Trash2, Edit2, Search, Filter, SlidersHorizontal, MessageCircle, Save } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { InputField } from '../components/ui/InputField';
@@ -395,8 +396,8 @@ export const Agenda = () => {
             const proName = professionals.find(p => p.id === selectedProId)?.name || 'Profissional';
             const serviceName = services.find(s => s.id === selectedServiceId)?.name || 'Serviço';
             await addNotification(
-                `Agendamento ${editingAppointmentId ? 'Atualizado' : 'Confirmado'}`,
-                `${serviceName} com ${proName} às ${time}.`
+                editingAppointmentId ? 'Reagendamento Confirmado' : 'Novo Agendamento',
+                `${serviceName} com ${proName} para ${new Date(date + 'T00:00:00').toLocaleDateString()} às ${time}.`
             );
 
             toast.success(`Agendamento ${editingAppointmentId ? 'atualizado' : 'realizado'} com sucesso!`);
@@ -815,9 +816,9 @@ export const Agenda = () => {
 
             {/* Modal de Novo Agendamento */}
             {
-                isModalOpen && (
-                    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[60] flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-sm shadow-2xl w-full max-w-lg overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
+                isModalOpen && createPortal(
+                    <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-slate-900 rounded-sm shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
                             <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between shrink-0">
                                 <div>
                                     <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter text-balance">
@@ -924,14 +925,15 @@ export const Agenda = () => {
                                 </div>
                             </form>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
 
             {/* Modal de Detalhes do Agendamento */}
             {
-                selectedAppointment && (
-                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 flex items-center justify-center p-4">
+                selectedAppointment && createPortal(
+                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
                         <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800">
                             <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
                                 <div>
@@ -1014,7 +1016,8 @@ export const Agenda = () => {
                                 </Button>
                             </div>
                         </div>
-                    </div>
+                    </div>,
+                    document.body
                 )
             }
 
@@ -1038,8 +1041,8 @@ export const Agenda = () => {
                 cancelLabel="Não, Manter original"
             />
             {/* Modal de Conflitos de Horário */}
-            {isConflictModalOpen && (
-                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4">
+            {isConflictModalOpen && createPortal(
+                <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
                     <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-200">
                         <div className="p-4 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between">
                             <h3 className="font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1072,11 +1075,12 @@ export const Agenda = () => {
                             ))}
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
 
-            {isFilterPanelOpen && (
-                <div className="fixed inset-0 z-[70] flex justify-end">
+            {isFilterPanelOpen && createPortal(
+                <div className="fixed inset-0 z-[120] flex justify-end">
                     <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-md" onClick={() => setIsFilterPanelOpen(false)} />
                     <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col p-10 animate-in slide-in-from-right duration-500 overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
@@ -1205,7 +1209,8 @@ export const Agenda = () => {
                             </Button>
                         </div>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </div >
     );

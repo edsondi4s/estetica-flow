@@ -51,6 +51,7 @@ export const ConfirmModal = ({
             isOpen={isOpen}
             onClose={onClose}
             title={title}
+            maxWidth="lg"
         >
             <div className="text-center py-4">
                 {getIcon()}

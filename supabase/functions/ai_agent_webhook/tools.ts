@@ -197,6 +197,14 @@ export async function handleBookAppointment(supabase: any, userId: string, args:
     });
 
     if (error) return { success: false, reason: "Erro ao salvar no banco: " + error.message };
+
+    // Notificação para o sistema (Painel)
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Novo Agendamento via IA',
+        message: `${client.name} agendou ${service.name} com ${pro?.name || professional_name || 'Profissional'} para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`
+    });
+
     return { success: true, message: "Agendamento realizado com sucesso!" };
 }
 
@@ -310,6 +318,14 @@ export async function handleRescheduleAppointment(supabase: any, userId: string,
     }).eq('id', appointment_id);
 
     if (error) return { success: false, reason: "Erro ao atualizar: " + error.message };
+
+    // Notificação para o sistema (Painel)
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Reagendamento via IA',
+        message: `Agendamento de ${original.services?.name} reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`
+    });
+
     return { success: true, message: `Reagendado com sucesso para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} às ${new_time}.` };
 }
 
@@ -344,8 +360,15 @@ export async function handleCancelAppointment(supabase: any, userId: string, arg
     const updateData: any = { status: 'Cancelado' };
     if (reason) updateData.cancelled_reason = reason;
 
-    const { error } = await supabase.from('appointments').update(updateData).eq('id', appointment_id);
-    if (error) return { success: false, reason: "Erro ao cancelar: " + error.message };
+    const { error: cancelError } = await supabase.from('appointments').update(updateData).eq('id', appointment_id);
+    if (cancelError) return { success: false, reason: "Erro ao cancelar: " + cancelError.message };
+
+    // Notificação para o sistema (Painel)
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Cancelamento via IA',
+        message: `Agendamento de ${original.services?.name} com ${original.pro_name} foi cancelado pela IA.`
+    });
 
     return { success: true, message: `Agendamento de ${original.services?.name} com ${original.pro_name} cancelado com sucesso.` };
 }

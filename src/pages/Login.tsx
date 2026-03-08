@@ -1,6 +1,6 @@
 import React, { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { Scissors, EyeOff, Eye, Loader2, ShieldCheck, Cpu, Terminal } from 'lucide-react';
+import { Scissors, EyeOff, Eye, Loader2, ShieldCheck, ChevronRight, Terminal } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
@@ -74,18 +74,8 @@ export const Login = ({ onLogin }: LoginProps) => {
                 animate={{ opacity: 1, scale: 1 }}
                 className="w-full max-w-[480px] relative z-10"
             >
-                {/* Corporate Header Decoration */}
-                <div className="flex items-center justify-between mb-4 px-1">
-                    <div className="flex items-center gap-2">
-                        <Terminal className="w-4 h-4 text-primary" />
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">SECURE ACCESS MODULE</span>
-                    </div>
-                    <div className="text-[10px] font-black text-primary uppercase tracking-widest animate-pulse">
-                        V4.0 ESTÁVEL
-                    </div>
-                </div>
 
-                <div className="bg-white dark:bg-slate-950 rounded-sm border-2 border-slate-950 dark:border-white/10 shadow-[20px_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden">
+                <div className="bg-white dark:bg-slate-950 rounded-sm border-2 border-slate-100 dark:border-white/10 shadow-[20px_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden">
                     <div className="p-10 sm:p-14">
                         <div className="flex justify-center mb-10">
                             <div className="relative group">
@@ -104,9 +94,9 @@ export const Login = ({ onLogin }: LoginProps) => {
 
                         <div className="text-center mb-12">
                             <h2 className="text-3xl font-black text-slate-950 dark:text-white uppercase tracking-tighter leading-none mb-3">
-                                {isSignUp ? 'CENTRAL DE' : 'CENTRO DE'} <span className="text-primary">{isSignUp ? 'CADASTRO' : 'CONTROLE'}</span>
+                                {isSignUp ? 'CRIAR' : 'ACESSAR'} <span className="text-primary">{isSignUp ? 'CONTA' : 'SISTEMA'}</span>
                             </h2>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Autenticação de Ativo Credenciado</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Gestão Inteligente para Estética</p>
                         </div>
 
                         {error && (
@@ -139,7 +129,7 @@ export const Login = ({ onLogin }: LoginProps) => {
                             )}
 
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">E-mail Operacional</label>
+                                <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">Seu E-mail</label>
                                 <input
                                     placeholder="USUARIO@ESTETICAFLOW.COM.BR"
                                     type="email"
@@ -152,7 +142,7 @@ export const Login = ({ onLogin }: LoginProps) => {
 
                             <div className="space-y-2">
                                 <div className="flex justify-between items-center px-1">
-                                    <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest">Código de Acesso</label>
+                                    <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest">Sua Senha</label>
                                     {isSignUp ? null : (
                                         <a href="#" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">Esqueceu a senha?</a>
                                     )}
@@ -184,12 +174,12 @@ export const Login = ({ onLogin }: LoginProps) => {
                                 {isLoading ? (
                                     <span className="flex items-center gap-3">
                                         <Loader2 className="w-5 h-5 animate-spin" />
-                                        SINCRONIZANDO...
+                                        ENTRANDO...
                                     </span>
                                 ) : (
                                     <span className="flex items-center gap-3">
-                                        {isSignUp ? 'INICIALIZAR SISTEMA' : 'AUTORIZAR ACESSO'}
-                                        <Cpu className="w-4 h-4 group-hover:rotate-180 transition-transform duration-700" />
+                                        {isSignUp ? 'CRIAR MINHA CONTA' : 'ENTRAR NO SISTEMA'}
+                                        <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                                     </span>
                                 )}
                             </Button>
@@ -228,14 +218,9 @@ export const Login = ({ onLogin }: LoginProps) => {
                     </div>
                 </div>
 
-                {/* Footer Technical Decoration */}
-                <div className="mt-8 flex justify-between items-center px-2 opacity-40">
-                    <div className="flex gap-4">
-                        <div className="w-1 h-3 bg-primary" />
-                        <div className="w-1 h-3 bg-slate-300 dark:bg-slate-700" />
-                        <div className="w-1 h-3 bg-slate-300 dark:bg-slate-700" />
-                    </div>
-                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">EsteticaFlow Precision Engineering © 2026</span>
+                {/* Footer Decoration */}
+                <div className="mt-8 flex justify-center items-center px-2 opacity-40">
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">EsteticaFlow © 2026</span>
                 </div>
             </motion.div>
         </div>

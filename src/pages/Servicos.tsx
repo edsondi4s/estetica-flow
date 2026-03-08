@@ -162,10 +162,10 @@ export const Servicos = () => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-950 border-b-2 border-primary">
+                                <tr className="bg-slate-50 dark:bg-slate-950 border-b-2 border-primary">
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Procedimento</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Classificação</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Ciclo Técnico</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Duração</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Valor (R$)</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-center">Protocolo</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-right">Ações</th>
@@ -212,7 +212,7 @@ export const Servicos = () => {
                                             </button>
                                         </td>
                                         <td className="px-8 py-6 text-right">
-                                            <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
+                                            <div className="flex justify-end gap-3 transition-all">
                                                 <button
                                                     onClick={() => handleOpenModal(service)}
                                                     className="p-2.5 bg-slate-950 text-white hover:bg-primary transition-all shadow-xl shadow-black/20"
@@ -266,7 +266,7 @@ export const Servicos = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Ciclo Técnico (Minutos)</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Duração Estimada (Minutos)</label>
                             <input
                                 type="number"
                                 value={duration}

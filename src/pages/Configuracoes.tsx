@@ -563,22 +563,22 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
     return (
         <div className="max-w-6xl mx-auto w-full space-y-10">
-            <div className="bg-slate-950 p-2 rounded-sm border border-slate-900 shadow-2xl flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
+            <div className="bg-white dark:bg-slate-950 p-2 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
                 {[
                     { id: 'info', label: 'Informações Gerais', icon: Building2 },
-                    { id: 'enderecos', label: 'Localizações de Ativos', icon: MapIcon },
-                    { id: 'branding', label: 'Motor Visual', icon: Palette },
-                    { id: 'seo', label: 'Indexação e Web', icon: Globe },
-                    { id: 'hours', label: 'Ciclo Operacional', icon: Clock },
-                    { id: 'ai_agent', label: 'Núcleo Neural', icon: Bot, highlight: true }
+                    { id: 'enderecos', label: 'Endereços', icon: MapIcon },
+                    { id: 'branding', label: 'Aparência', icon: Palette },
+                    { id: 'seo', label: 'SEO e Site', icon: Globe },
+                    { id: 'hours', label: 'Horário de Funcionamento', icon: Clock },
+                    { id: 'ai_agent', label: 'Inteligência Artificial (IA)', icon: Bot, highlight: true }
                 ].map((tab) => (
                     <button
                         key={tab.id}
                         onClick={() => setActiveTab(tab.id as any)}
                         className={`flex items-center gap-3 px-6 py-3 rounded-none text-[10px] font-black uppercase tracking-[0.2em] transition-all
                             ${activeTab === tab.id
-                                ? (tab.highlight ? 'bg-primary text-slate-950' : 'bg-white text-slate-950')
-                                : 'text-slate-500 hover:bg-slate-900 hover:text-white'}`}
+                                ? (tab.highlight ? 'bg-primary text-slate-950' : 'bg-slate-100 dark:bg-white text-slate-950')
+                                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-950 dark:hover:text-white'}`}
                     >
                         <tab.icon className="w-4 h-4" />
                         {tab.label}
@@ -1362,7 +1362,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
                             {agentForm.ai_provider === 'openrouter' ? (
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Seleção_de_Pesos_Neurais (Modelo)</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Modelo de Inteligência Artificial</label>
 
                                     {!agentForm.ai_api_key && (
                                         <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">
@@ -1374,7 +1374,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            placeholder={isFetchingModels ? 'SYNCHRONIZING...' : 'SEARCH_MODEL_SLUG...'}
+                                            placeholder={isFetchingModels ? 'SINCRONIZANDO...' : 'BUSCAR MODELO...'}
                                             className="w-full pl-6 pr-12 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white placeholder-slate-400"
                                             value={modelSearch}
                                             onChange={(e) => setModelSearch(e.target.value)}
@@ -1417,7 +1417,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                                         <div className="flex items-center gap-4">
                                                             <span className="text-[9px] font-mono text-slate-400 uppercase">{model.id}</span>
                                                             <span className="h-3 w-px bg-slate-200 dark:bg-slate-700"></span>
-                                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Link_Verificado</span>
+                                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Modelo Verificado</span>
                                                         </div>
                                                     </button>
                                                 ))
@@ -1427,7 +1427,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 </div>
                             ) : (
                                 <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Slug_de_Pesos_Neurais</label>
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nome do Modelo (ID)</label>
                                     <input
                                         type="text"
                                         className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
@@ -1442,7 +1442,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             )}
 
                             <InputField
-                                label="Auth_Credential_Token"
+                                label="Chave de API (Secret Key)"
                                 type="password"
                                 placeholder="sk-pro-••••••••••••••••"
                                 value={agentForm.ai_api_key}

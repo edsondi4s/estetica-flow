@@ -539,13 +539,13 @@ export const Clientes = () => {
             <Modal
                 isOpen={!!selectedClient}
                 onClose={() => setSelectedClient(null)}
-                title="Prontuário Digital"
+                title="Ficha do Cliente"
             >
                 {selectedClient && (
                     <div className="space-y-10 py-4 reveal-content overflow-hidden">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
 
-                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 p-10 bg-slate-950 text-white rounded-sm border-2 border-slate-900 shadow-2xl">
+                        <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 p-10 bg-white dark:bg-slate-950 text-slate-950 dark:text-white rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl">
                             <Avatar
                                 size="lg"
                                 className="w-24 h-24 ring-4 ring-primary/20 rounded-sm"
@@ -568,7 +568,7 @@ export const Clientes = () => {
                         {selectedClient.notes && (
                             <div className="space-y-4 relative z-10">
                                 <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-950 dark:text-white flex items-center gap-2">
-                                    <ClipboardList className="w-4 h-4 text-primary" /> Observações de Performance
+                                    <ClipboardList className="w-4 h-4 text-primary" /> Notas e Observações
                                 </h4>
                                 <div className="p-8 bg-slate-50 dark:bg-slate-900 border-l-4 border-primary rounded-sm text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed shadow-xl shadow-black/5">
                                     "{selectedClient.notes}"

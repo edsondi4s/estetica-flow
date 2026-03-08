@@ -641,13 +641,13 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     </div>
                 </Card>
 
-                <Card title="📈 Topologia de Serviços" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
+                <Card title="📈 Meus Serviços" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
                     <div className="space-y-6 py-2">
                         {popularServices.map((service, i) => (
                             <div key={i} className="group cursor-default">
                                 <div className="flex items-center justify-between mb-3">
                                     <div className="flex items-center gap-5">
-                                        <div className={`w-14 h-14 bg-slate-950 border border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
+                                        <div className={`w-14 h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
                                             <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                             <service.icon className="w-8 h-8 relative z-10" />
                                         </div>
