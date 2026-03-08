@@ -23,7 +23,7 @@
 
 body {
   font-family: "Outfit", sans-serif;
-  @apply bg-[#fdfafb] text-slate-900 transition-colors duration-300 antialiased italic-none;
+  @apply bg-[#fdfafb] text-slate-900 transition-colors duration-300 antialiased;
 }
 
 .dark body {
