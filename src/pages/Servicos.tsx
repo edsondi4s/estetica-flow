@@ -140,85 +140,92 @@ export const Servicos = () => {
     };
 
     return (
-        <div className="flex flex-col gap-6">
-            <div className="flex justify-between items-center">
+        <div className="flex flex-col gap-10 reveal-content">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">Catálogo de Serviços</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">Gerencie os procedimentos e disponibilidades.</p>
+                    <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                        Catálogo <span className="text-primary">Técnico</span>
+                    </h2>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Engenharia de Procedimentos e Valores</p>
                 </div>
-                <Button onClick={() => handleOpenModal()} className="gap-2">
-                    <Plus className="w-5 h-5" /> Novo Serviço
+                <Button onClick={() => handleOpenModal()} className="gap-2 bg-slate-950 hover:bg-primary border-none shadow-xl shadow-black/10 transition-all hover:-translate-y-0.5 rounded-sm font-black uppercase text-[10px] tracking-widest whitespace-nowrap py-6 px-8">
+                    <Plus className="w-4 h-4" /> Novo Procedimento
                 </Button>
             </div>
 
-            <Card noPadding>
+            <div className="bg-white dark:bg-slate-900 rounded-sm border-2 border-slate-100 dark:border-slate-800 shadow-2xl shadow-black/5 overflow-hidden">
                 {isLoading ? (
-                    <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                    <div className="flex items-center justify-center py-24">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary" />
                     </div>
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700">
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Serviço</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Categoria</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Duração</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Preço</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Status</th>
-                                    <th className="px-6 py-4 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-right">Ações</th>
+                                <tr className="bg-slate-950 border-b-2 border-primary">
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Procedimento</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Classificação</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Ciclo Técnico</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Valor (R$)</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-center">Protocolo</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-right">Ações</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                            <tbody className="divide-y-2 divide-slate-50 dark:divide-slate-800">
                                 {services.map((service) => (
-                                    <tr key={service.id} className={`hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors ${!service.is_active ? 'opacity-60' : ''}`}>
-                                        <td className="px-6 py-4">
+                                    <tr key={service.id} className={`group hover:bg-slate-50 dark:hover:bg-primary/5 transition-all ${!service.is_active ? 'opacity-40 grayscale' : ''}`}>
+                                        <td className="px-8 py-6">
                                             <div className="flex flex-col">
-                                                <span className="font-bold text-slate-900 dark:text-white">{service.name}</span>
-                                                <span className="text-xs text-slate-500 dark:text-slate-400 line-clamp-1">{service.description || 'Sem descrição'}</span>
+                                                <span className="text-base font-black text-slate-950 dark:text-white uppercase tracking-tight group-hover:text-primary transition-colors">{service.name}</span>
+                                                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">{service.description || 'Nenhuma especificação disponível'}</span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400">
-                                                {service.category || 'Geral'}
+                                        <td className="px-8 py-6">
+                                            <span className="inline-flex items-center px-3 py-1 bg-slate-100 dark:bg-slate-800 text-[9px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest rounded-none border border-slate-200 dark:border-slate-700 transition-colors group-hover:border-primary/30 group-hover:text-primary">
+                                                {service.category || 'Padrão'}
                                             </span>
                                         </td>
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-1.5 text-slate-600 dark:text-slate-300">
-                                                <Clock className="w-4 h-4" />
-                                                <span className="text-sm">{service.duration_minutes} min</span>
+                                        <td className="px-8 py-6">
+                                            <div className="flex items-center gap-2 text-slate-600 dark:text-slate-300">
+                                                <Clock className="w-3.5 h-3.5 text-primary" />
+                                                <span className="text-sm font-black">{service.duration_minutes}<span className="text-[9px] text-slate-400 ml-1">MIN</span></span>
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 text-sm font-bold text-slate-900 dark:text-white">
-                                            R$ {service.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                        <td className="px-8 py-6">
+                                            <div className="flex flex-col">
+                                                <span className="text-base font-black text-slate-950 dark:text-white tracking-tighter">
+                                                    R$ {service.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                                </span>
+                                                <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Valor de Tabela</span>
+                                            </div>
                                         </td>
-                                        <td className="px-6 py-4">
+                                        <td className="px-8 py-6 text-center">
                                             <button
                                                 onClick={() => toggleStatus(service)}
-                                                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${service.is_active
-                                                    ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-200'
-                                                    : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-200'
+                                                className={`inline-flex items-center gap-2 px-4 py-2 text-[9px] font-black uppercase tracking-widest border-2 transition-all ${service.is_active
+                                                    ? 'bg-primary/5 border-primary text-primary hover:bg-primary hover:text-slate-950'
+                                                    : 'bg-slate-100 border-slate-300 text-slate-400 hover:border-slate-400'
                                                     }`}
                                             >
-                                                {service.is_active ? <Check className="w-3.5 h-3.5" /> : <PowerOff className="w-3.5 h-3.5" />}
-                                                {service.is_active ? 'Ativo' : 'Inativo'}
+                                                {service.is_active ? <Check className="w-3 h-3" /> : <PowerOff className="w-3 h-3" />}
+                                                {service.is_active ? 'Ativado' : 'Bloqueado'}
                                             </button>
                                         </td>
-                                        <td className="px-6 py-4 text-right">
-                                            <div className="flex justify-end gap-2 text-slate-400">
+                                        <td className="px-8 py-6 text-right">
+                                            <div className="flex justify-end gap-3 translate-x-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 transition-all">
                                                 <button
                                                     onClick={() => handleOpenModal(service)}
-                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg hover:text-primary transition-all"
+                                                    className="p-2.5 bg-slate-950 text-white hover:bg-primary transition-all shadow-xl shadow-black/20"
                                                     title="Editar"
                                                 >
-                                                    <Edit2 className="w-4 h-4" />
+                                                    <Edit2 className="w-3.5 h-3.5" />
                                                 </button>
                                                 <button
                                                     onClick={() => setConfirmDelete({ isOpen: true, id: service.id })}
-                                                    className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg hover:text-red-500 transition-all"
+                                                    className="p-2.5 bg-red-100 text-red-500 hover:bg-red-500 hover:text-white transition-all"
                                                     title="Excluir"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-3.5 h-3.5" />
                                                 </button>
                                             </div>
                                         </td>
@@ -226,8 +233,11 @@ export const Servicos = () => {
                                 ))}
                                 {services.length === 0 && (
                                     <tr>
-                                        <td colSpan={6} className="px-6 py-20 text-center text-slate-500">
-                                            Nenhum serviço cadastrado ainda.
+                                        <td colSpan={6} className="px-8 py-32 text-center">
+                                            <div className="flex flex-col items-center">
+                                                <Clock className="w-12 h-12 text-slate-100 mb-4" />
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Aguardando injeção de dados técnico-comerciais</p>
+                                            </div>
                                         </td>
                                     </tr>
                                 )}
@@ -235,81 +245,93 @@ export const Servicos = () => {
                         </table>
                     </div>
                 )}
-            </Card>
+            </div>
 
             <Modal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                title={editingService ? 'Editar Serviço' : 'Novo Serviço'}
-                description="Preencha as informações do serviço oferecido."
+                title="ESPECIFICAÇÃO TÉCNICA"
             >
-                <form onSubmit={handleSaveService} className="space-y-4 pt-2">
-                    <InputField
-                        label="Nome do Serviço"
-                        placeholder="Ex: Limpeza de Pele"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                    <div className="grid grid-cols-2 gap-4">
-                        <InputField
-                            label="Duração (min)"
-                            type="number"
-                            value={duration}
-                            onChange={(e) => setDuration(e.target.value)}
-                            required
-                        />
-                        <InputField
-                            label="Preço (R$)"
-                            placeholder="0,00"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
+                <form onSubmit={handleSaveService} className="space-y-6 pt-4">
+                    <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800 focus-within:border-primary transition-all">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Identificação do Procedimento</label>
+                        <input
+                            placeholder="NOME DO PROCEDIMENTO"
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            className="w-full bg-transparent text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter placeholder:text-slate-200 outline-none"
                             required
                         />
                     </div>
-                    <div className="space-y-1.5 text-left">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Categoria</label>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Ciclo Técnico (Minutos)</label>
+                            <input
+                                type="number"
+                                value={duration}
+                                onChange={(e) => setDuration(e.target.value)}
+                                className="w-full bg-transparent text-2xl font-black text-primary tracking-tighter outline-none"
+                                required
+                            />
+                        </div>
+                        <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fee Profissional (R$)</label>
+                            <input
+                                placeholder="0,00"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                                className="w-full bg-transparent text-2xl font-black text-slate-950 dark:text-white tracking-tighter outline-none"
+                                required
+                            />
+                        </div>
+                    </div>
+
+                    <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Classificação de Domínio</label>
                         <select
-                            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white outline-none transition-all"
+                            className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none cursor-pointer"
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
                         >
-                            <option value="Facial">Facial</option>
-                            <option value="Corporal">Corporal</option>
-                            <option value="Sobrancelhas">Sobrancelhas</option>
-                            <option value="Injetáveis">Injetáveis</option>
-                            <option value="Outros">Outros</option>
+                            <option value="Facial">Divisão Facial</option>
+                            <option value="Corporal">Mecânica Corporal</option>
+                            <option value="Sobrancelhas">Dermo-Arte</option>
+                            <option value="Injetáveis">Protocolo Invasivo</option>
+                            <option value="Outros">Operações Especiais</option>
                         </select>
                     </div>
-                    <div className="space-y-1.5 text-left">
-                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 ml-1">Descrição</label>
+
+                    <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Memória Manual (Descrição)</label>
                         <textarea
-                            className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm min-h-[100px] text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/50 outline-none transition-all placeholder:text-slate-400"
-                            placeholder="Descreva o procedimento..."
+                            className="w-full bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 min-h-[100px] outline-none placeholder:text-slate-200 resize-none"
+                            placeholder="Descreva o passo a passo técnico..."
                             value={desc}
                             onChange={(e) => setDesc(e.target.value)}
                         />
                     </div>
-                    <div className="flex items-center gap-3 py-2">
+
+                    <div className="flex items-center gap-4 py-2 px-1">
                         <button
                             type="button"
                             onClick={() => setIsActive(!isActive)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ring-2 ring-primary/20 ${isActive ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-700'}`}
+                            className={`relative inline-flex h-5 w-10 items-center rounded-none transition-all ${isActive ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-800'}`}
                         >
                             <span
                                 className={`${isActive ? 'translate-x-6' : 'translate-x-1'
-                                    } inline-block h-4 w-4 transform rounded-full bg-white transition-transform`}
+                                    } inline-block h-3 w-3 transform rounded-none bg-slate-950 transition-transform`}
                             />
                         </button>
-                        <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Serviço Ativo</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocolo Ativado no Catálogo</span>
                     </div>
-                    <div className="pt-4 flex gap-3">
-                        <Button type="button" variant="outline" className="flex-1" onClick={() => setShowModal(false)}>
-                            Cancelar
+
+                    <div className="pt-8 flex gap-4 border-t-2 border-slate-100 dark:border-slate-800">
+                        <Button type="button" variant="outline" className="flex-1 rounded-sm border-2 border-slate-200 font-black uppercase text-[10px] tracking-widest py-6" onClick={() => setShowModal(false)}>
+                            Descartar
                         </Button>
-                        <Button type="submit" className="flex-1 gap-2" disabled={isSaving}>
-                            {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                            Salvar Serviço
+                        <Button type="submit" className="flex-1 bg-slate-950 hover:bg-primary border-none text-white rounded-sm font-black uppercase text-[10px] tracking-widest py-6 shadow-xl shadow-black/20" disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Registrar Procedimento'}
                         </Button>
                     </div>
                 </form>

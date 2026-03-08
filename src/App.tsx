@@ -19,8 +19,15 @@ export default function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            style: {
+              zIndex: 99999,
+            },
+          }}
+        />
         <AppContent />
-        <Toaster position="top-right" />
       </NotificationProvider>
     </ThemeProvider>
   );

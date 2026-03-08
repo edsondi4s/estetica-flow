@@ -27,9 +27,9 @@ export const Modal = ({
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         exit={{ opacity: 0, scale: 0.95 }}
-                        className="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl shadow-2xl overflow-hidden"
+                        className="bg-white dark:bg-slate-900 w-full max-w-md rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
                     >
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center shrink-0">
                             <div>
                                 <h3 className="text-lg font-bold text-slate-900 dark:text-white">{title}</h3>
                                 {description && <p className="text-sm text-slate-500 dark:text-slate-400">{description}</p>}
@@ -38,11 +38,11 @@ export const Modal = ({
                                 <XCircle className="w-6 h-6" />
                             </button>
                         </div>
-                        <div className="p-6 space-y-4">
+                        <div className="p-6 space-y-4 overflow-y-auto custom-scrollbar flex-1">
                             {children}
                         </div>
                         {footer && (
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3">
+                            <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-3 shrink-0">
                                 {footer}
                             </div>
                         )}

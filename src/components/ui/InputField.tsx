@@ -57,9 +57,9 @@ export const InputField = ({
                 <Component
                     className={`
             w-full ${Icon ? 'pl-10' : 'px-4'} pr-4 py-2.5 
-            bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm 
+            bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-sm text-sm 
             text-slate-900 dark:text-slate-100
-            outline-none focus:ring-2 focus:ring-primary/50 transition-all
+            outline-none focus:ring-1 focus:ring-primary/40 transition-all duration-300
             placeholder:text-slate-400 dark:placeholder:text-slate-500
             ${className}
           `}

@@ -18,12 +18,13 @@ import { supabase } from '../lib/supabase';
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
-                <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-1">{label}</p>
-                <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-primary"></div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white">
-                        {payload[0].value} <span className="text-xs font-medium text-slate-500 dark:text-slate-400">agendamentos</span>
+            <div className="bg-white dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-900 shadow-2xl relative overflow-hidden group">
+                <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-50"></div>
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Dados: {label}</p>
+                <div className="flex items-center gap-3">
+                    <div className="w-2 h-2 bg-primary animate-pulse"></div>
+                    <p className="text-sm font-black text-slate-900 dark:text-white">
+                        {payload[0].value} <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">unidades</span>
                     </p>
                 </div>
             </div>
@@ -313,269 +314,312 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     }
 
     return (
-        <div className="flex flex-col gap-4 md:gap-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <StatCard
-                    onClick={() => onPageChange?.('agenda')}
-                    label="Próximos Agendamentos"
-                    value={stats.appointmentsCount.toString()}
-                    subtitle="Hoje"
-                    icon={Calendar}
-                    trend={stats.appointmentsTrend}
-                    color="indigo"
-                />
-                <StatCard
-                    onClick={() => onPageChange?.('clientes')}
-                    label="Total de Clientes"
-                    value={stats.clientsCount.toLocaleString()}
-                    icon={Users}
-                    trend={stats.clientsTrend}
-                    color="emerald"
-                />
-                <StatCard
-                    onClick={() => onPageChange?.('financeiro')}
-                    label="Receita do Mês"
-                    value={`R$ ${stats.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
-                    icon={DollarSign}
-                    trend={stats.revenueTrend}
-                    color="amber"
-                />
+        <div className="flex flex-col gap-8 md:gap-12 pb-12">
+            {/* Header / Hero Section - Title Removed as per user request */}
+            <div className="reveal-content flex flex-col md:flex-row md:items-end justify-between gap-6">
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Agendamentos Chart */}
-                <Card
-                    className="lg:col-span-2"
-                    title="Desempenho de Agendamentos"
-                    extra={
-                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-1 rounded-lg border border-slate-100 dark:border-slate-700">
-                            {(['week', 'month', 'year'] as const).map((v) => (
-                                <button
-                                    key={v}
-                                    onClick={() => setChartView(v)}
-                                    className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${chartView === v
-                                        ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
-                                >
-                                    {v === 'week' ? 'Semana' : v === 'month' ? 'Mês' : 'Ano'}
-                                </button>
-                            ))}
-                        </div>
-                    }
-                >
-                    <div className="h-[300px] w-full pt-4">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={chartData}>
-                                <defs>
-                                    <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.3} />
-                                        <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
-                                    </linearGradient>
-                                </defs>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                                <XAxis
-                                    dataKey="name"
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fill: '#64748B' }}
-                                    dy={10}
-                                />
-                                <YAxis
-                                    axisLine={false}
-                                    tickLine={false}
-                                    tick={{ fontSize: 10, fill: '#64748B' }}
-                                />
-                                <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'rgba(226, 232, 240, 0.5)', strokeWidth: 1, strokeDasharray: '3 3' }} />
-                                <Area
-                                    type="monotone"
-                                    dataKey="total"
-                                    stroke="var(--primary)"
-                                    strokeWidth={3}
-                                    fillOpacity={1}
-                                    fill="url(#colorTotal)"
-                                />
-                            </AreaChart>
-                        </ResponsiveContainer>
-                    </div>
-                </Card>
-
-                {/* Professional Ranking */}
-                <Card title="🏆 Ranking de Profissionais">
-                    <div className="space-y-4">
-                        {proRanking.map((pro, index) => (
-                            <div
-                                key={pro.id}
-                                className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-all cursor-pointer group"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className={`w-8 h-8 flex items-center justify-center shrink-0`}>
-                                        {index < 3 ? (
-                                            <Medal className={`w-6 h-6 ${getMedalColor(index)}`} />
-                                        ) : (
-                                            <span className="text-sm font-bold text-slate-400">{index + 1}</span>
-                                        )}
-                                    </div>
-                                    <Avatar name={pro.name} src={pro.photo} size="md" />
-                                    <div>
-                                        <p className="text-sm font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{pro.name}</p>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400">{pro.count} agendamentos</p>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="flex items-center gap-1 text-emerald-500 font-bold text-xs">
-                                        <TrendingUp className="w-3 h-3" />
-                                        <span>Top</span>
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-            </div>
-
-            <Card
-                title="Atividade Recente"
-                noPadding
-                extra={
-                    <button
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-6 reveal-content delay-100">
+                <div className="md:col-span-12 lg:col-span-5">
+                    <StatCard
+                        onClick={() => onPageChange?.('financeiro')}
+                        label="Receita do Mês"
+                        value={`R$ ${stats.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
+                        icon={DollarSign}
+                        trend={stats.revenueTrend}
+                        color="rose"
+                    />
+                </div>
+                <div className="md:col-span-6 lg:col-span-3">
+                    <StatCard
                         onClick={() => onPageChange?.('agenda')}
-                        className="text-sm text-primary-dark font-medium hover:text-primary transition-colors flex items-center gap-1"
+                        label="Agendamentos"
+                        value={stats.appointmentsCount.toString()}
+                        subtitle="Hoje"
+                        icon={Calendar}
+                        trend={stats.appointmentsTrend}
+                        color="indigo"
+                    />
+                </div>
+                <div className="md:col-span-6 lg:col-span-4">
+                    <StatCard
+                        onClick={() => onPageChange?.('clientes')}
+                        label="Clientes Totais"
+                        value={stats.clientsCount.toLocaleString()}
+                        icon={Users}
+                        trend={stats.clientsTrend}
+                        color="emerald"
+                    />
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 reveal-content delay-200">
+                {/* Agendamentos Chart */}
+                <div className="lg:col-span-8">
+                    <Card
+                        title="Vetor de Fluxo"
+                        extra={
+                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-1 rounded-sm">
+                                {(['week', 'month', 'year'] as const).map((v) => (
+                                    <button
+                                        key={v}
+                                        onClick={() => setChartView(v)}
+                                        className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all ${chartView === v
+                                            ? 'bg-slate-900 text-primary shadow-xl shadow-black/20'
+                                            : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                                    >
+                                        {v === 'week' ? 'Semana' : v === 'month' ? 'Mês' : 'Ano'}
+                                    </button>
+                                ))}
+                            </div>
+                        }
                     >
-                        Ver Tudo <ArrowRight className="w-4 h-4" />
-                    </button>
-                }
-            >
-                <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-slate-50/50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-semibold border-b border-slate-100 dark:border-slate-800">
-                                <th className="px-6 py-4 font-semibold">Cliente</th>
-                                <th className="px-6 py-4 font-semibold">Serviço</th>
-                                <th className="px-6 py-4 font-semibold">Profissional</th>
-                                <th className="px-6 py-4 font-semibold">Data</th>
-                                <th className="px-6 py-4 font-semibold">Horário</th>
-                                <th className="px-6 py-4 font-semibold text-center">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-sm">
-                            {recentAppointments.length > 0 ? (
-                                recentAppointments
-                                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
-                                    .map((row, i) => (
-                                        <tr key={i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors group">
-                                            <td className="px-6 py-4">
-                                                <div className="flex items-center gap-3">
-                                                    <Avatar
-                                                        name={row.clients?.name || 'Cliente'}
-                                                        initials={row.clients?.name?.split(' ')?.map((n: any) => n[0]).join('').toUpperCase() || 'C'}
-                                                    />
-                                                    <span className="font-medium text-slate-900 dark:text-white">{row.clients?.name || 'Cliente'}</span>
-                                                </div>
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-300">{row.services?.name}</td>
-                                            <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                                                {row.professionals?.name || 'Profissional'}
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-500 font-medium dark:text-slate-400">
-                                                {row.appointment_date ? new Date(row.appointment_date + 'T00:00:00').toLocaleDateString('pt-BR') : '--/--/----'}
-                                            </td>
-                                            <td className="px-6 py-4 text-slate-500 font-mono dark:text-slate-400">
-                                                {row.appointment_time?.substring(0, 5) || '--:--'}
-                                            </td>
-                                            <td className="px-6 py-4 text-center">
-                                                <StatusBadge status={row.status} />
-                                            </td>
-                                        </tr>
-                                    ))
-                            ) : (
-                                <tr>
-                                    <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
-                                        Nenhum agendamento encontrado.
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                        <div className="h-[350px] w-full pt-8 px-4">
+                            <ResponsiveContainer width="100%" height="100%">
+                                <AreaChart data={chartData}>
+                                    <defs>
+                                        <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
+                                        </linearGradient>
+                                        <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
+                                            <stop offset="0%" stopColor="var(--primary)" />
+                                            <stop offset="100%" stopColor="#ff4d4d" />
+                                        </linearGradient>
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
+                                    <XAxis
+                                        dataKey="name"
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 9, fill: '#64748B', fontWeight: 900 }}
+                                        dy={10}
+                                    />
+                                    <YAxis
+                                        axisLine={false}
+                                        tickLine={false}
+                                        tick={{ fontSize: 9, fill: '#64748B', fontWeight: 900 }}
+                                    />
+                                    <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4' }} />
+                                    <Area
+                                        type="monotone"
+                                        dataKey="total"
+                                        stroke="url(#strokeGradient)"
+                                        strokeWidth={4}
+                                        fillOpacity={1}
+                                        fill="url(#colorTotal)"
+                                        animationDuration={1500}
+                                    />
+                                </AreaChart>
+                            </ResponsiveContainer>
+                        </div>
+                    </Card>
                 </div>
 
-                {/* Pagination Controls */}
-                {recentAppointments.length > 0 && (
-                    <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/20 rounded-b-xl">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs text-slate-500 dark:text-slate-400 font-medium">Itens por página:</span>
-                            <select
-                                value={itemsPerPage}
-                                onChange={(e) => {
-                                    setItemsPerPage(Number(e.target.value));
-                                    setCurrentPage(1);
-                                }}
-                                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200 py-1.5 px-3 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer hover:border-primary/30"
-                            >
-                                {[5, 10, 20, 50].map(val => (
-                                    <option key={val} value={val}>{val}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 mr-2">
-                                {Math.min((currentPage * itemsPerPage) - itemsPerPage + 1, recentAppointments.length)} - {Math.min(currentPage * itemsPerPage, recentAppointments.length)} de {recentAppointments.length}
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                {/* Professional Ranking */}
+                <div className="lg:col-span-4 flex flex-col gap-6">
+                    <Card title="⚡ Ranking de Profissionais">
+                        <div className="space-y-3">
+                            {proRanking.map((pro, index) => (
+                                <div
+                                    key={pro.id}
+                                    className="relative flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
                                 >
-                                    <ChevronLeft className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                    <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"></div>
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className="flex flex-col items-center justify-center">
+                                            <div className={`text-xl font-black mb-1 ${getMedalColor(index)}`}>
+                                                0{index + 1}
+                                            </div>
+                                            <div className="w-4 h-[2px] bg-slate-200 dark:bg-slate-800"></div>
+                                        </div>
+                                        <div className="relative">
+                                            <Avatar name={pro.name} src={pro.photo} size="md" className="ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all" />
+                                            {index < 3 && <div className="absolute -top-1 -right-1 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-5 h-5 shadow-xl"><Medal className={`w-3 h-3 ${getMedalColor(index)}`} /></div>}
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{pro.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                <p className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </Card>
+
+                    <div className="bg-white dark:bg-slate-950 rounded-sm shadow-2xl p-6 text-slate-950 dark:text-white relative overflow-hidden flex-1 flex flex-col justify-center min-h-[180px] group border-2 border-slate-100 dark:border-slate-900">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/40 transition-all duration-700"></div>
+                        <div className="relative z-10">
+                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-2">Ações Rápidas</h3>
+                            <p className="text-2xl font-black mb-6 leading-tight uppercase tracking-tight text-slate-900 dark:text-white">Alta <br />Performance</p>
+                            <div className="grid grid-cols-1 gap-3">
+                                <button
+                                    onClick={() => onPageChange?.('agenda')}
+                                    className="bg-slate-50 dark:bg-white/5 hover:bg-primary text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-sm p-4 text-left transition-all duration-300 flex items-center justify-between group/btn"
+                                >
+                                    <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover/btn:text-slate-950 transition-colors">Novo Agendamento</span>
+                                    <CalendarPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
                                 </button>
                                 <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentAppointments.length / itemsPerPage)))}
-                                    disabled={currentPage === Math.ceil(recentAppointments.length / itemsPerPage)}
-                                    className="p-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                    onClick={() => onPageChange?.('clientes')}
+                                    className="bg-slate-50 dark:bg-white/5 hover:bg-primary text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-sm p-4 text-left transition-all duration-300 flex items-center justify-between group/btn"
                                 >
-                                    <ChevronRight className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                                    <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover/btn:text-slate-950 transition-colors">Cadastrar Cliente</span>
+                                    <UserPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
                                 </button>
                             </div>
                         </div>
                     </div>
-                )}
-            </Card>
+                </div>
+            </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8">
-                <Card title="🔥 Horários de Pico">
-                    <div className="flex flex-col gap-4 py-2">
-                        <p className="text-xs text-slate-500 mb-2 leading-relaxed">Frequência por horário e dia da semana (últmos 90 dias)</p>
-                        <div className="flex gap-4">
-                            {/* Time labels column */}
-                            <div className="flex flex-col justify-between py-1 text-[9px] font-bold text-slate-400 w-8">
-                                <span>08h</span>
-                                <span>12h</span>
-                                <span>16h</span>
-                                <span>19h</span>
+            <div className="reveal-content delay-300">
+                <Card
+                    title="Atividades Recentes"
+                    noPadding
+                    extra={
+                        <button
+                            onClick={() => onPageChange?.('agenda')}
+                            className="text-[10px] font-black text-primary uppercase tracking-[0.2em] hover:opacity-70 transition-all flex items-center gap-2"
+                        >
+                            Ver Tudo <ArrowRight className="w-4 h-4" />
+                        </button>
+                    }
+                >
+                    <div className="overflow-x-auto">
+                        <table className="w-full text-left border-collapse">
+                            <thead>
+                                <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-[0.2em] font-black border-b border-slate-100 dark:border-slate-900">
+                                    <th className="px-8 py-6 font-black">Cliente</th>
+                                    <th className="px-8 py-6 font-black">Serviço</th>
+                                    <th className="px-8 py-6 font-black">Profissional</th>
+                                    <th className="px-8 py-6 font-black">Data</th>
+                                    <th className="px-8 py-6 font-black">Horário</th>
+                                    <th className="px-8 py-6 font-black text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-sm bg-white dark:bg-slate-950">
+                                {recentAppointments.length > 0 ? (
+                                    recentAppointments
+                                        .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                                        .map((row, i) => (
+                                            <tr key={i} className="hover:bg-primary/5 dark:hover:bg-primary/5 transition-all duration-300 group">
+                                                <td className="px-8 py-5">
+                                                    <div className="flex items-center gap-4">
+                                                        <Avatar
+                                                            name={row.clients?.name || 'Cliente'}
+                                                            className="w-10 h-10 ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all rounded-sm"
+                                                            initials={row.clients?.name?.split(' ')?.map((n: any) => n[0]).join('').toUpperCase() || 'C'}
+                                                        />
+                                                        <span className="font-black text-slate-900 dark:text-white uppercase tracking-tighter text-xs">{row.clients?.name || 'Cliente'}</span>
+                                                    </div>
+                                                </td>
+                                                <td className="px-8 py-5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">{row.services?.name}</td>
+                                                <td className="px-8 py-5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
+                                                    {row.professionals?.name || 'Profissional'}
+                                                </td>
+                                                <td className="px-8 py-5">
+                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-sm">
+                                                        {row.appointment_date ? new Date(row.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR') : '--/--/----'}
+                                                    </span>
+                                                </td>
+                                                <td className="px-8 py-5 text-[10px] font-black text-primary font-mono bg-primary/5 dark:bg-primary/10 text-center">
+                                                    {row.appointment_time?.substring(0, 5) || '--:--'}
+                                                </td>
+                                                <td className="px-8 py-5 text-center">
+                                                    <StatusBadge status={row.status} />
+                                                </td>
+                                            </tr>
+                                        ))
+                                ) : (
+                                    <tr>
+                                        <td colSpan={6} className="px-8 py-16 text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
+                                            Aguardando entrada de dados...
+                                        </td>
+                                    </tr>
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {recentAppointments.length > 0 && (
+                        <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-950/50">
+                            <div className="flex items-center gap-4">
+                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registros por Bloco:</span>
+                                <select
+                                    value={itemsPerPage}
+                                    onChange={(e) => {
+                                        setItemsPerPage(Number(e.target.value));
+                                        setCurrentPage(1);
+                                    }}
+                                    className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-sm text-[10px] font-black text-slate-700 dark:text-slate-200 py-1.5 px-4 outline-none focus:border-primary transition-all cursor-pointer uppercase"
+                                >
+                                    {[5, 10, 20, 50].map(val => (
+                                        <option key={val} value={val}>{val} Unid.</option>
+                                    ))}
+                                </select>
                             </div>
 
-                            {/* Heatmap Grid */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">
+                                    Página {currentPage} de {Math.ceil(recentAppointments.length / itemsPerPage)}
+                                </span>
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="p-2 bg-slate-950 text-white border border-slate-900 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xl"
+                                    >
+                                        <ChevronLeft className="w-5 h-5 text-primary" />
+                                    </button>
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentAppointments.length / itemsPerPage)))}
+                                        disabled={currentPage === Math.ceil(recentAppointments.length / itemsPerPage)}
+                                        className="p-2 bg-slate-950 text-white border border-slate-900 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xl"
+                                    >
+                                        <ChevronRight className="w-5 h-5 text-primary" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 reveal-content delay-300">
+                <Card title="📈 Intensidade de Atendimento">
+                    <div className="flex flex-col gap-6 py-4">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de volume por horário (últimos 90 dias)</p>
+                        <div className="flex gap-6">
+                            <div className="flex flex-col justify-between py-2 text-[10px] font-black text-slate-500 w-8 text-right pr-2 border-r border-slate-100 dark:border-slate-900">
+                                <span>08H</span>
+                                <span>12H</span>
+                                <span>16H</span>
+                                <span>19H</span>
+                            </div>
+
                             <div className="flex-1">
-                                <div className="grid grid-cols-7 gap-1">
-                                    {/* Day labels header */}
-                                    {['D', 'S', 'T', 'Q', 'Q', 'S', 'S'].map((d, i) => (
-                                        <div key={i} className="text-[10px] font-black text-slate-400 text-center mb-1">{d}</div>
+                                <div className="grid grid-cols-7 gap-1.5">
+                                    {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].map((d, i) => (
+                                        <div key={i} className="text-[9px] font-black text-slate-400 text-center mb-2 uppercase tracking-tighter">{d}</div>
                                     ))}
 
-                                    {/* Grid cells (rendered by hour, then by day) */}
                                     {heatmapData.map((row, hIdx) => (
                                         row.days.map((day: any, dIdx: number) => (
                                             <div
                                                 key={`${hIdx}-${dIdx}`}
-                                                className="w-full h-3.5 md:h-4.5 rounded-[1px] cursor-help transition-all hover:scale-110 relative group"
+                                                className="w-full h-4.5 rounded-sm cursor-crosshair transition-all hover:scale-125 hover:z-50 relative group border border-transparent hover:border-white/20"
                                                 style={{
                                                     backgroundColor: `var(--primary)`,
-                                                    opacity: day.count === 0 ? 0.05 : Math.max(day.intensity, 0.2)
+                                                    boxShadow: day.count > 0 ? `0 0 10px var(--primary)` : 'none',
+                                                    opacity: day.count === 0 ? 0.03 : Math.max(day.intensity, 0.2)
                                                 }}
                                             >
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-[9px] font-bold py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30 shadow-xl border border-white/10">
-                                                    {day.count} agendamentos às {row.hour}
+                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-slate-950 text-white text-[10px] font-black py-2 px-3 border border-primary/50 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-30 shadow-2xl backdrop-blur-xl uppercase tracking-widest">
+                                                    <span className="text-primary">{day.count} Agendamentos</span> Detectados @ {row.hour}
                                                 </div>
                                             </div>
                                         ))
@@ -584,69 +628,50 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-50 dark:border-slate-800/50">
-                            <span className="text-[9px] text-slate-400 font-medium italic">Frequência:</span>
-                            <div className="flex items-center gap-1">
-                                <span className="text-[9px] text-slate-400 mr-1">Menor</span>
-                                {[0.2, 0.4, 0.6, 0.8, 1].map((op, i) => (
-                                    <div key={i} className="w-2 h-2 rounded-[1px] bg-primary" style={{ opacity: op }}></div>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-900/50">
+                            <span className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Densidade de Atendimentos</span>
+                            <div className="flex items-center gap-2">
+                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Baixo</span>
+                                {[0.1, 0.3, 0.5, 0.7, 1].map((op, i) => (
+                                    <div key={i} className="w-3 h-3 rounded-sm bg-primary border border-white/10" style={{ opacity: op }}></div>
                                 ))}
-                                <span className="text-[9px] text-slate-400 ml-1">Maior</span>
+                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Alto</span>
                             </div>
                         </div>
                     </div>
                 </Card>
 
-                <div className="flex flex-col gap-6">
-                    <Card title="Serviços Populares" extra={<button className="text-slate-400 hover:text-primary transition-colors"><MoreHorizontal className="w-5 h-5" /></button>}>
-                        <div className="space-y-4">
-                            {popularServices.map((service, i) => (
-                                <div key={i}>
-                                    <div className="flex items-center justify-between mb-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-10 h-10 rounded-xl ${service.bg} border ${service.bg.replace('bg-', 'border-').split(' ')[0]}/20 flex items-center justify-center ${service.color} shrink-0 shadow-sm shadow-black/5`}>
-                                                <service.icon className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-1">{service.name}</p>
-                                                <p className="text-[10px] text-slate-500 dark:text-slate-400">{service.count} agendamentos</p>
+                <Card title="📈 Topologia de Serviços" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
+                    <div className="space-y-6 py-2">
+                        {popularServices.map((service, i) => (
+                            <div key={i} className="group cursor-default">
+                                <div className="flex items-center justify-between mb-3">
+                                    <div className="flex items-center gap-5">
+                                        <div className={`w-14 h-14 bg-slate-950 border border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
+                                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                            <service.icon className="w-8 h-8 relative z-10" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors tracking-tighter uppercase">{service.name}</p>
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-3 h-[1px] bg-slate-300 dark:bg-slate-700"></div>
+                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{service.count} Execuções</p>
                                             </div>
                                         </div>
-                                        <span className="text-xs font-bold text-slate-700 dark:text-slate-300">{service.percent}%</span>
                                     </div>
-                                    <div className="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5">
-                                        <div className="bg-primary h-1.5 rounded-full" style={{ width: `${service.percent}%` }}></div>
+                                    <span className="text-xs font-black text-slate-950 dark:text-white tracking-tighter">{service.percent}.0%</span>
+                                </div>
+                                <div className="w-full bg-slate-100 dark:bg-slate-900 h-1.5 overflow-hidden rounded-sm relative">
+                                    <div className="absolute inset-0 bg-primary/5 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+                                    <div className="bg-primary h-full relative" style={{ width: `${service.percent}%` }}>
+                                        <div className="absolute top-0 right-0 w-2 h-full bg-white opacity-20 blur-sm"></div>
                                     </div>
                                 </div>
-                            ))}
-                        </div>
-                    </Card>
-
-                    <div className="bg-gradient-to-br from-primary to-purple-600 rounded-xl shadow-lg p-5 text-white relative overflow-hidden flex-1 flex flex-col justify-center min-h-[160px]">
-                        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl"></div>
-                        <div className="relative z-10">
-                            <h3 className="text-lg font-bold mb-1">Ações Rápidas</h3>
-                            <p className="text-white/80 font-medium text-[11px] mb-4 leading-tight">Gestão eficiente com atalhos.</p>
-                            <div className="grid grid-cols-1 gap-2">
-                                <button
-                                    onClick={() => onPageChange?.('agenda')}
-                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex items-center gap-3 shadow-sm"
-                                >
-                                    <CalendarPlus className="w-5 h-5 text-white shrink-0" />
-                                    <span className="text-[11px] font-bold">Novo Agendamento</span>
-                                </button>
-                                <button
-                                    onClick={() => onPageChange?.('clientes')}
-                                    className="bg-white/20 hover:bg-white/30 backdrop-blur-sm border border-white/10 rounded-lg p-3 text-left transition-colors flex items-center gap-3 shadow-sm"
-                                >
-                                    <UserPlus className="w-5 h-5 text-white shrink-0" />
-                                    <span className="text-[11px] font-bold">Adicionar Cliente</span>
-                                </button>
                             </div>
-                        </div>
+                        ))}
                     </div>
-                </div>
+                </Card>
             </div>
-        </div >
+        </div>
     );
 };

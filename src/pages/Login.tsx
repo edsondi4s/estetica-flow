@@ -1,8 +1,7 @@
 import React, { useState, FormEvent } from 'react';
 import { motion } from 'motion/react';
-import { Scissors, EyeOff, Eye, Loader2 } from 'lucide-react';
+import { Scissors, EyeOff, Eye, Loader2, ShieldCheck, Cpu, Terminal } from 'lucide-react';
 import { Button } from '../components/ui/Button';
-import { InputField } from '../components/ui/InputField';
 import { supabase } from '../lib/supabase';
 import { useTheme } from '../contexts/ThemeContext';
 import toast from 'react-hot-toast';
@@ -48,10 +47,10 @@ export const Login = ({ onLogin }: LoginProps) => {
                 });
                 if (signInError) throw signInError;
                 onLogin();
-                toast.success('Login realizado com sucesso!');
+                toast.success('Acesso concedido. Bem-vindo(a) à matriz.');
             }
         } catch (err: any) {
-            const errorMessage = err.message || 'Ocorreu um erro ao processar sua solicitação.';
+            const errorMessage = err.message || 'Falha na autenticação do ativo.';
             setError(errorMessage);
             toast.error(errorMessage);
         } finally {
@@ -60,148 +59,184 @@ export const Login = ({ onLogin }: LoginProps) => {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 transition-colors">
+        <div className="min-h-screen flex items-center justify-center p-6 bg-slate-50 dark:bg-slate-950 transition-colors relative overflow-hidden">
+            {/* Background Decorations - Silk & Steel */}
+            <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none opacity-20 dark:opacity-40">
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/20 blur-[120px] rounded-full animate-pulse" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-slate-400 dark:bg-slate-800 blur-[120px] rounded-full" />
+                {/* Technical Lines */}
+                <div className="absolute top-1/2 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent" />
+                <div className="absolute top-0 left-1/2 w-[1px] h-full bg-gradient-to-b from-transparent via-slate-200 dark:via-slate-800 to-transparent" />
+            </div>
+
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-100 dark:border-slate-800 p-8 sm:p-12"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="w-full max-w-[480px] relative z-10"
             >
-                <div className="flex justify-center mb-6">
-                    <div className={`${(theme === 'dark' ? (settings.logo_url_dark || settings.logo_url) : settings.logo_url) ? 'w-full h-24' : 'w-16 h-16 rounded-2xl bg-primary/20 text-primary-dark dark:text-primary-light'} flex items-center justify-center overflow-hidden`}>
-                        {theme === 'dark' && settings.logo_url_dark ? (
-                            <img src={settings.logo_url_dark} alt="Logo" className="max-w-full max-h-full object-contain" />
-                        ) : settings.logo_url ? (
-                            <img src={settings.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
-                        ) : (
-                            <Scissors className="w-10 h-10" />
-                        )}
+                {/* Corporate Header Decoration */}
+                <div className="flex items-center justify-between mb-4 px-1">
+                    <div className="flex items-center gap-2">
+                        <Terminal className="w-4 h-4 text-primary" />
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">SECURE ACCESS MODULE</span>
+                    </div>
+                    <div className="text-[10px] font-black text-primary uppercase tracking-widest animate-pulse">
+                        V4.0 ESTÁVEL
                     </div>
                 </div>
-                {!(theme === 'dark' ? (settings.logo_url_dark || settings.logo_url) : settings.logo_url) && (
-                    <h2 className="text-center text-3xl font-black text-primary-dark dark:text-primary-light mb-2">
-                        {settings.business_name}
-                    </h2>
-                )}
-                <h3 className="text-center text-xl font-bold text-slate-900 dark:text-white mb-2">
-                    {isSignUp ? 'Crie sua conta' : 'Bem-vinda de volta'}
-                </h3>
-                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mb-8">
-                    {isSignUp
-                        ? 'Comece a gerenciar sua clínica de forma profissional'
-                        : 'Entre na sua conta para gerenciar sua clínica'}
-                </p>
 
-                {error && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        className="mb-6 p-4 bg-red-50 dark:bg-red-500/10 border border-red-100 dark:border-red-500/20 rounded-xl text-red-600 dark:text-red-400 text-sm font-medium"
-                    >
-                        {error}
-                    </motion.div>
-                )}
-
-                <form className="space-y-4" onSubmit={handleAuth}>
-                    {isSignUp && (
-                        <InputField
-                            label="Nome Completo"
-                            placeholder="Como quer ser chamada?"
-                            type="text"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
-                            required
-                        />
-                    )}
-
-                    <InputField
-                        label="E-mail"
-                        placeholder="seu@email.com"
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        required
-                    />
-
-                    <div className="space-y-1">
-                        <div className="flex justify-between items-center">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Senha</label>
-                            {!isSignUp && (
-                                <a href="#" className="text-xs font-semibold text-primary-dark dark:text-primary-light hover:text-primary">Esqueci minha senha</a>
-                            )}
+                <div className="bg-white dark:bg-slate-950 rounded-sm border-2 border-slate-950 dark:border-white/10 shadow-[20px_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden">
+                    <div className="p-10 sm:p-14">
+                        <div className="flex justify-center mb-10">
+                            <div className="relative group">
+                                <div className="absolute -inset-4 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition-all opacity-0 group-hover:opacity-100" />
+                                <div className={`${(theme === 'dark' ? (settings.logo_url_dark || settings.logo_url) : settings.logo_url) ? 'w-full h-24' : 'w-20 h-20 bg-slate-950 rounded-sm flex items-center justify-center text-primary border-2 border-primary/20 transition-all'} relative z-10 flex items-center justify-center overflow-hidden`}>
+                                    {theme === 'dark' && settings.logo_url_dark ? (
+                                        <img src={settings.logo_url_dark} alt="Logo" className="max-w-full max-h-full object-contain" />
+                                    ) : settings.logo_url ? (
+                                        <img src={settings.logo_url} alt="Logo" className="max-w-full max-h-full object-contain" />
+                                    ) : (
+                                        <Scissors className="w-12 h-12 stroke-[2.5]" />
+                                    )}
+                                </div>
+                            </div>
                         </div>
-                        <div className="relative">
-                            <input
-                                className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white transition-all"
-                                placeholder="Sua senha secreta"
-                                type={showPassword ? 'text' : 'password'}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                required
-                            />
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword(!showPassword)}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1"
+
+                        <div className="text-center mb-12">
+                            <h2 className="text-3xl font-black text-slate-950 dark:text-white uppercase tracking-tighter leading-none mb-3">
+                                {isSignUp ? 'CENTRAL DE' : 'CENTRO DE'} <span className="text-primary">{isSignUp ? 'CADASTRO' : 'CONTROLE'}</span>
+                            </h2>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.4em]">Autenticação de Ativo Credenciado</p>
+                        </div>
+
+                        {error && (
+                            <motion.div
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                className="mb-8 p-6 bg-red-50 dark:bg-red-500/5 border-l-4 border-red-500 rounded-none flex items-start gap-4"
                             >
-                                {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                                <ShieldCheck className="w-5 h-5 text-red-500 shrink-0" />
+                                <div>
+                                    <p className="text-[10px] font-black text-red-600 dark:text-red-400 uppercase tracking-widest mb-1">ERRO DE SEGURANÇA</p>
+                                    <p className="text-xs font-bold text-red-900 dark:text-red-200">{error}</p>
+                                </div>
+                            </motion.div>
+                        )}
+
+                        <form className="space-y-6" onSubmit={handleAuth}>
+                            {isSignUp && (
+                                <div className="space-y-2">
+                                    <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">Identificação Completa</label>
+                                    <input
+                                        placeholder="NOME DO ATIVO"
+                                        type="text"
+                                        value={name}
+                                        onChange={(e) => setName(e.target.value)}
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-none text-xs font-black uppercase tracking-widest outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-950 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                                        required
+                                    />
+                                </div>
+                            )}
+
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">E-mail Operacional</label>
+                                <input
+                                    placeholder="USUARIO@ESTETICAFLOW.COM.BR"
+                                    type="email"
+                                    value={email}
+                                    onChange={(e) => setEmail(e.target.value)}
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-none text-xs font-black uppercase tracking-widest outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-950 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                                    required
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between items-center px-1">
+                                    <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest">Código de Acesso</label>
+                                    {isSignUp ? null : (
+                                        <a href="#" className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline">Esqueceu a senha?</a>
+                                    )}
+                                </div>
+                                <div className="relative">
+                                    <input
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-none text-xs font-black uppercase tracking-widest outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-800 transition-all text-slate-950 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                                        placeholder="••••••••••••"
+                                        type={showPassword ? 'text' : 'password'}
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowPassword(!showPassword)}
+                                        className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-400 hover:text-primary transition-colors p-1"
+                                    >
+                                        {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <Button
+                                type="submit"
+                                className="w-full mt-6 bg-slate-950 dark:bg-primary py-8 rounded-none border-none text-[12px] font-black uppercase tracking-[0.4em] shadow-2xl hover:scale-[1.02] active:scale-[0.98] transition-all group"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <span className="flex items-center gap-3">
+                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        SINCRONIZANDO...
+                                    </span>
+                                ) : (
+                                    <span className="flex items-center gap-3">
+                                        {isSignUp ? 'INICIALIZAR SISTEMA' : 'AUTORIZAR ACESSO'}
+                                        <Cpu className="w-4 h-4 group-hover:rotate-180 transition-transform duration-700" />
+                                    </span>
+                                )}
+                            </Button>
+                        </form>
+
+                        <div className="relative my-12">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t-2 border-slate-100 dark:border-slate-800"></div>
+                            </div>
+                            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-[0.5em] text-slate-300 dark:text-slate-700">
+                                <span className="bg-white dark:bg-slate-950 px-6 transition-colors font-black">ACESSO FEDERADO</span>
+                            </div>
+                        </div>
+
+                        <button className="w-full flex items-center justify-center gap-4 border-2 border-slate-100 dark:border-slate-800 py-5 rounded-none text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] group">
+                            <svg className="w-5 h-5 group-hover:rotate-[360deg] transition-transform duration-700" viewBox="0 0 24 24">
+                                <path d="M12.0003 20.45c4.6483 0 8.545-3.2355 9.5936-7.702h-9.5936v-3.798h13.803c.123.637.189 1.303.189 1.99 0 7.363-5.029 12.55-12.046 12.55-6.627 0-12-5.373-12-12s5.373-12 12-12c3.15 0 6.027 1.134 8.283 3.018l-3.328 3.328c-1.077-.999-2.738-1.798-4.955-1.798-4.329 0-7.85 3.52-7.85 7.85s3.521 7.85 7.85 7.85V20.45z" fill="currentColor" />
+                            </svg>
+                            Sincronizar com Google ID
+                        </button>
+
+                        <div className="mt-12 text-center">
+                            <button
+                                onClick={() => {
+                                    setIsSignUp(!isSignUp);
+                                    setError(null);
+                                }}
+                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors group"
+                            >
+                                {isSignUp ? 'JÁ POSSUI CADASTRO? ' : 'NOVA OPERAÇÃO? '}
+                                <span className="text-slate-950 dark:text-white group-hover:text-primary underline underline-offset-4 font-black">
+                                    {isSignUp ? 'AUTORIZE AGORA' : 'INICIALIZAR MÓDULO'}
+                                </span>
                             </button>
                         </div>
                     </div>
-
-                    {!isSignUp && (
-                        <div className="flex items-center">
-                            <label className="flex items-center gap-2 cursor-pointer group">
-                                <input type="checkbox" className="w-4 h-4 rounded border-slate-300 dark:border-slate-700 text-primary focus:ring-primary accent-primary" />
-                                <span className="text-sm text-slate-600 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-slate-200 transition-colors">Lembrar-me</span>
-                            </label>
-                        </div>
-                    )}
-
-                    <Button
-                        type="submit"
-                        className="w-full mt-2"
-                        size="lg"
-                        disabled={isLoading}
-                    >
-                        {isLoading ? (
-                            <span className="flex items-center gap-2">
-                                <Loader2 className="w-4 h-4 animate-spin" />
-                                Processando...
-                            </span>
-                        ) : (
-                            isSignUp ? 'Criar minha conta' : 'Entrar'
-                        )}
-                    </Button>
-                </form>
-
-                <div className="relative my-8">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-100 dark:border-slate-800"></div>
-                    </div>
-                    <div className="relative flex justify-center text-xs font-bold uppercase tracking-wider text-slate-400">
-                        <span className="bg-white dark:bg-slate-900 px-4 transition-colors">OU</span>
-                    </div>
                 </div>
 
-                <button className="w-full flex items-center justify-center gap-3 border border-slate-200 dark:border-slate-700 py-3 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98]">
-                    <svg className="w-5 h-5" viewBox="0 0 24 24">
-                        <path d="M12.0003 20.45c4.6483 0 8.545-3.2355 9.5936-7.702h-9.5936v-3.798h13.803c.123.637.189 1.303.189 1.99 0 7.363-5.029 12.55-12.046 12.55-6.627 0-12-5.373-12-12s5.373-12 12-12c3.15 0 6.027 1.134 8.283 3.018l-3.328 3.328c-1.077-.999-2.738-1.798-4.955-1.798-4.329 0-7.85 3.52-7.85 7.85s3.521 7.85 7.85 7.85V20.45z" fill="#4285F4" />
-                    </svg>
-                    Entrar com Google
-                </button>
-
-                <p className="text-center text-sm text-slate-500 dark:text-slate-400 mt-8">
-                    {isSignUp ? 'Já tem uma conta?' : 'Não tem uma conta?'} {' '}
-                    <button
-                        onClick={() => {
-                            setIsSignUp(!isSignUp);
-                            setError(null);
-                        }}
-                        className="font-bold text-primary-dark dark:text-primary-light hover:text-primary transition-colors"
-                    >
-                        {isSignUp ? 'Entrar agora' : 'Criar conta gratuitamente'}
-                    </button>
-                </p>
+                {/* Footer Technical Decoration */}
+                <div className="mt-8 flex justify-between items-center px-2 opacity-40">
+                    <div className="flex gap-4">
+                        <div className="w-1 h-3 bg-primary" />
+                        <div className="w-1 h-3 bg-slate-300 dark:bg-slate-700" />
+                        <div className="w-1 h-3 bg-slate-300 dark:bg-slate-700" />
+                    </div>
+                    <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">EsteticaFlow Precision Engineering © 2026</span>
+                </div>
             </motion.div>
         </div>
     );

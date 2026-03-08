@@ -166,32 +166,34 @@ export const Financeiro = () => {
     };
 
     return (
-        <div className="flex flex-col gap-8 pb-8">
-            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                        <Wallet className="w-5 h-5 text-primary" />
+        <div className="flex flex-col gap-10 reveal-content pb-10">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
+                <div className="flex items-center gap-4">
+                    <div className="p-4 bg-slate-950 rounded-sm shadow-xl shadow-black/10">
+                        <Wallet className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 dark:text-white">Financeiro Baseado em Atendimentos</h2>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">Acompanhe suas receitas confirmadas e pendentes</p>
+                        <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
+                            Monitor <span className="text-primary">Financeiro</span>
+                        </h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Gestão de Fluxo e Projeções</p>
                     </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 w-full lg:w-auto">
-                    <div className="flex items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2 shadow-sm w-full sm:w-auto">
-                        <CalendarIcon className="w-4 h-4 text-slate-400" />
-                        <div className="flex items-center gap-1">
+                <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
+                    <div className="flex items-center gap-3 bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-sm p-4 shadow-xl shadow-black/5 w-full sm:w-auto focus-within:border-primary transition-all">
+                        <CalendarIcon className="w-4 h-4 text-primary" />
+                        <div className="flex items-center gap-3">
                             <input
                                 type="date"
-                                className="bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none"
+                                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white outline-none cursor-pointer"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
-                            <span className="text-slate-400">até</span>
+                            <span className="text-[8px] font-black text-slate-300 uppercase">ATÉ</span>
                             <input
                                 type="date"
-                                className="bg-transparent text-sm text-slate-700 dark:text-slate-200 outline-none"
+                                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white outline-none cursor-pointer"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                             />
@@ -200,23 +202,44 @@ export const Financeiro = () => {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <StatCard label="Saldo Total (Confirmados)" value={formatCurrency(totalBalance)} icon={CheckCircle2} color="emerald" />
-                <StatCard label="Projeção (Confirmados + Pendentes)" value={formatCurrency(projectedBalance)} icon={TrendingUp} color="blue" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
+                <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-l-4 border-emerald-500 shadow-2xl shadow-black/5 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <CheckCircle2 className="w-24 h-24 text-emerald-500" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Capital Confirmado</p>
+                    <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(totalBalance)}</h3>
+                    <div className="mt-6 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Saldo Realizado</span>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-l-4 border-primary shadow-2xl shadow-black/5 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                        <TrendingUp className="w-24 h-24 text-primary" />
+                    </div>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Receita Projetada</p>
+                    <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(projectedBalance)}</h3>
+                    <div className="mt-6 flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">Previsão Operacional</span>
+                    </div>
+                </div>
             </div>
 
-            <Card className="p-6">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-                    <div className="flex items-center gap-2">
-                        <TrendingUp className="w-5 h-5 text-primary" />
-                        <h3 className="font-bold text-slate-900 dark:text-white">Receita por Período</h3>
+            <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/20">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Análise de <span className="text-primary">Performance</span></h3>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1">Oscilação de Receita por Intervalo</p>
                     </div>
-                    <div className="flex items-center border border-slate-200 dark:border-slate-800 rounded-lg p-1 bg-slate-50 dark:bg-slate-900/50">
+                    <div className="flex items-center bg-slate-900 p-1 divide-x divide-slate-800 border border-slate-800">
                         {(['diario', 'semanal', 'mensal'] as const).map(group => (
                             <button
                                 key={group}
                                 onClick={() => setChartGroup(group)}
-                                className={`px-3 py-1.5 text-xs font-bold rounded-md capitalize transition-colors ${chartGroup === group ? 'bg-white dark:bg-slate-800 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                className={`px-6 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${chartGroup === group ? 'bg-primary text-slate-950' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
                             >
                                 {group}
                             </button>
@@ -225,74 +248,125 @@ export const Financeiro = () => {
                 </div>
 
                 {isLoading ? (
-                    <div className="h-72 flex items-center justify-center">
-                        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <div className="h-80 flex items-center justify-center">
+                        <Loader2 className="w-12 h-12 animate-spin text-primary" />
                     </div>
                 ) : chartData.length === 0 ? (
-                    <div className="h-72 flex flex-col items-center justify-center text-slate-400 gap-3">
-                        <FileText className="w-12 h-12 opacity-20" />
-                        <p>Nenhuma receita registrada no período selecionado.</p>
+                    <div className="h-80 flex flex-col items-center justify-center text-slate-600 gap-4">
+                        <FileText className="w-12 h-12 opacity-10" />
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Aguardando logs de transação</p>
                     </div>
                 ) : (
-                    <div className="h-80 w-full mt-4">
+                    <div className="h-96 w-full -ml-4">
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 20 }}>
-                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
-                                <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dy={10} />
-                                <YAxis tickFormatter={(value) => `R$${value}`} tickLine={false} axisLine={false} tick={{ fill: '#64748b', fontSize: 12 }} dx={-10} />
+                                <CartesianGrid strokeDasharray="0" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
+                                <XAxis
+                                    dataKey="label"
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tick={{ fill: '#475569', fontSize: 10, fontWeight: '900', letterSpacing: '0.1em' }}
+                                    dy={15}
+                                />
+                                <YAxis
+                                    tickFormatter={(value) => `R$ ${value}`}
+                                    tickLine={false}
+                                    axisLine={false}
+                                    tick={{ fill: '#475569', fontSize: 10, fontWeight: '900' }}
+                                    dx={-10}
+                                />
                                 <Tooltip
-                                    cursor={{ fill: 'transparent' }}
+                                    cursor={{ fill: 'rgba(235, 254, 98, 0.05)' }}
                                     content={<CustomTooltip formatCurrency={formatCurrency} />}
                                 />
-                                <Bar name="Receita Confirmada" dataKey="Confirmado" fill="#10b981" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
-                                <Bar name="Receita Pendente" dataKey="Pendente" fill="#fbbf24" radius={[4, 4, 0, 0]} maxBarSize={40} stackId="a" />
+                                <Bar name="Confirmado" dataKey="Confirmado" fill="var(--primary)" radius={0} maxBarSize={30} stackId="a" />
+                                <Bar name="Pendente" dataKey="Pendente" fill="currentColor" className="text-slate-200 dark:text-slate-800" radius={0} maxBarSize={30} stackId="a" />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
                 )}
-            </Card>
+            </div>
 
-            <Card title="Atendimentos Confirmados">
-
+            <div className="bg-white dark:bg-slate-900 rounded-sm border-2 border-slate-100 dark:border-slate-800 shadow-2xl shadow-black/5 overflow-hidden">
+                <div className="px-10 py-8 border-b border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Log de <span className="text-primary">Transações</span></h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Histórico de Atendimentos Confirmados</p>
+                    </div>
+                    <div className="w-full sm:w-auto">
+                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-none border border-slate-200 dark:border-slate-700">
+                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Limitar Visualização</span>
+                            <select
+                                className="bg-transparent text-[10px] font-black text-slate-950 dark:text-white uppercase outline-none cursor-pointer"
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                    setItemsPerPage(Number(e.target.value));
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <option value={5}>05 LOGS</option>
+                                <option value={10}>10 LOGS</option>
+                                <option value={20}>20 LOGS</option>
+                                <option value={50}>50 LOGS</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
 
                 {isLoading ? (
-                    <div className="h-40 flex items-center justify-center">
-                        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <div className="h-40 flex items-center justify-center py-20">
+                        <Loader2 className="w-10 h-10 animate-spin text-primary" />
                     </div>
                 ) : confirmedTableData.length === 0 ? (
-                    <div className="p-8 text-center text-slate-500 text-sm border-t border-slate-100 dark:border-slate-800">
-                        Nenhum atendimento confirmado neste período.
+                    <div className="p-20 text-center">
+                        <FileText className="w-12 h-12 text-slate-100 mx-auto mb-4" />
+                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhum registro encontrado no intervalo atual</p>
                     </div>
                 ) : (
                     <>
                         <div className="overflow-x-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="text-xs text-slate-500 bg-slate-50 dark:bg-slate-800/50 uppercase border-b border-slate-100 dark:border-slate-800">
-                                    <tr>
-                                        <th className="px-6 py-4 font-semibold">Data</th>
-                                        <th className="px-6 py-4 font-semibold">Cliente</th>
-                                        <th className="px-6 py-4 font-semibold">Serviço</th>
-                                        <th className="px-6 py-4 font-semibold">Profissional</th>
-                                        <th className="px-6 py-4 font-semibold text-right">Valor Pago</th>
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="bg-slate-50 dark:bg-slate-800/50">
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Timeline</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Especificação</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Profissional</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Fee Final</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                                <tbody className="divide-y-2 divide-slate-50 dark:divide-slate-800">
                                     {paginatedData.map(t => (
-                                        <tr key={t.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
-                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                                                {new Date(t.appointment_date + 'T12:00:00').toLocaleDateString()}
+                                        <tr key={t.id} className="group hover:bg-slate-50 dark:hover:bg-primary/5 transition-all">
+                                            <td className="px-10 py-6">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-1 h-8 bg-emerald-500 rounded-none transform scale-y-50 group-hover:scale-y-100 transition-transform"></div>
+                                                    <span className="text-sm font-black text-slate-600 dark:text-slate-400 tracking-tighter">
+                                                        {new Date(t.appointment_date + 'T12:00:00').toLocaleDateString()}
+                                                    </span>
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap font-medium text-slate-900 dark:text-white">
-                                                {t.clients?.name || 'Cliente Removido'}
+                                            <td className="px-10 py-6">
+                                                <div className="flex flex-col">
+                                                    <span className="text-base font-black text-slate-950 dark:text-white uppercase tracking-tight group-hover:text-primary transition-colors">
+                                                        {t.clients?.name || 'Undefined Entity'}
+                                                    </span>
+                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                        {t.services?.name || 'Core Protocol'}
+                                                    </span>
+                                                </div>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                                                {t.services?.name || 'Serviço Removido'}
+                                            <td className="px-10 py-6 whitespace-nowrap">
+                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 border border-slate-200 dark:border-slate-700">
+                                                    {t.professionals?.name || 'Sytem Agent'}
+                                                </span>
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-slate-600 dark:text-slate-300">
-                                                {t.professionals?.name || 'Profissional Removido'}
-                                            </td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-right font-bold text-emerald-600 dark:text-emerald-400">
-                                                {formatCurrency(t.services?.price || 0)}
+                                            <td className="px-10 py-6 text-right">
+                                                <div className="flex flex-col items-end">
+                                                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
+                                                        {formatCurrency(t.services?.price || 0)}
+                                                    </span>
+                                                    <span className="text-[8px] font-black text-emerald-500/50 uppercase tracking-widest">Verificado</span>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -300,92 +374,56 @@ export const Financeiro = () => {
                             </table>
                         </div>
 
-                        <div className="p-4 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/50">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">Mostrar</span>
-                                <select
-                                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-sm font-medium text-slate-700 dark:text-slate-300 py-1.5 px-2 rounded-lg outline-none cursor-pointer focus:ring-2 focus:ring-primary/50"
-                                    value={itemsPerPage}
-                                    onChange={(e) => {
-                                        setItemsPerPage(Number(e.target.value));
-                                        setCurrentPage(1);
-                                    }}
-                                >
-                                    <option value={5}>5</option>
-                                    <option value={10}>10</option>
-                                    <option value={20}>20</option>
-                                    <option value={50}>50</option>
-                                </select>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">itens</span>
-                            </div>
-                            <span className="text-sm text-slate-500 font-medium">
-                                Total Encontrado: {confirmedTableData.length}
-                            </span>
-                        </div>
-
-                        {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-between px-6 py-4 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 rounded-b-xl">
-                                <p className="text-sm text-slate-500">
-                                    Mostrando <span className="font-medium text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-medium text-slate-900 dark:text-white">{Math.min(currentPage * itemsPerPage, confirmedTableData.length)}</span> de <span className="font-medium text-slate-900 dark:text-white">{confirmedTableData.length}</span> resultados
+                        {/* Pagination Area */}
+                        <div className="px-10 py-8 bg-slate-50 dark:bg-slate-950 shadow-inner flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-4">
+                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
+                                    Exibindo <span className="text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, confirmedTableData.length)}</span> de <span className="text-slate-900 dark:text-white">{confirmedTableData.length}</span> registros
                                 </p>
-                                <div className="flex items-center gap-2">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="flex items-center gap-3">
+                                    <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="px-2"
+                                        className="p-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all rounded-none"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
-                                    </Button>
+                                    </button>
 
-                                    <div className="flex gap-1">
+                                    <div className="flex gap-2">
                                         {Array.from({ length: totalPages }, (_, i) => i + 1).filter(page => {
-                                            // Show first, last, current, and one before/after current
                                             return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
                                         }).map((page, index, array) => {
-                                            // Add ellipsis logic
                                             if (index > 0 && page - array[index - 1] > 1) {
-                                                return (
-                                                    <React.Fragment key={`ellipsis-${page}`}>
-                                                        <span className="px-2 py-1 text-slate-400">...</span>
-                                                        <button
-                                                            onClick={() => setCurrentPage(page)}
-                                                            className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors ${currentPage === page ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
-                                                        >
-                                                            {page}
-                                                        </button>
-                                                    </React.Fragment>
-                                                );
+                                                return <span key={`dots-${page}`} className="text-slate-300 font-black">//</span>;
                                             }
                                             return (
                                                 <button
                                                     key={page}
                                                     onClick={() => setCurrentPage(page)}
-                                                    className={`w-8 h-8 rounded-md text-sm font-semibold transition-colors ${currentPage === page ? 'bg-primary text-white' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'}`}
+                                                    className={`w-10 h-10 text-[10px] font-black transition-all rounded-none border-2 ${currentPage === page ? 'bg-primary border-primary text-slate-950' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600'}`}
                                                 >
-                                                    {page}
+                                                    {page.toString().padStart(2, '0')}
                                                 </button>
                                             );
                                         })}
                                     </div>
 
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
+                                    <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="px-2"
+                                        className="p-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all rounded-none"
                                     >
                                         <ChevronRight className="w-4 h-4" />
-                                    </Button>
+                                    </button>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </>
                 )}
-            </Card>
+            </div>
         </div>
     );
 };

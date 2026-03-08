@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, Bot, MessageSquare, Key, Link as LinkIcon, FileText, Trash2, Info, ChevronRight, ChevronLeft, Check, Globe, Map as MapIcon, Search } from 'lucide-react';
+import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, Bot, MessageSquare, Key, Link as LinkIcon, FileText, Trash2, Info, ChevronRight, ChevronLeft, Check, Globe, Map as MapIcon, Search, Zap, X, Code } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { InputField } from '../components/ui/InputField';
 import { Card } from '../components/ui/Card';
@@ -15,7 +15,7 @@ interface ConfiguracoesProps {
 const DAYS_OF_WEEK = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
-    const [activeTab, setActiveTab] = useState<'info' | 'branding' | 'hours' | 'ai_agent'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'enderecos' | 'branding' | 'seo' | 'hours' | 'ai_agent'>('info');
     const [businessHours, setBusinessHours] = useState<any[]>([]);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [settings, setSettings] = useState({
@@ -562,58 +562,47 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
     };
 
     return (
-        <div className="max-w-4xl mx-auto w-full space-y-6">
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-xl w-full overflow-x-auto no-scrollbar">
-                <button
-                    onClick={() => setActiveTab('info')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'info' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    Informações Gerais
-                </button>
-                <button
-                    onClick={() => setActiveTab('enderecos')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'enderecos' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    Endereços
-                </button>
-                <button
-                    onClick={() => setActiveTab('branding')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'branding' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    Personalização Visual
-                </button>
-                <button
-                    onClick={() => setActiveTab('seo')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'seo' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    SEO & Web
-                </button>
-                <button
-                    onClick={() => setActiveTab('hours')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all ${activeTab === 'hours' ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    Horários
-                </button>
-                <button
-                    onClick={() => setActiveTab('ai_agent')}
-                    className={`px-4 py-2 rounded-lg text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 ${activeTab === 'ai_agent' ? 'bg-primary dark:bg-primary text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-                >
-                    <Bot className="w-4 h-4" /> Assistente IA
-                </button>
+        <div className="max-w-6xl mx-auto w-full space-y-10">
+            <div className="bg-slate-950 p-2 rounded-sm border border-slate-900 shadow-2xl flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
+                {[
+                    { id: 'info', label: 'Informações Gerais', icon: Building2 },
+                    { id: 'enderecos', label: 'Localizações de Ativos', icon: MapIcon },
+                    { id: 'branding', label: 'Motor Visual', icon: Palette },
+                    { id: 'seo', label: 'Indexação e Web', icon: Globe },
+                    { id: 'hours', label: 'Ciclo Operacional', icon: Clock },
+                    { id: 'ai_agent', label: 'Núcleo Neural', icon: Bot, highlight: true }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id as any)}
+                        className={`flex items-center gap-3 px-6 py-3 rounded-none text-[10px] font-black uppercase tracking-[0.2em] transition-all
+                            ${activeTab === tab.id
+                                ? (tab.highlight ? 'bg-primary text-slate-950' : 'bg-white text-slate-950')
+                                : 'text-slate-500 hover:bg-slate-900 hover:text-white'}`}
+                    >
+                        <tab.icon className="w-4 h-4" />
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
             <Card noPadding>
                 {activeTab === 'info' && (
-                    <div className="p-8 space-y-6">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div>
+                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Identidade <span className="text-primary">Corporativa</span></h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Metadados e Identificação da Unidade</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InputField
-                                label="Nome da Clínica"
+                                label="Nome da Unidade"
                                 icon={Building2}
                                 value={settings.business_name}
                                 onChange={(e) => setSettings({ ...settings, business_name: e.target.value })}
                             />
                             <InputField
-                                label="Telefone de Contato"
+                                label="Linha Direta de Contato"
                                 icon={Phone}
                                 type="tel"
                                 placeholder="(00) 00000-0000"
@@ -622,7 +611,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             />
                             <div className="md:col-span-2">
                                 <InputField
-                                    label="E-mail Comercial"
+                                    label="Canal de Comunicação Oficial (E-mail)"
                                     icon={Mail}
                                     type="email"
                                     value={settings.email}
@@ -630,56 +619,82 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 />
                             </div>
                         </div>
+
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+                            <Button
+                                onClick={handleSave}
+                                isLoading={isSaving}
+                                className="group bg-slate-950 text-white rounded-none border border-slate-900 px-10 py-6 hover:bg-slate-900 transition-all font-black uppercase tracking-widest text-[11px]"
+                            >
+                                <Save className="w-4 h-4 mr-2 group-hover:scale-110 transition-transform text-primary" />
+                                Sincronizar Banco de Dados
+                            </Button>
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'enderecos' && (
-                    <div className="p-8 space-y-6">
-                        <div className="flex items-center justify-between">
+                    <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div>
-                                <h4 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                                    <MapIcon className="w-5 h-5 text-primary" /> Endereços da Clínica
-                                </h4>
-                                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">Gerencie os locais de atendimento</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Localização de <span className="text-primary">Ativos</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Geolocalização de Pontos de Operação</p>
                             </div>
-                            <Button className="gap-2" onClick={() => {
-                                setAddressForm({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: addresses.length === 0 });
-                                setIsAddressModalOpen(true);
-                            }}>
-                                <Plus className="w-4 h-4" /> Adicionar
+                            <Button
+                                onClick={() => {
+                                    setAddressForm({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: addresses.length === 0 });
+                                    setIsAddressModalOpen(true);
+                                }}
+                                className="bg-primary text-slate-950 rounded-none h-12 px-8 font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
+                            >
+                                <Plus className="w-4 h-4 mr-2" /> Registrar Ponto
                             </Button>
                         </div>
 
                         {addresses.length === 0 ? (
-                            <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                                <MapPin className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                                <p className="text-sm text-slate-500">Nenhum endereço cadastrado.</p>
+                            <div className="text-center py-24 bg-slate-50 dark:bg-slate-900/50 rounded-sm border-2 border-dashed border-slate-200 dark:border-slate-800">
+                                <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-4 opacity-20" />
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zero pontos ativos detectados</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {addresses.map((addr) => (
-                                    <div key={addr.id} className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative group overflow-hidden">
+                                    <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-8 rounded-sm border border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/5 hover:border-primary/30 transition-all overflow-hidden">
                                         {addr.is_main && (
-                                            <div className="absolute top-0 right-0 bg-primary/10 text-primary text-[10px] font-bold px-2 py-1 rounded-bl-lg">PRICIPAL</div>
+                                            <div className="absolute top-0 right-0 bg-primary text-slate-950 text-[9px] font-black px-4 py-1 tracking-widest uppercase">
+                                                Unidade Principal
+                                            </div>
                                         )}
-                                        <div className="flex gap-3 mb-2">
-                                            <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg shrink-0 h-fit">
-                                                <MapPin className="w-4 h-4 text-slate-500" />
+                                        <div className="flex gap-4 mb-6">
+                                            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-none flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-800">
+                                                <MapPin className="w-5 h-5 text-slate-500" />
                                             </div>
                                             <div>
-                                                <h5 className="font-bold text-slate-900 dark:text-white text-sm">{addr.street}, {addr.number}</h5>
-                                                <p className="text-xs text-slate-500">
-                                                    {addr.neighborhood} - {addr.city}/{addr.state} <br />
-                                                    CEP: {addr.zip_code} {addr.complement && `(${addr.complement})`}
+                                                <h5 className="font-black text-slate-950 dark:text-white text-md uppercase tracking-tight">{addr.street}, {addr.number}</h5>
+                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                    {addr.neighborhood} — {addr.city}/{addr.state}
                                                 </p>
+                                                <div className="mt-2 flex items-center gap-3">
+                                                    <span className="text-[9px] font-black text-primary uppercase tracking-widest px-2 py-0.5 border border-primary/20 bg-primary/5">CEP {addr.zip_code}</span>
+                                                    {addr.complement && <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">[{addr.complement}]</span>}
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2 justify-end mt-4">
-                                            <Button variant="outline" size="sm" className="h-7 text-xs px-2" onClick={() => {
-                                                setAddressForm(addr);
-                                                setIsAddressModalOpen(true);
-                                            }}>Editar</Button>
-                                            <Button variant="danger" size="sm" className="h-7 text-xs px-2 bg-rose-50 text-rose-600 border-transparent hover:bg-rose-100 dark:bg-rose-900/20" onClick={() => handleDeleteAddress(addr.id)}>Remover</Button>
+                                        <div className="flex gap-2 justify-end pt-6 border-t border-slate-50 dark:border-slate-900">
+                                            <button
+                                                onClick={() => {
+                                                    setAddressForm(addr);
+                                                    setIsAddressModalOpen(true);
+                                                }}
+                                            >
+                                                Configurar Ponto
+                                            </button>
+                                            <button
+                                                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors"
+                                                onClick={() => handleDeleteAddress(addr.id)}
+                                            >
+                                                Desativar
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -689,68 +704,71 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 )}
 
                 {activeTab === 'seo' && (
-                    <div className="p-8 space-y-8">
-                        <div>
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 mb-2">
-                                <Globe className="w-5 h-5 text-primary" /> SEO & Web
-                            </h4>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                                Configure as informações do seu site para aparecer corretamente no Google e redes sociais.
-                            </p>
-
-                            <div className="grid grid-cols-1 gap-6">
-                                <InputField
-                                    label="Título do Site (Title Tag)"
-                                    placeholder="Ex: EstéticaFlow - Clínica de Estética Avançada"
-                                    value={settings.seo_title || ''}
-                                    onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
-                                />
-
-                                <div className="space-y-1">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Descrição (Meta Description)</label>
-                                    <textarea
-                                        rows={3}
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
-                                        placeholder="Um resumo de 1 ou 2 frases sobre a clínica, usado pelo Google..."
-                                        value={settings.seo_description || ''}
-                                        onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
-                                    />
-                                </div>
-
-                                <div className="space-y-1">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Palavras-chave (Keywords)</label>
-                                    <textarea
-                                        rows={2}
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
-                                        placeholder="estética, botox, preenchimento, clínica em são paulo, harmonização..."
-                                        value={settings.seo_keywords || ''}
-                                        onChange={(e) => setSettings({ ...settings, seo_keywords: e.target.value })}
-                                    />
-                                </div>
+                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
+                                <Globe className="w-8 h-8 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Indexação e <span className="text-primary">Busca Web</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Otimização de Mecanismos e Metadados SEO</p>
                             </div>
                         </div>
 
-                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-2">Scripts e Analytics</h4>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Insira códigos de rastreamento (Google Analytics, Pixel do Facebook, etc).</p>
+                        <div className="grid grid-cols-1 gap-10">
+                            <InputField
+                                label="Título do Site (Title Tag)"
+                                placeholder="Ex: EstéticaFlow — Biotecnologia Avançada"
+                                value={settings.seo_title || ''}
+                                onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
+                            />
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div className="space-y-1">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scripts no &lt;head&gt;</label>
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Descrição do Site (Meta Description)</label>
+                                <textarea
+                                    rows={3}
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-none text-sm outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none font-medium leading-relaxed"
+                                    placeholder="Breve resumo da expertise técnica da unidade..."
+                                    value={settings.seo_description || ''}
+                                    onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="space-y-4">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Palavras-chave Técnicas (SEO Tags)</label>
+                                <textarea
+                                    rows={2}
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-none text-sm outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none font-mono"
+                                    placeholder="estetica, botox, preenchimento..."
+                                    value={settings.seo_keywords || ''}
+                                    onChange={(e) => setSettings({ ...settings, seo_keywords: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="pt-10 border-t border-slate-100 dark:border-slate-900">
+                            <div className="mb-8">
+                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-2">Protocolos de <span className="text-primary">Rastreamento</span></h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Injeção de Scripts de Monitoramento (Analytics & Pixel)</p>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Head Injection &lt;head&gt;</label>
                                     <textarea
-                                        rows={6}
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
-                                        placeholder="<!-- Scripts que carregam antes do body -->"
+                                        rows={8}
+                                        className="w-full px-6 py-4 bg-slate-900 border border-slate-800 rounded-none text-[12px] font-mono outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-emerald-500 resize-none opacity-80"
+                                        placeholder="<!-- Scripts: GTM, Search Console -->"
                                         value={settings.tracking_code || ''}
                                         onChange={(e) => setSettings({ ...settings, tracking_code: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-1">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Scripts no &lt;body&gt;</label>
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Body Injection &lt;body&gt;</label>
                                     <textarea
-                                        rows={6}
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-mono outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
-                                        placeholder="<!-- Scripts no final do body (GTM NoScript, etc) -->"
+                                        rows={8}
+                                        className="w-full px-6 py-4 bg-slate-900 border border-slate-800 rounded-none text-[12px] font-mono outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-emerald-500 resize-none opacity-80"
+                                        placeholder="<!-- Scripts: FB Pixel NoScript -->"
                                         value={settings.tracking_code_body || ''}
                                         onChange={(e) => setSettings({ ...settings, tracking_code_body: e.target.value })}
                                     />
@@ -761,167 +779,131 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 )}
 
                 {activeTab === 'branding' && (
-                    <div className="p-8 space-y-8">
-                        <div>
-                            <h4 className="text-lg font-bold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-                                <Palette className="w-5 h-5 text-primary" /> Identidade Visual
-                            </h4>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                                Escolha a cor principal que será aplicada em botões, links e destaques em todo o painel administrativo.
-                            </p>
+                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
+                                <Palette className="w-8 h-8 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Motor <span className="text-primary">Visual</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocolos de Identidade e Cromatismo</p>
+                            </div>
+                        </div>
 
-                            <div className="space-y-4">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Cor Primária</label>
+                        <div className="space-y-12">
+                            <div>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 block">Cor Principal da Interface</label>
                                 <div className="flex flex-wrap gap-4">
                                     {[
-                                        '#db2777', // Rosa (Original)
+                                        '#ebfe62', // Neon Lime (Silk & Steel Default)
+                                        '#db2777', // Rosa
                                         '#7c3aed', // Roxo
                                         '#2563eb', // Azul
                                         '#059669', // Verde
-                                        '#d97706', // Laranja
-                                        '#dc2626', // Vermelho
                                         '#1e293b', // Slate
                                     ].map((color) => (
                                         <button
                                             key={color}
                                             onClick={() => setSettings({ ...settings, primary_color: color })}
-                                            className={`w-12 h-12 rounded-xl border-2 transition-all ${settings.primary_color === color ? 'border-primary ring-4 ring-primary/20 scale-110' : 'border-transparent'}`}
+                                            className={`w-14 h-14 rounded-none border-2 transition-all relative ${settings.primary_color === color ? 'border-primary ring-4 ring-primary/10' : 'border-slate-200 dark:border-slate-800'}`}
                                             style={{ backgroundColor: color }}
                                             title={color}
-                                        />
+                                        >
+                                            {settings.primary_color === color && <Check className="w-5 h-5 absolute inset-0 m-auto text-slate-950" />}
+                                        </button>
                                     ))}
-                                    <div className="flex items-center gap-3 ml-4 pl-4 border-l border-slate-100 dark:border-slate-800">
-                                        <input
-                                            type="color"
-                                            value={settings.primary_color}
-                                            onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                                            className="w-12 h-12 rounded-xl border-none cursor-pointer bg-transparent"
-                                        />
-                                        <span className="text-sm font-mono font-bold text-slate-600 dark:text-slate-400 uppercase">{settings.primary_color}</span>
+                                    <div className="flex items-center gap-4 ml-6 pl-6 border-l border-slate-100 dark:border-slate-800">
+                                        <div className="relative group">
+                                            <input
+                                                type="color"
+                                                value={settings.primary_color}
+                                                onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
+                                                className="w-14 h-14 rounded-none border-none cursor-pointer bg-transparent"
+                                            />
+                                            <div className="absolute inset-0 border-2 border-slate-200 dark:border-slate-800 pointer-events-none group-hover:border-primary/50 transition-colors"></div>
+                                        </div>
+                                        <div className="flex flex-col">
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manual RGB</span>
+                                            <span className="text-[14px] font-mono font-black text-slate-950 dark:text-white uppercase tracking-tighter">{settings.primary_color}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-6">Logotipos por Tema</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div className="pt-10 border-t border-slate-100 dark:border-slate-900">
+                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
+                                    <ImageIcon className="w-5 h-5 text-primary" /> Ativos de <span className="text-primary">Marca</span>
+                                </h4>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                                     {/* Light Logo */}
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Claro</label>
-                                        <div className="relative group aspect-video rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projeção Padrão (Modo Claro)</label>
+                                        <div className="relative group aspect-video rounded-none bg-slate-50 flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden">
                                             {settings.logo_url ? (
-                                                <img src={settings.logo_url} className="max-w-[80%] max-h-[80%] object-contain" alt="Logo Light" />
+                                                <img src={settings.logo_url} className="max-w-[70%] max-h-[70%] object-contain grayscale hover:grayscale-0 transition-all duration-700" alt="Logo Light" />
                                             ) : (
-                                                <div className="text-center">
-                                                    <ImageIcon className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                                                    <span className="text-xs text-slate-400">Nenhum logo selecionado</span>
+                                                <div className="text-center opacity-20">
+                                                    <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">Offline Asset</span>
                                                 </div>
                                             )}
-                                            <input
-                                                type="file"
-                                                id="logo-light-upload"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={(e) => handleLogoUpload(e, 'light')}
-                                                disabled={isUploadingLogo}
-                                            />
-                                            <label
-                                                htmlFor="logo-light-upload"
-                                                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold text-sm gap-2"
-                                            >
-                                                {isUploadingLogo ? <Loader2 className="animate-spin" /> : <Plus className="w-5 h-5" />}
-                                                {settings.logo_url ? 'Trocar Logo' : 'Adicionar Logo'}
+                                            <input type="file" id="logo-light-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'light')} disabled={isUploadingLogo} />
+                                            <label htmlFor="logo-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-950/90 opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+                                                Remapear Entidade
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* Dark Logo */}
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Escuro</label>
-                                        <div className="relative group aspect-video rounded-2xl bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-800 overflow-hidden">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projeção Escura (Alto Contraste)</label>
+                                        <div className="relative group aspect-video rounded-none bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-900 overflow-hidden">
                                             {settings.logo_url_dark ? (
-                                                <img src={settings.logo_url_dark} className="max-w-[80%] max-h-[80%] object-contain" alt="Logo Dark" />
+                                                <img src={settings.logo_url_dark} className="max-w-[70%] max-h-[70%] object-contain" alt="Logo Dark" />
                                             ) : (
-                                                <div className="text-center">
-                                                    <ImageIcon className="w-8 h-8 text-slate-600 mx-auto mb-2" />
-                                                    <span className="text-xs text-slate-600">Nenhum logo selecionado</span>
+                                                <div className="text-center opacity-10">
+                                                    <ImageIcon className="w-10 h-10 text-slate-600 mx-auto mb-2" />
+                                                    <span className="text-[9px] font-black uppercase tracking-widest">Pending Asset</span>
                                                 </div>
                                             )}
-                                            <input
-                                                type="file"
-                                                id="logo-dark-upload"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={(e) => handleLogoUpload(e, 'dark')}
-                                                disabled={isUploadingLogo}
-                                            />
-                                            <label
-                                                htmlFor="logo-dark-upload"
-                                                className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold text-sm gap-2"
-                                            >
-                                                {isUploadingLogo ? <Loader2 className="animate-spin" /> : <Plus className="w-5 h-5" />}
-                                                {settings.logo_url_dark ? 'Trocar Logo' : 'Adicionar Logo'}
+                                            <input type="file" id="logo-dark-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'dark')} disabled={isUploadingLogo} />
+                                            <label htmlFor="logo-dark-upload" className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
+                                                Remapear Entidade
                                             </label>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
 
-                            <div className="pt-8 border-t border-slate-100 dark:border-slate-800 mt-8">
-                                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-6">Favicon (Ícone do Navegador)</h4>
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {/* Light Favicon */}
+                                    {/* Favicon Light */}
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Claro</label>
-                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-100 dark:bg-slate-900 flex items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 overflow-hidden">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ícone do Navegador (Modo Claro)</label>
+                                        <div className="relative group w-24 h-24 rounded-none bg-slate-50 flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden">
                                             {settings.favicon_url ? (
-                                                <img src={settings.favicon_url} className="w-12 h-12 object-contain" alt="Favicon Light" />
+                                                <img src={settings.favicon_url} className="w-12 h-12 object-contain grayscale hover:grayscale-0 transition-all duration-700" alt="Favicon" />
                                             ) : (
-                                                <div className="text-center">
-                                                    <ImageIcon className="w-6 h-6 text-slate-400 mx-auto" />
-                                                </div>
+                                                <ImageIcon className="w-6 h-6 text-slate-300 mx-auto opacity-20" />
                                             )}
-                                            <input
-                                                type="file"
-                                                id="favicon-light-upload"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={(e) => handleLogoUpload(e, 'favicon-light')}
-                                                disabled={isUploadingLogo}
-                                            />
-                                            <label
-                                                htmlFor="favicon-light-upload"
-                                                className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold"
-                                            >
-                                                {isUploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                                            <input type="file" id="favicon-light-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'favicon-light')} disabled={isUploadingLogo} />
+                                            <label htmlFor="favicon-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-950/90 opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                                             </label>
                                         </div>
                                     </div>
 
-                                    {/* Dark Favicon */}
+                                    {/* Favicon Dark */}
                                     <div className="space-y-4">
-                                        <label className="text-xs font-bold text-slate-500 uppercase tracking-wider">Versão para Tema Escuro</label>
-                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-800 overflow-hidden">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ícone do Navegador (Modo Escuro)</label>
+                                        <div className="relative group w-24 h-24 rounded-none bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-900 overflow-hidden">
                                             {settings.favicon_url_dark ? (
-                                                <img src={settings.favicon_url_dark} className="w-12 h-12 object-contain" alt="Favicon Dark" />
+                                                <img src={settings.favicon_url_dark} className="w-12 h-12 object-contain" alt="Favicon" />
                                             ) : (
-                                                <div className="text-center">
-                                                    <ImageIcon className="w-6 h-6 text-slate-600 mx-auto" />
-                                                </div>
+                                                <ImageIcon className="w-6 h-6 text-slate-600 mx-auto opacity-10" />
                                             )}
-                                            <input
-                                                type="file"
-                                                id="favicon-dark-upload"
-                                                className="hidden"
-                                                accept="image/*"
-                                                onChange={(e) => handleLogoUpload(e, 'favicon-dark')}
-                                                disabled={isUploadingLogo}
-                                            />
-                                            <label
-                                                htmlFor="favicon-dark-upload"
-                                                className="absolute inset-0 flex items-center justify-center bg-white/10 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-white font-bold"
-                                            >
-                                                {isUploadingLogo ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                                            <input type="file" id="favicon-dark-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'favicon-dark')} disabled={isUploadingLogo} />
+                                            <label htmlFor="favicon-dark-upload" className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
                                             </label>
                                         </div>
                                     </div>
@@ -929,239 +911,287 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             </div>
                         </div>
 
-                        <div className="p-6 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                            <h5 className="text-sm font-bold text-slate-900 dark:text-white mb-2">Dica de Design</h5>
-                            <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                                Cores vibrantes funcionam melhor para botões de ação. Se você mudar a cor para um tom muito claro,
-                                o sistema ajustará automaticamente alguns contrastes para manter a acessibilidade.
+                        <div className="p-10 bg-slate-950 border border-slate-900 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
+                            <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
+                                <Zap className="w-3 h-3" /> Inteligência Técnica
+                            </h5>
+                            <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-2xl">
+                                <span className="text-white uppercase font-black">Protocolo de Design:</span> Cores de alta saturação (Neon Lime) são otimizadas para monitoramento em ambientes escuros. O sistema recalibra automaticamente o espectro visual para manter a conformidade com as diretrizes de acessibilidade estéticas.
                             </p>
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'hours' && (
-                    <div className="p-8">
-                        <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
-                            <Clock className="w-4 h-4 text-primary" /> Horário de Funcionamento
-                        </h4>
+                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
+                                <Clock className="w-8 h-8 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Ciclo <span className="text-primary">Operacional</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cronograma de Atividade da Unidade</p>
+                            </div>
+                        </div>
 
                         {isLoading ? (
-                            <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>
+                            <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
                         ) : (
                             <div className="space-y-4">
                                 {businessHours.map((bh, index) => (
-                                    <div key={bh.id} className="flex flex-col sm:flex-row sm:items-center gap-4 p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
-                                        <div className="flex items-center gap-3 w-48 shrink-0">
+                                    <div key={bh.id} className="flex flex-col sm:flex-row sm:items-center gap-6 p-6 rounded-none border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 hover:border-primary/30 transition-colors group">
+                                        <div className="flex items-center gap-6 w-56 shrink-0">
                                             <button
                                                 onClick={() => {
                                                     const newBh = [...businessHours];
                                                     newBh[index].is_working_day = !newBh[index].is_working_day;
                                                     setBusinessHours(newBh);
                                                 }}
-                                                className={`w-10 h-5 rounded-full relative transition-colors ${bh.is_working_day ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                                className={`w-12 h-6 rounded-none relative transition-all border ${bh.is_working_day ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'}`}
                                             >
-                                                <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${bh.is_working_day ? 'left-5' : 'left-1'}`} />
+                                                <div className={`absolute top-0.5 w-4.5 h-4.5 bg-slate-950 rounded-none transition-all ${bh.is_working_day ? 'left-6 bg-white' : 'left-1'}`} />
                                             </button>
-                                            <span className={`text-sm font-medium ${bh.is_working_day ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                                            <span className={`text-[12px] font-black uppercase tracking-widest ${bh.is_working_day ? 'text-slate-950 dark:text-white' : 'text-slate-400 opacity-50'}`}>
                                                 {DAYS_OF_WEEK[bh.day_of_week]}
                                             </span>
                                         </div>
 
-                                        <div className={`flex items-center gap-2 flex-1 transition-opacity duration-200 ${!bh.is_working_day ? 'opacity-40 pointer-events-none' : 'opacity-100'}`}>
-                                            <input
-                                                type="time"
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
-                                                value={bh.start_time?.substring(0, 5) || '08:00'}
-                                                onChange={(e) => {
-                                                    const newBh = [...businessHours];
-                                                    newBh[index].start_time = e.target.value;
-                                                    setBusinessHours(newBh);
-                                                }}
-                                            />
-                                            <span className="text-slate-400">até</span>
-                                            <input
-                                                type="time"
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
-                                                value={bh.end_time?.substring(0, 5) || '18:00'}
-                                                onChange={(e) => {
-                                                    const newBh = [...businessHours];
-                                                    newBh[index].end_time = e.target.value;
-                                                    setBusinessHours(newBh);
-                                                }}
-                                            />
+                                        <div className={`flex items-center gap-4 flex-1 transition-all duration-300 ${!bh.is_working_day ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
+                                            <div className="flex-1 relative">
+                                                <input
+                                                    type="time"
+                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                                    value={bh.start_time?.substring(0, 5) || '08:00'}
+                                                    onChange={(e) => {
+                                                        const newBh = [...businessHours];
+                                                        newBh[index].start_time = e.target.value;
+                                                        setBusinessHours(newBh);
+                                                    }}
+                                                />
+                                                <label className="absolute -top-2 left-3 px-1 bg-white dark:bg-slate-950 text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Início</label>
+                                            </div>
+                                            <span className="text-[10px] font-black text-slate-300 uppercase">até</span>
+                                            <div className="flex-1 relative">
+                                                <input
+                                                    type="time"
+                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                                    value={bh.end_time?.substring(0, 5) || '18:00'}
+                                                    onChange={(e) => {
+                                                        const newBh = [...businessHours];
+                                                        newBh[index].end_time = e.target.value;
+                                                        setBusinessHours(newBh);
+                                                    }}
+                                                />
+                                                <label className="absolute -top-2 left-3 px-1 bg-white dark:bg-slate-950 text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Fim</label>
+                                            </div>
                                         </div>
                                         {!bh.is_working_day && (
-                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wider hidden sm:block">Fechado</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block opacity-30">Modo Offline</span>
                                         )}
                                     </div>
                                 ))}
                             </div>
                         )}
+
+                        <div className="p-8 bg-primary/5 border-l-4 border-primary rounded-none">
+                            <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
+                                <Info className="w-3 h-3" /> Aviso do Sistema
+                            </h5>
+                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
+                                Alterações no <span className="text-slate-900 dark:text-white">Operational Cycle</span> afetam instantaneamente a disponibilidade de agendamentos no Portal do Cliente e na disponibilidade da Neural Core.
+                            </p>
+                        </div>
                     </div>
                 )}
 
                 {activeTab === 'ai_agent' && (
-                    <div className="p-8 space-y-10 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                    <div className="p-10 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center gap-6">
+                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
+                                <Zap className="w-8 h-8 text-primary" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Núcleo <span className="text-primary">Neural</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inteligência Sintética e Automação de Fluxo</p>
+                            </div>
+                        </div>
+
                         {/* 1. Conexão Global do WhatsApp */}
-                        <div className="space-y-6">
-                            <div className="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-                                <div className="p-2 bg-primary/10 rounded-lg">
-                                    <LinkIcon className="w-5 h-5 text-primary" />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-slate-900 dark:text-white">Conexão WhatsApp</h4>
-                                    <p className="text-xs text-slate-500">Configure a conexão central que todos os agentes usarão para enviar mensagens.</p>
-                                </div>
+                        <div className="space-y-8 relative">
+                            <div className="flex items-center gap-4 mb-8">
+                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Uplink de Hardware (WhatsApp)</span>
+                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Plataforma</label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Protocolo de Conexão</label>
                                     <select
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white transition-all appearance-none cursor-pointer"
                                         value={settings.whatsapp_provider_type}
                                         onChange={(e) => setSettings({ ...settings, whatsapp_provider_type: e.target.value })}
                                     >
-                                        <option value="evolution">Evolution API (Recomendado)</option>
-                                        <option value="zapi">Z-API</option>
+                                        <option value="evolution">EVOLUTION API (v2.0 Native)</option>
+                                        <option value="zapi">Z-API (Cloud Bridge)</option>
                                     </select>
                                 </div>
 
-                                <InputField
-                                    label="URL da API"
-                                    icon={LinkIcon}
-                                    value={settings.whatsapp_provider_url || ''}
-                                    placeholder="Ex: https://api.exemplo.com"
-                                    onChange={(e) => setSettings({ ...settings, whatsapp_provider_url: e.target.value })}
-                                />
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Endereço do Endpoint (URL)</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                            value={settings.whatsapp_provider_url || ''}
+                                            placeholder="https://api.instance.sh"
+                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_url: e.target.value })}
+                                        />
+                                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    </div>
+                                </div>
 
-                                <InputField
-                                    label="Nome da Instância / Número"
-                                    icon={Phone}
-                                    value={settings.whatsapp_provider_instance || ''}
-                                    placeholder="Ex: esteticaflow_bot"
-                                    onChange={(e) => setSettings({ ...settings, whatsapp_provider_instance: e.target.value })}
-                                />
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ID da Instância / Identificador</label>
+                                    <div className="relative">
+                                        <input
+                                            type="text"
+                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                            value={settings.whatsapp_provider_instance || ''}
+                                            placeholder="ESTETICA_FLOW_CORE"
+                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_instance: e.target.value })}
+                                        />
+                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    </div>
+                                </div>
 
-                                <InputField
-                                    label="Token de Conexão"
-                                    icon={Key}
-                                    type="password"
-                                    value={settings.whatsapp_provider_token || ''}
-                                    placeholder="Token de segurança"
-                                    onChange={(e) => setSettings({ ...settings, whatsapp_provider_token: e.target.value })}
-                                />
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Token de Autenticação de Segurança</label>
+                                    <div className="relative">
+                                        <input
+                                            type="password"
+                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                            value={settings.whatsapp_provider_token || ''}
+                                            placeholder="••••••••••••••••"
+                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_token: e.target.value })}
+                                        />
+                                        <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         {/* 2. Lembretes Automáticos */}
-                        <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-100 dark:border-slate-800">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-amber-100 dark:bg-amber-900/30 rounded-lg">
-                                        <Clock className="w-5 h-5 text-amber-600 dark:text-amber-500" />
+                        <div className="p-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 blur-3xl rounded-full -mr-20 -mt-20"></div>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
+                                        <Clock className="w-7 h-7 text-amber-500" />
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">Lembretes de Agendamento</h4>
-                                        <p className="text-xs text-slate-500">Enviar mensagens automáticas para confirmar presença.</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Confirmação de <span className="text-amber-500">Pulso Neural</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembretes Preditivos de Presença</p>
                                     </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm font-bold text-slate-600 dark:text-slate-400">
-                                        {settings.reminder_active ? 'Ativado' : 'Desativado'}
+                                <div className="flex items-center gap-6">
+                                    <span className={`text-[10px] font-black uppercase tracking-widest ${settings.reminder_active ? 'text-primary' : 'text-slate-400'}`}>
+                                        {settings.reminder_active ? 'Status: Ativo' : 'Status: Em Espera'}
                                     </span>
                                     <button
                                         onClick={() => setSettings({ ...settings, reminder_active: !settings.reminder_active })}
-                                        className={`w-12 h-6 rounded-full relative transition-colors ${settings.reminder_active ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                        className={`w-14 h-7 rounded-none relative transition-all border ${settings.reminder_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
                                     >
-                                        <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.reminder_active ? 'left-7' : 'left-1'}`} />
+                                        <div className={`absolute top-0.5 w-5 h-5 bg-slate-950 rounded-none transition-all ${settings.reminder_active ? 'left-8 bg-white' : 'left-0.5'}`} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div className={`grid grid-cols-1 sm:grid-cols-2 gap-6 transition-opacity ${!settings.reminder_active ? 'opacity-50 pointer-events-none' : ''}`}>
-                                <div>
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Tempo Antecedência</label>
+                            <div className={`mt-10 pt-10 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-10 transition-all duration-500 ${!settings.reminder_active ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Intervalo de Transmissão</label>
                                     <select
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
+                                        className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
                                         value={settings.reminder_minutes}
                                         onChange={(e) => setSettings({ ...settings, reminder_minutes: parseInt(e.target.value) })}
                                     >
-                                        <option value={30}>30 Minutos antes</option>
-                                        <option value={60}>1 Hora antes</option>
-                                        <option value={120}>2 Horas antes</option>
-                                        <option value={1440}>24 Horas antes</option>
+                                        <option value={30}>T-30 Minutos (Rapid Response)</option>
+                                        <option value={60}>T-60 Minutos (Standard)</option>
+                                        <option value={120}>T-120 Minutos (Extended)</option>
+                                        <option value={1440}>T-24 Hours (Long Term)</option>
                                     </select>
                                 </div>
-                                <div className="p-4 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center gap-3">
-                                    <Info className="w-5 h-5 text-primary shrink-0" />
-                                    <p className="text-[11px] text-slate-500">
-                                        Se o cliente responder confirmando, a IA detectará e alterará o status para <strong>"Confirmado"</strong> automaticamente.
+                                <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20">
+                                    <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
+                                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                                        <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Detecção Autônoma:</span>
+                                        A rede neural analisa as respostas dos clientes e reajusta o status de agendamento em tempo real, eliminando a carga operacional humana.
                                     </p>
                                 </div>
                             </div>
                         </div>
 
                         {/* 3. Gestão de Agentes */}
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-primary/10 rounded-lg">
-                                        <Bot className="w-5 h-5 text-primary" />
+                        <div className="space-y-10">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
+                                        <Bot className="w-7 h-7 text-primary" />
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">Agentes de IA</h4>
-                                        <p className="text-xs text-slate-500">Crie múltiplos agentes para diferentes papéis (Recepcionista, Promoções, etc).</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Entidades Neurais <span className="text-primary">Ativas</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Matriz de Agentes Especializados</p>
                                     </div>
                                 </div>
-                                <Button onClick={() => handleOpenAgentModal()} className="gap-2 shrink-0">
-                                    <Plus className="w-4 h-4" /> Novo Agente
+                                <Button onClick={() => handleOpenAgentModal()} className="gap-3 shrink-0 h-14 px-8 rounded-none uppercase font-black tracking-widest text-[11px]">
+                                    <Plus className="w-5 h-5" /> Implantar Nova Entidade
                                 </Button>
                             </div>
 
                             {agents.length === 0 ? (
-                                <div className="text-center py-12 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                                    <Bot className="w-8 h-8 text-slate-300 mx-auto mb-3" />
-                                    <p className="text-sm text-slate-500">Nenhum agente configurado ainda.</p>
-                                    <Button variant="ghost" size="sm" onClick={() => handleOpenAgentModal()} className="mt-2 text-primary">
-                                        Criar meu primeiro agente
+                                <div className="text-center py-24 bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-100 dark:border-slate-900">
+                                    <Bot className="w-16 h-16 text-slate-300 dark:text-slate-800 mx-auto mb-6 opacity-50" />
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Nenhuma Entidade Ativa Detectada</p>
+                                    <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px]" onClick={() => handleOpenAgentModal()}>
+                                        Inicializar Primeira Sequência
                                     </Button>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {agents.map((agent) => (
-                                        <div key={agent.id} className="p-5 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm hover:border-primary/30 transition-all group relative">
-                                            <div className="flex items-center gap-4 mb-4">
-                                                <div className={`p-3 rounded-xl ${agent.is_active ? 'bg-primary/10 text-primary' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                                    <Bot className="w-6 h-6" />
+                                        <div key={agent.id} className="p-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 shadow-sm hover:border-primary/50 transition-all group relative">
+                                            <div className="flex items-center gap-6 mb-8">
+                                                <div className={`w-14 h-14 flex items-center justify-center border transition-all ${agent.is_active ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                                    <Bot className="w-7 h-7" />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <h5 className="font-bold text-slate-900 dark:text-white truncate">{agent.name}</h5>
-                                                    <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
-                                                        {agent.agent_role}
+                                                    <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest truncate">{agent.name}</h5>
+                                                    <span className="text-[9px] uppercase tracking-[0.2em] font-black text-primary/70 bg-primary/5 px-3 py-1 mt-1 inline-block">
+                                                        Função: {agent.agent_role}
                                                     </span>
                                                 </div>
                                                 <button
                                                     onClick={() => handleToggleAgent(agent)}
-                                                    className={`w-10 h-5 rounded-full relative transition-colors ${agent.is_active ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}
+                                                    className={`w-12 h-6 rounded-none relative transition-all border ${agent.is_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
                                                 >
-                                                    <div className={`absolute top-0.5 w-4 h-4 bg-white rounded-full transition-all ${agent.is_active ? 'left-5' : 'left-0.5'}`} />
+                                                    <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agent.is_active ? 'left-7 bg-white' : 'left-0.5'}`} />
                                                 </button>
                                             </div>
 
-                                            <p className="text-xs text-slate-500 line-clamp-2 mb-4 italic">
-                                                "{agent.system_prompt.substring(0, 100)}..."
+                                            <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-8 line-clamp-3">
+                                                "{agent.system_prompt}"
                                             </p>
 
-                                            <div className="flex gap-2 pt-2">
-                                                <Button variant="outline" size="sm" className="flex-1 text-xs py-1" onClick={() => handleOpenAgentModal(agent)}>
-                                                    Editar
+                                            <div className="flex gap-4 pt-4 border-t border-slate-50 dark:border-slate-900">
+                                                <Button variant="outline" className="flex-1 h-12 rounded-none uppercase font-black tracking-widest text-[10px] border-slate-200 dark:border-slate-800" onClick={() => handleOpenAgentModal(agent)}>
+                                                    Acessar Logs e Configuração
                                                 </Button>
                                                 <button
                                                     onClick={() => setAgentToDelete(agent)}
-                                                    className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                    className="w-12 h-12 flex items-center justify-center border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
                                         </div>
@@ -1171,72 +1201,76 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
 
                         {/* Base de Conhecimento */}
-                        <div className="space-y-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-4">
-                                <div className="flex items-center gap-3">
-                                    <div className="p-2 bg-slate-100 dark:bg-slate-800 rounded-lg">
-                                        <FileText className="w-5 h-5 text-slate-400" />
+                        <div className="space-y-10">
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
+                                        <FileText className="w-7 h-7 text-slate-400" />
                                     </div>
                                     <div>
-                                        <h4 className="text-lg font-bold text-slate-900 dark:text-white">Base de Conhecimento</h4>
-                                        <p className="text-xs text-slate-500">Regras e informações gerais que todos os agentes podem consultar.</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Dados de <span className="text-slate-400">Heurística Principal</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base de Conhecimento e Vínculo de Regras</p>
                                     </div>
                                 </div>
                                 {!isAddingKnowledge && (
-                                    <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-2">
-                                        <Plus className="w-4 h-4" /> Adicionar Instrução
+                                    <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-3 h-14 px-8 rounded-none border-slate-200 dark:border-slate-800 uppercase font-black tracking-widest text-[11px]">
+                                        <Plus className="w-5 h-5" /> Ingerir Heurística
                                     </Button>
                                 )}
                             </div>
 
                             {isAddingKnowledge && (
-                                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-4 animate-in fade-in slide-in-from-top-2">
-                                    <h5 className="font-bold text-slate-900 dark:text-white">Nova Instrução</h5>
-                                    <InputField
-                                        label="Título do Documento/Regra"
-                                        placeholder="Ex: Tabela de Preços, Política de Cancelamento..."
-                                        value={newKnowledge.title}
-                                        onChange={(e) => setNewKnowledge({ ...newKnowledge, title: e.target.value })}
-                                    />
-                                    <div className="space-y-1">
-                                        <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Conteúdo do Texto</label>
-                                        <textarea
-                                            rows={6}
-                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary text-slate-900 dark:text-white resize-y"
-                                            placeholder="Ex: Botox: R$ 1.200 (1x) ou R$ 1.350 em 3x. Aceitamos PIX e Cartão..."
-                                            value={newKnowledge.content}
-                                            onChange={(e) => setNewKnowledge({ ...newKnowledge, content: e.target.value })}
+                                <div className="p-10 bg-slate-50 dark:bg-slate-950 border border-primary/20 rounded-none space-y-8 animate-in fade-in slide-in-from-top-4">
+                                    <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Nova Ingestão de Heurística</h5>
+                                    <div className="space-y-6">
+                                        <InputField
+                                            label="Entity Label / Key Phrase"
+                                            placeholder="Ex: PRICING_MODEL_BOTX"
+                                            value={newKnowledge.title}
+                                            onChange={(e) => setNewKnowledge({ ...newKnowledge, title: e.target.value })}
                                         />
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dados do Payload (Suporta Markdown)</label>
+                                            <textarea
+                                                rows={8}
+                                                className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-y"
+                                                placeholder="# Core Rules...\n- Protocol 01: Fast responses\n- Protocol 02: Be precise"
+                                                value={newKnowledge.content}
+                                                onChange={(e) => setNewKnowledge({ ...newKnowledge, content: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="flex justify-end gap-3 pt-2">
-                                        <Button variant="ghost" onClick={() => setIsAddingKnowledge(false)}>Cancelar</Button>
-                                        <Button onClick={handleAddKnowledge}>Salvar Regra</Button>
+                                    <div className="flex justify-end gap-6 pt-6 border-t border-slate-100 dark:border-slate-900">
+                                        <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddingKnowledge(false)}>Abortar Comando</Button>
+                                        <Button className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" onClick={handleAddKnowledge}>Confirmar no Núcleo</Button>
                                     </div>
                                 </div>
                             )}
 
                             {knowledgeBase.length === 0 && !isAddingKnowledge ? (
-                                <div className="text-center py-8 bg-slate-50 dark:bg-slate-800/20 rounded-2xl border border-dashed border-slate-200 dark:border-slate-700">
-                                    <FileText className="w-8 h-8 text-slate-400 mx-auto mb-3 opacity-50" />
-                                    <p className="text-slate-500 font-medium">Nenhuma regra ou documento configurado.</p>
+                                <div className="text-center py-16 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 opacity-50">
+                                    <FileText className="w-12 h-12 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Processador de Heurísticas: Aguardando Dados...</p>
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {knowledgeBase.map((kb) => (
-                                        <div key={kb.id} className="p-5 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative group overflow-hidden flex flex-col">
-                                            <div className="flex justify-between items-start mb-2">
-                                                <h5 className="font-bold text-slate-900 dark:text-white pr-8">{kb.title}</h5>
+                                        <div key={kb.id} className="p-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 shadow-sm relative group overflow-hidden flex flex-col">
+                                            <div className="flex justify-between items-start mb-6">
+                                                <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest pr-12">{kb.title}</h5>
                                                 <button
                                                     onClick={() => handleDeleteKnowledge(kb.id)}
-                                                    className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                                                    title="Excluir"
+                                                    className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
                                                 >
-                                                    <Trash2 className="w-4 h-4" />
+                                                    <Trash2 className="w-5 h-5" />
                                                 </button>
                                             </div>
-                                            <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-4 flex-1">
+                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-6 flex-1 leading-relaxed">
                                                 {kb.content}
                                             </p>
+                                            <div className="mt-6 pt-6 border-t border-slate-50 dark:border-slate-900">
+                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Integridade da Heurística: Verificada</span>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
@@ -1245,72 +1279,69 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     </div>
                 )}
 
-                <div className="p-8 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center gap-4">
+                <div className="p-10 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-8">
                     {onLogout && (
-                        <Button variant="danger" size="sm" onClick={onLogout} className="opacity-70 hover:opacity-100">
-                            Sair da Conta
+                        <Button variant="danger" className="rounded-none uppercase font-black tracking-[0.2em] text-[10px] h-12 px-8 opacity-50 hover:opacity-100 transition-opacity" onClick={onLogout}>
+                            Encerrar Sessão
                         </Button>
                     )}
-                    <div className="flex gap-4 ml-auto">
-                        <Button variant="ghost" disabled={isSaving} onClick={() => fetchSettings()}>Cancelar</Button>
-                        <Button className="gap-2" size="lg" onClick={handleSave} disabled={isSaving || isLoading}>
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                            Salvar Alterações
+                    <div className="flex gap-6 w-full sm:w-auto">
+                        <Button variant="ghost" className="flex-1 sm:flex-none uppercase font-black tracking-widest text-[10px] transition-all hover:bg-slate-100 dark:hover:bg-slate-900" disabled={isSaving} onClick={() => fetchSettings()}>Resetar Interface</Button>
+                        <Button className="flex-1 sm:flex-none h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={handleSave} disabled={isSaving || isLoading} isLoading={isSaving}>
+                            <Save className="w-5 h-5 mr-3" /> Salvar Configurações
                         </Button>
                     </div>
                 </div>
-            </Card >
+            </Card>
 
             {/* Modal de Criação/Edição de Agente (Multi-step) */}
             <Modal
                 isOpen={isAgentModalOpen}
                 onClose={() => setIsAgentModalOpen(false)}
-                title={editingAgent ? `Editar Agente: ${editingAgent.name}` : "Criar Novo Agente Inteligente"}
-                description={`Passo ${agentFormStep} de 3: ${agentFormStep === 1 ? 'Identidade' : agentFormStep === 2 ? 'Cérebro e Modelo' : 'Comportamento'}`}
+                title={editingAgent ? `MOD_ENTIDADE: ${editingAgent.name}` : "INIT_NOVA_ENTIDADE"}
+                description={`Fase 0${agentFormStep}/03: ${agentFormStep === 1 ? 'ESPEC_IDENTIDADE' : agentFormStep === 2 ? 'LINK_NEURAL_PRINCIPAL' : 'HEURÍSTICAS_COMPORTAMENTAIS'}`}
             >
-                <div className="space-y-6">
-                    {/* Stepper Visual */}
-                    <div className="flex items-center gap-2 mb-4">
+                <div className="space-y-8 py-4">
+                    {/* Industrial Stepper */}
+                    <div className="flex items-center gap-1 mb-8">
                         {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex-1 flex items-center gap-2">
-                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${agentFormStep >= step ? 'bg-primary text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
-                                    {agentFormStep > step ? <Check className="w-4 h-4" /> : step}
-                                </div>
-                                {step < 3 && <div className={`flex-1 h-1 rounded-full ${agentFormStep > step ? 'bg-primary' : 'bg-slate-100 dark:bg-slate-800'}`} />}
+                            <div key={step} className="flex-1 flex flex-col gap-2">
+                                <div className={`h-1.5 transition-all duration-500 ${agentFormStep >= step ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800'}`} />
+                                <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${agentFormStep >= step ? 'text-primary' : 'text-slate-400'}`}>Fase 0{step}</span>
                             </div>
                         ))}
                     </div>
 
                     {agentFormStep === 1 && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             <InputField
-                                label="Nome do Agente"
-                                placeholder="Ex: Recepcionista Virtual"
+                                label="NOME_DA_ENTIDADE"
+                                placeholder="ex. RECEPCIONISTA_VIRTUAL_V2"
                                 value={agentForm.name}
                                 onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                             />
-                            <div>
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Papel do Agente</label>
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Função_Operacional</label>
                                 <select
-                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
                                     value={agentForm.agent_role}
                                     onChange={(e) => setAgentForm({ ...agentForm, agent_role: e.target.value })}
                                 >
-                                    <option value="receptivo">Atendimento Receptivo (Geral)</option>
-                                    <option value="vendas">Vendas / Promoção</option>
-                                    <option value="recuperacao">Recuperação de Carrinho</option>
-                                    <option value="confirmacao">Confirmação de Agendamento</option>
+                                    <option value="receptivo">RECEPTIVE_MODE (General Handling)</option>
+                                    <option value="vendas">SALES_ACCELERATOR (Conversion)</option>
+                                    <option value="recuperacao">CART_RECOVERY (Churn Prevention)</option>
+                                    <option value="confirmacao">APPOINTMENT_VALIDATOR (Confirmation)</option>
                                 </select>
                             </div>
                         </div>
                     )}
 
                     {agentFormStep === 2 && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div>
-                                <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Provedor de IA</label>
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="space-y-2">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Provedor_de_Inteligência</label>
                                 <select
-                                    className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
                                     value={agentForm.ai_provider}
                                     onChange={(e) => {
                                         const provider = e.target.value;
@@ -1321,54 +1352,51 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         }
                                     }}
                                 >
-                                    <option value="openai">OpenAI (GPT)</option>
-                                    <option value="groq">Groq (Rápido e Gratuito)</option>
-                                    <option value="openrouter">OpenRouter (Centenas de Modelos)</option>
-                                    <option value="gemini">Google Gemini</option>
-                                    <option value="anthropic">Anthropic Claude</option>
+                                    <option value="openai">OpenAI (GPT_CORE)</option>
+                                    <option value="groq">Groq (LP_STABLE)</option>
+                                    <option value="openrouter">OpenRouter (MULTI_MODAL)</option>
+                                    <option value="gemini">Google Gemini (FLASH_NATIVE)</option>
+                                    <option value="anthropic">Anthropic Claude (OPS_SAFETY)</option>
                                 </select>
                             </div>
 
-                            {/* OpenRouter: dropdown searchable de modelos */}
                             {agentForm.ai_provider === 'openrouter' ? (
-                                <div className="space-y-3">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 block">Modelo</label>
+                                <div className="space-y-4">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Seleção_de_Pesos_Neurais (Modelo)</label>
 
-                                    {/* Hint sobre a chave */}
                                     {!agentForm.ai_api_key && (
-                                        <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg text-xs text-amber-700 dark:text-amber-400">
-                                            <Info className="w-3.5 h-3.5 shrink-0" />
-                                            Informe sua chave abaixo para carregar os modelos disponíveis.
+                                        <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">
+                                            <Info className="w-4 h-4 shrink-0" />
+                                            Chave necessária para sincronização de modelos.
                                         </div>
                                     )}
 
-                                    {/* Search + dropdown */}
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            placeholder={isFetchingModels ? 'Carregando modelos...' : 'Buscar modelo (ex: llama, mistral, gpt)...'}
-                                            className="w-full pl-4 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white placeholder-slate-400"
+                                            placeholder={isFetchingModels ? 'SYNCHRONIZING...' : 'SEARCH_MODEL_SLUG...'}
+                                            className="w-full pl-6 pr-12 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white placeholder-slate-400"
                                             value={modelSearch}
                                             onChange={(e) => setModelSearch(e.target.value)}
                                             disabled={isFetchingModels}
                                         />
                                         {isFetchingModels && (
-                                            <Loader2 className="absolute right-3 top-3.5 w-4 h-4 text-slate-400 animate-spin" />
+                                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
                                         )}
                                     </div>
 
-                                    {/* Modelo selecionado atual */}
                                     {agentForm.ai_model && (
-                                        <div className="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg">
-                                            <Check className="w-3.5 h-3.5 text-primary shrink-0" />
-                                            <span className="text-xs font-mono text-primary font-bold truncate">{agentForm.ai_model}</span>
-                                            <button className="ml-auto text-slate-400 hover:text-red-500 text-xs" onClick={() => setAgentForm({ ...agentForm, ai_model: '' })}>✕</button>
+                                        <div className="flex items-center gap-4 p-4 bg-primary/5 border border-primary/20">
+                                            <div className="w-2 h-2 bg-primary animate-pulse" />
+                                            <span className="text-[11px] font-mono text-primary font-black truncate uppercase tracking-widest">{agentForm.ai_model}</span>
+                                            <button className="ml-auto text-slate-400 hover:text-red-500" onClick={() => setAgentForm({ ...agentForm, ai_model: '' })}>
+                                                <X className="w-4 h-4" />
+                                            </button>
                                         </div>
                                     )}
 
-                                    {/* Lista de modelos filtrada */}
                                     {openrouterModels.length > 0 && modelSearch.trim().length > 0 && (
-                                        <div className="max-h-52 overflow-y-auto rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 divide-y divide-slate-50 dark:divide-slate-800 shadow-lg">
+                                        <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 shadow-2xl z-50 relative">
                                             {openrouterModels
                                                 .filter(m =>
                                                     m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
@@ -1383,72 +1411,44 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                                             setAgentForm({ ...agentForm, ai_model: model.id });
                                                             setModelSearch('');
                                                         }}
-                                                        className="w-full text-left px-4 py-2.5 hover:bg-primary/5 transition-colors flex flex-col gap-0.5"
+                                                        className="w-full text-left px-6 py-4 hover:bg-primary/5 transition-all group flex flex-col gap-1"
                                                     >
-                                                        <span className="text-sm font-semibold text-slate-800 dark:text-white truncate">{model.name || model.id}</span>
-                                                        <div className="flex items-center gap-3 flex-wrap">
-                                                            <span className="text-[10px] font-mono text-slate-400 truncate">{model.id}</span>
-                                                            {model.context_length && (
-                                                                <span className="text-[10px] text-slate-400">{(model.context_length / 1000).toFixed(0)}K ctx</span>
-                                                            )}
-                                                            {model.pricing?.prompt && (
-                                                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400">
-                                                                    ${(parseFloat(model.pricing.prompt) * 1_000_000).toFixed(2)}/M tokens
-                                                                </span>
-                                                            )}
+                                                        <span className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-widest truncate group-hover:text-primary transition-colors">{model.name || model.id}</span>
+                                                        <div className="flex items-center gap-4">
+                                                            <span className="text-[9px] font-mono text-slate-400 uppercase">{model.id}</span>
+                                                            <span className="h-3 w-px bg-slate-200 dark:bg-slate-700"></span>
+                                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Link_Verificado</span>
                                                         </div>
                                                     </button>
                                                 ))
                                             }
                                         </div>
                                     )}
-
-                                    {/* Botão recarregar */}
-                                    <button
-                                        type="button"
-                                        onClick={() => fetchOpenRouterModels(agentForm.ai_api_key)}
-                                        className="text-xs text-primary hover:underline flex items-center gap-1"
-                                        disabled={isFetchingModels}
-                                    >
-                                        {isFetchingModels ? <Loader2 className="w-3 h-3 animate-spin" /> : null}
-                                        {isFetchingModels ? 'Carregando...' : 'Recarregar lista de modelos'}
-                                    </button>
                                 </div>
                             ) : (
-                                /* Para outros provedores: campo de texto com sugestões */
-                                <div>
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300 mb-2 block">Modelo (Slug)</label>
+                                <div className="space-y-3">
+                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Slug_de_Pesos_Neurais</label>
                                     <input
                                         type="text"
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white"
-                                        placeholder={
-                                            agentForm.ai_provider === 'openai' ? 'gpt-4o-mini / gpt-4o / gpt-3.5-turbo' :
-                                                agentForm.ai_provider === 'groq' ? 'llama-3.3-70b-versatile / mixtral-8x7b-32768' :
-                                                    agentForm.ai_provider === 'gemini' ? 'gemini-1.5-flash / gemini-1.5-pro' :
-                                                        agentForm.ai_provider === 'anthropic' ? 'claude-3-haiku-20240307 / claude-3-opus-20240229' :
-                                                            'Slug do modelo...'
-                                        }
+                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                        placeholder="ex. gpt-4o-mini"
                                         value={agentForm.ai_model}
                                         onChange={(e) => setAgentForm({ ...agentForm, ai_model: e.target.value })}
                                     />
-                                    <p className="text-xs text-slate-400 mt-1">
-                                        {agentForm.ai_provider === 'openai' && 'Recomendado: gpt-4o-mini (melhor custo-benefício)'}
-                                        {agentForm.ai_provider === 'groq' && 'Recomendado: llama-3.3-70b-versatile (gratuito e rápido)'}
-                                        {agentForm.ai_provider === 'gemini' && 'Recomendado: gemini-1.5-flash (rápido e gratuito)'}
-                                        {agentForm.ai_provider === 'anthropic' && 'Recomendado: claude-3-haiku-20240307 (mais barato)'}
+                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
+                                        Substituição manual necessária para provedores nativos.
                                     </p>
                                 </div>
                             )}
 
                             <InputField
-                                label="Chave de API"
+                                label="Auth_Credential_Token"
                                 type="password"
-                                placeholder="sk-..."
+                                placeholder="sk-pro-••••••••••••••••"
                                 value={agentForm.ai_api_key}
                                 onChange={(e) => {
                                     setAgentForm({ ...agentForm, ai_api_key: e.target.value });
-                                    // Se OpenRouter e tiver chave, carrega modelos
-                                    if (agentForm.ai_provider === 'openrouter' && e.target.value.length > 10) {
+                                    if (agentForm.ai_provider === 'openrouter' && (e.target.value?.length || 0) > 10) {
                                         fetchOpenRouterModels(e.target.value);
                                     }
                                 }}
@@ -1457,54 +1457,54 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     )}
 
                     {agentFormStep === 3 && (
-                        <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-                            <div className="space-y-4">
-                                <div className="space-y-2">
-                                    <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Personalidade (System Prompt)</label>
-                                    <textarea
-                                        rows={8}
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary/50 text-slate-900 dark:text-white resize-none"
-                                        placeholder="Instrua como o agente deve falar..."
-                                        value={agentForm.system_prompt}
-                                        onChange={(e) => setAgentForm({ ...agentForm, system_prompt: e.target.value })}
-                                    />
-                                </div>
-                                <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                                    <div>
-                                        <h4 className="text-sm font-bold text-slate-900 dark:text-white">Modo Debug (Logs)</h4>
-                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Salva todas as interações e erros detalhados. Desative para economizar espaço.</p>
+                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="space-y-3">
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Diretrizes_Principais (System Prompt)</label>
+                                <textarea
+                                    rows={10}
+                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none leading-relaxed"
+                                    placeholder="Enter natural language constraints..."
+                                    value={agentForm.system_prompt}
+                                    onChange={(e) => setAgentForm({ ...agentForm, system_prompt: e.target.value })}
+                                />
+                            </div>
+
+                            <div className="p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between group">
+                                <div className="flex items-center gap-4">
+                                    <div className={`w-10 h-10 flex items-center justify-center border ${agentForm.enable_logs ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                        <Code className="w-5 h-5" />
                                     </div>
-                                    <label className="relative inline-flex items-center cursor-pointer ml-4 shrink-0">
-                                        <input
-                                            type="checkbox"
-                                            className="sr-only peer"
-                                            checked={agentForm.enable_logs}
-                                            onChange={(e) => setAgentForm({ ...agentForm, enable_logs: e.target.checked })}
-                                        />
-                                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-slate-600 peer-checked:bg-primary"></div>
-                                    </label>
+                                    <div>
+                                        <h4 className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-1">Diagnósticos_de_Telemetria</h4>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Armazenar logs detalhados de interação</p>
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => setAgentForm({ ...agentForm, enable_logs: !agentForm.enable_logs })}
+                                    className={`w-12 h-6 rounded-none relative transition-all border ${agentForm.enable_logs ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
+                                >
+                                    <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agentForm.enable_logs ? 'left-7 bg-white' : 'left-0.5'}`} />
+                                </button>
                             </div>
                         </div>
                     )}
 
-                    <div className="flex justify-between pt-4 gap-3">
+                    <div className="flex justify-between pt-8 gap-6 border-t border-slate-100 dark:border-slate-900">
                         {agentFormStep > 1 ? (
-                            <Button variant="outline" onClick={() => setAgentFormStep(v => v - 1)} className="gap-2">
-                                <ChevronLeft className="w-4 h-4" /> Voltar
+                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setAgentFormStep(v => v - 1)}>
+                                <ChevronLeft className="w-5 h-5 mr-3" /> Back
                             </Button>
                         ) : (
-                            <Button variant="ghost" onClick={() => setIsAgentModalOpen(false)}>Cancelar</Button>
+                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setIsAgentModalOpen(false)}>Abortar</Button>
                         )}
 
                         {agentFormStep < 3 ? (
-                            <Button onClick={() => setAgentFormStep(v => v + 1)} className="gap-2 ml-auto">
-                                Próximo <ChevronRight className="w-4 h-4" />
+                            <Button onClick={() => setAgentFormStep(v => v + 1)} className="h-12 px-10 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto group">
+                                Próxima Fase <ChevronRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
                             </Button>
                         ) : (
-                            <Button onClick={handleSaveAgent} disabled={isSaving} className="gap-2 ml-auto">
-                                {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                                {editingAgent ? 'Salvar Alterações' : 'Criar Agente'}
+                            <Button onClick={handleSaveAgent} disabled={isSaving} className="h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto shadow-xl shadow-primary/20" isLoading={isSaving}>
+                                <Save className="w-5 h-5 mr-3" /> Confirmar Entidade
                             </Button>
                         )}
                     </div>
@@ -1524,14 +1524,14 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
             <Modal
                 isOpen={isAddressModalOpen}
                 onClose={() => setIsAddressModalOpen(false)}
-                title={addressForm.id ? 'Editar Endereço' : 'Novo Endereço'}
-                description="Preencha os dados do local de atendimento."
+                title={addressForm.id ? 'VÍNCULO_GEO: EDITAR' : 'VÍNCULO_GEO: NOVO'}
+                description="Sincronizando coordenadas físicas do nó."
             >
-                <form onSubmit={handleSaveAddress} className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <form onSubmit={handleSaveAddress} className="space-y-8 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1 relative">
                             <InputField
-                                label="CEP"
+                                label="COORDINATE_CODE (CEP)"
                                 value={addressForm.zip_code}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -1544,12 +1544,12 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 required
                             />
                             {isSearchingCep && (
-                                <Loader2 className="absolute right-3 top-9 w-4 h-4 text-slate-400 animate-spin" />
+                                <Loader2 className="absolute right-4 top-10 w-4 h-4 text-primary animate-spin" />
                             )}
                         </div>
                         <div className="md:col-span-2">
                             <InputField
-                                label="Logradouro"
+                                label="PRIMARY_AXIS (Street)"
                                 value={addressForm.street}
                                 onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
                                 placeholder="Rua, Avenida..."
@@ -1558,10 +1558,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1">
                             <InputField
-                                label="Número"
+                                label="NODE_ID (Number)"
                                 value={addressForm.number}
                                 onChange={(e) => setAddressForm({ ...addressForm, number: e.target.value })}
                                 placeholder="123"
@@ -1570,7 +1570,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-2">
                             <InputField
-                                label="Complemento"
+                                label="OFFSET_DATA (Complement)"
                                 value={addressForm.complement}
                                 onChange={(e) => setAddressForm({ ...addressForm, complement: e.target.value })}
                                 placeholder="Sala, Andar, Bloco..."
@@ -1578,10 +1578,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1">
                             <InputField
-                                label="Bairro"
+                                label="DISTRICT_ZONE"
                                 value={addressForm.neighborhood}
                                 onChange={(e) => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
                                 required
@@ -1589,7 +1589,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-1">
                             <InputField
-                                label="Cidade"
+                                label="METROPOLIS"
                                 value={addressForm.city}
                                 onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
                                 required
@@ -1597,7 +1597,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-1">
                             <InputField
-                                label="Estado (UF)"
+                                label="STATE_REF (UF)"
                                 value={addressForm.state}
                                 onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
                                 placeholder="SP"
@@ -1607,25 +1607,22 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-2">
-                        <input
-                            type="checkbox"
-                            id="is_main"
-                            className="w-4 h-4 text-primary rounded border-slate-300 focus:ring-primary"
-                            checked={addressForm.is_main}
-                            onChange={(e) => setAddressForm({ ...addressForm, is_main: e.target.checked })}
-                            disabled={addresses.length === 0} // Primeiro endereço é sempre principal
-                        />
-                        <label htmlFor="is_main" className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                            Definir como endereço principal
-                        </label>
+                    <div className="flex items-center gap-4 p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                        <button
+                            type="button"
+                            onClick={() => setAddressForm({ ...addressForm, is_main: !addressForm.is_main })}
+                            disabled={addresses.length === 0}
+                            className={`w-12 h-6 rounded-none relative transition-all border ${addressForm.is_main ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'}`}
+                        >
+                            <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${addressForm.is_main ? 'left-7 bg-white' : 'left-0.5'}`} />
+                        </button>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Definir como Nó Principal de Operações</label>
                     </div>
 
-                    <div className="flex justify-end gap-3 pt-6 border-t border-slate-100 dark:border-slate-800">
-                        <Button type="button" variant="ghost" onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
-                        <Button type="submit" disabled={isSaving}>
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                            Salvar Endereço
+                    <div className="flex justify-end gap-6 pt-8 border-t border-slate-100 dark:border-slate-900">
+                        <Button type="button" variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddressModalOpen(false)}>Abortar Vinculação</Button>
+                        <Button type="submit" className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" disabled={isSaving} isLoading={isSaving}>
+                            <Save className="w-5 h-5 mr-3" /> Confirmar Dados Geográficos
                         </Button>
                     </div>
                 </form>
