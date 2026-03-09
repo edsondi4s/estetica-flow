@@ -284,13 +284,13 @@ export const Clientes = () => {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
                     <div>
                         <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                            Top <span className="text-primary">Fidelidade</span>
+                            Clientes <span className="text-primary">Fiéis</span>
                         </h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Nossos clientes em destaque</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Nossos clientes que mais frequentam</p>
                     </div>
                     <div className="flex items-center gap-2 bg-slate-900 text-white px-4 py-2 rounded-sm text-[10px] font-black uppercase tracking-widest animate-pulse">
                         <Trophy className="w-4 h-4 text-primary" />
-                        Status: Elite
+                        Status: Premium
                     </div>
                 </div>
 
@@ -341,7 +341,7 @@ export const Clientes = () => {
                         ))
                     ) : (
                         <div className="col-span-full py-12 text-center bg-slate-50 dark:bg-slate-900/50 rounded-sm border-2 border-dashed border-slate-200 dark:border-slate-800">
-                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aguardando dados de performance...</p>
+                            <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Aguardando dados de atendimentos...</p>
                         </div>
                     )}
                 </div>
@@ -351,7 +351,7 @@ export const Clientes = () => {
                     <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                     <input
                         type="text"
-                        placeholder="BUSCAR CLIENTE NO BANCO DE DADOS..."
+                        placeholder="BUSCAR CLIENTE..."
                         className="w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/20 rounded-sm text-xs font-black uppercase tracking-tight focus:bg-white dark:focus:bg-slate-800 transition-all outline-none dark:text-white"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
@@ -362,7 +362,7 @@ export const Clientes = () => {
                         <ClipboardList className="w-4 h-4" /> Exportar [CSV]
                     </Button>
                     <Button onClick={() => handleOpenModal()} className="gap-2 flex-1 md:flex-none bg-slate-950 hover:bg-primary border-none shadow-xl shadow-black/10 transition-all hover:-translate-y-0.5 rounded-sm font-black uppercase text-[10px] tracking-widest whitespace-nowrap">
-                        <Plus className="w-4 h-4" /> Novo Registro
+                        <Plus className="w-4 h-4" /> Novo Cliente
                     </Button>
                 </div>
             </div>
@@ -373,17 +373,17 @@ export const Clientes = () => {
                         <div className="flex items-center justify-center py-32 bg-white dark:bg-slate-900">
                             <div className="flex flex-col items-center gap-4">
                                 <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Recuperando Registros...</span>
+                                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Carregando Clientes...</span>
                             </div>
                         </div>
                     ) : (
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="border-b-2 border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-950/30">
-                                    <th className="px-8 py-6 text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Identificação</th>
-                                    <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Contato</th>
+                                    <th className="px-8 py-6 text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Nome</th>
+                                    <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Telefone</th>
                                     <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">E-Mail</th>
-                                    <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Registro</th>
+                                    <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em]">Data de Cadastro</th>
                                     <th className="px-8 py-6 text-[11px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -403,7 +403,7 @@ export const Clientes = () => {
                                                 <div className="flex flex-col">
                                                     <span className="font-black text-sm text-slate-900 dark:text-white group-hover/name:text-primary transition-colors tracking-tight uppercase leading-none mb-1">{client.name}</span>
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest group-hover/name:translate-x-1 transition-transform inline-flex items-center gap-1">
-                                                        [ Ver Prontuário ]
+                                                        [ Ver Detalhes ]
                                                     </span>
                                                 </div>
                                             </div>
@@ -453,7 +453,7 @@ export const Clientes = () => {
                 </div>
                 <div className="bg-slate-50/50 dark:bg-slate-950/50 px-8 py-6 border-t-2 border-slate-100 dark:border-slate-900 flex items-center justify-between">
                     <span className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">
-                        Volume Total: {filteredClients.length} / {clients.length} Clientes
+                        Total: {filteredClients.length} / {clients.length} Clientes
                     </span>
                     <div className="flex gap-4">
                         <Button variant="outline" size="sm" className="rounded-sm font-black uppercase text-[10px] tracking-widest" disabled>Anterior</Button>
@@ -465,13 +465,13 @@ export const Clientes = () => {
             <Modal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                title={editingClient ? 'Ajustar Cadastro' : 'Novo Registro'}
+                title={editingClient ? 'Editar Cliente' : 'Novo Cliente'}
             >
                 <div className="flex flex-col gap-1 mb-8">
                     <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
                         {editingClient ? 'Editar' : 'Cadastrar'} <span className="text-primary">Cliente</span>
                     </h3>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Gestão de Ativos EstéticaFlow</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em]">Gestão de Clientes</p>
                 </div>
 
                 <form onSubmit={handleSaveClient} className="space-y-6 pt-2">
@@ -509,10 +509,10 @@ export const Clientes = () => {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Prontuário / Observações</label>
+                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Observações</label>
                         <textarea
                             className="w-full px-4 py-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-sm text-sm font-bold text-slate-900 dark:text-white focus:ring-0 focus:border-primary outline-none transition-all min-h-[120px] resize-none"
-                            placeholder="Anote detalhes técnicos, alergias ou preferências..."
+                            placeholder="Anote detalhes, alergias ou preferências..."
                             value={notes}
                             onChange={(e) => setNotes(e.target.value)}
                         />
@@ -524,7 +524,7 @@ export const Clientes = () => {
                         </Button>
                         <Button type="submit" className="flex-1 gap-2 rounded-sm bg-slate-950 hover:bg-primary shadow-xl shadow-black/10 transition-all font-black uppercase text-[10px] tracking-widest py-6" disabled={isSaving}>
                             {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
-                            Salvar Registro
+                            Salvar Cliente
                         </Button>
                     </div>
                 </form>
@@ -575,7 +575,7 @@ export const Clientes = () => {
                                     <ClipboardList className="w-4 h-4 text-primary" /> Notas e Observações
                                 </h4>
                                 <div className="p-8 bg-slate-50 dark:bg-slate-900 border-l-4 border-primary rounded-sm text-sm font-bold text-slate-700 dark:text-slate-300 leading-relaxed shadow-xl shadow-black/5">
-                                    "{selectedClient.notes}"
+                                    {selectedClient.notes}
                                 </div>
                             </div>
                         )}
@@ -651,7 +651,7 @@ export const Clientes = () => {
 
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-950 dark:text-white flex items-center gap-2 mb-6">
-                                    <Clock className="w-4 h-4 text-primary" /> Próximas Atividades
+                                    <Clock className="w-4 h-4 text-primary" /> Próximos Atendimentos
                                 </h4>
 
                                 {isLoadingHistory ? (
@@ -700,7 +700,7 @@ export const Clientes = () => {
                                         </div>
                                     ) : (
                                         <div className="text-center py-12 bg-slate-50 dark:bg-slate-900/40 rounded-sm border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sem agendamentos futuros mapeados</p>
+                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sem agendamentos futuros</p>
                                         </div>
                                     );
                                 })()}
@@ -708,7 +708,7 @@ export const Clientes = () => {
 
                             <div>
                                 <h4 className="text-[11px] font-black uppercase tracking-[0.3em] text-slate-950 dark:text-white flex items-center gap-2 mb-6">
-                                    <CheckCircle2 className="w-4 h-4 text-primary" /> Log de Realizações
+                                    <CheckCircle2 className="w-4 h-4 text-primary" /> Histórico de Atendimentos
                                 </h4>
 
                                 {isLoadingHistory ? (

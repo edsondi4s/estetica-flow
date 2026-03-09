@@ -267,7 +267,9 @@ export const Profissionais = () => {
 
             const specialtyList = finalSelectedServices.map(sid => {
                 const s = services.find(sv => sv.id === sid);
-                return s ? s.name : '';
+                if (s) return s.name;
+                if (isAddingService && newServiceName.trim()) return newServiceName.trim();
+                return '';
             }).filter(Boolean);
 
             const proData = {
@@ -327,7 +329,7 @@ export const Profissionais = () => {
         if (!confirmDelete.id) return;
 
         try {
-            await supabase.from('appointments').update({ pro_id: null }).eq('pro_id', confirmDelete.id);
+            await supabase.from('appointments').update({ professional_id: null }).eq('professional_id', confirmDelete.id);
             const { error } = await supabase.from('professionals').delete().eq('id', confirmDelete.id);
             if (error) throw error;
 
@@ -344,12 +346,12 @@ export const Profissionais = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                        Especialistas de <span className="text-primary">Elite</span>
+                        Nossa <span className="text-primary">Equipe</span>
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Gestão de Performance e Equipe</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Gerencie seus profissionais e performance</p>
                 </div>
                 <Button onClick={() => handleOpenModal()} className="gap-2 bg-slate-950 hover:bg-primary border-none shadow-xl shadow-black/10 transition-all hover:-translate-y-0.5 rounded-sm font-black uppercase text-[10px] tracking-widest whitespace-nowrap py-6 px-8">
-                    <Plus className="w-4 h-4" /> Novo Especialista
+                    <Plus className="w-4 h-4" /> Novo Profissional
                 </Button>
             </div>
 
@@ -361,10 +363,10 @@ export const Profissionais = () => {
                             <Users className="w-8 h-8" />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Efetivo Ativo</p>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Profissionais Ativos</p>
                             <div className="flex items-baseline gap-2">
                                 <span className="text-4xl font-black text-slate-950 dark:text-white tracking-tighter">{globalStats.activeCount}</span>
-                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Online</span>
+                                <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Em Dia</span>
                             </div>
                         </div>
                     </div>
@@ -391,7 +393,7 @@ export const Profissionais = () => {
                             <Medal className="w-8 h-8" />
                         </div>
                         <div className="min-w-0 flex-1">
-                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Liderança Técnica</p>
+                            <p className="text-[10px] font-black text-primary uppercase tracking-widest mb-1">Destaque do Mês</p>
                             <div className="flex flex-col items-start gap-0.5">
                                 <span className="text-xl font-black text-slate-950 dark:text-white tracking-tight truncate block group-hover:translate-x-1 transition-transform">
                                     {globalStats.starPro.name}
@@ -415,7 +417,7 @@ export const Profissionais = () => {
                         const proServices = pro.professional_services?.map((ps: any) => ps.services?.name).filter(Boolean) || [];
 
                         return (
-                            <div key={pro.id} className={`${!pro.is_active ? 'opacity-40 grayscale pointer-events-none' : ''} group`}>
+                            <div key={pro.id} className={`${!pro.is_active ? 'opacity-40 grayscale' : ''} group`}>
                                 <div className="relative bg-white dark:bg-slate-900 p-8 rounded-sm border-2 border-slate-100 dark:border-slate-800 shadow-xl shadow-black/5 hover:border-primary hover:shadow-2xl transition-all duration-500 group overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-primary/20 transition-all"></div>
 
@@ -461,10 +463,11 @@ export const Profissionais = () => {
                                                 </h3>
                                                 <button
                                                     onClick={() => toggleProStatus(pro)}
-                                                    className={`transition-all ${pro.is_active ? 'text-primary' : 'text-slate-300'}`}
+                                                    className={`transition-all hover:scale-110 active:scale-95 ${pro.is_active ? 'text-primary' : 'text-slate-400'}`}
+                                                    title={pro.is_active ? 'Desativar Profissional' : 'Ativar Profissional'}
                                                 >
-                                                    <div className={`w-10 h-4 rounded-sm border-2 relative transition-all ${pro.is_active ? 'bg-primary/10 border-primary' : 'bg-slate-100 border-slate-300'}`}>
-                                                        <div className={`absolute top-0.5 w-2 h-2 rounded-none transition-all ${pro.is_active ? 'left-6 bg-primary animate-pulse' : 'left-0.5 bg-slate-400'}`} />
+                                                    <div className={`w-10 h-4 rounded-sm border-2 relative transition-all ${pro.is_active ? 'bg-primary/10 border-primary' : 'bg-slate-200 border-slate-400'}`}>
+                                                        <div className={`absolute top-0.5 w-2 h-2 rounded-none transition-all ${pro.is_active ? 'left-6 bg-primary animate-pulse' : 'left-0.5 bg-slate-500'}`} />
                                                     </div>
                                                 </button>
                                             </div>
@@ -522,8 +525,8 @@ export const Profissionais = () => {
                     <div className="flex items-center gap-3 mb-10">
                         <BarChart3 className="w-6 h-6 text-primary" />
                         <div>
-                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Desempenho <span className="text-primary">Inteligente</span></h3>
-                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Benchmarking de Atividade Mensal</p>
+                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Relatório de <span className="text-primary">Performance</span></h3>
+                            <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Atividade Mensal por Profissional</p>
                         </div>
                     </div>
                     <div className="h-[300px] w-full">
@@ -566,11 +569,11 @@ export const Profissionais = () => {
                 title={editingPro ? 'Editar Profissional' : 'Novo Profissional'}
                 description="Cadastre um novo membro para sua equipe e atribua serviços."
             >
-                <div className="space-y-4 pt-2">
+                <form onSubmit={handleSave} className="space-y-4 pt-2">
                     <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800 focus-within:border-primary transition-all">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Identificação Funcional</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome do Profissional</label>
                         <input
-                            placeholder="NOME DO ESPECIALISTA"
+                            placeholder="NOME COMPLETO"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full bg-transparent text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter placeholder:text-slate-200 outline-none"
@@ -607,7 +610,7 @@ export const Profissionais = () => {
 
                         <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
                             <div className="flex justify-between items-center mb-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Matriz de Habilidades</label>
+                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Serviços que realiza</label>
                                 <button
                                     type="button"
                                     onClick={() => setIsAddingService(!isAddingService)}
@@ -667,10 +670,10 @@ export const Profissionais = () => {
                             Descartar
                         </Button>
                         <Button type="submit" className="flex-1 bg-slate-950 hover:bg-primary border-none text-white rounded-sm font-black uppercase text-[10px] tracking-widest py-6 shadow-xl shadow-black/20" disabled={isSaving || (!isAddingService && selectedServices.length === 0)}>
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirmar Registro'}
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar Profissional'}
                         </Button>
                     </div>
-                </div>
+                </form>
             </Modal>
 
             <ConfirmModal
@@ -686,7 +689,7 @@ export const Profissionais = () => {
             <Modal
                 isOpen={!!selectedPro}
                 onClose={() => setSelectedPro(null)}
-                title="PERFIL DE DESEMPENHO TÉCNICO"
+                title="DESEMPENHO DO PROFISSIONAL"
             >
                 {selectedPro && (
                     <div className="space-y-8 pt-4">
@@ -721,7 +724,7 @@ export const Profissionais = () => {
 
                         <div className="bg-slate-50 dark:bg-slate-950 p-8 rounded-sm border-2 border-slate-100 dark:border-slate-800">
                             <h4 className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-8 flex items-center gap-3">
-                                <div className="w-4 h-0.5 bg-primary"></div> Distribuição Técnica de Resultados
+                                <div className="w-4 h-0.5 bg-primary"></div> Distribuição de Atendimentos
                             </h4>
                             {isLoadingStats ? (
                                 <div className="flex justify-center py-10"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
@@ -774,7 +777,7 @@ export const Profissionais = () => {
                             ) : (
                                 <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800">
                                     <Scissors className="w-12 h-12 text-slate-200 mx-auto mb-4" />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Aguardando Log de Procedimentos</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum atendimento registrado</p>
                                 </div>
                             )}
                         </div>
@@ -782,7 +785,7 @@ export const Profissionais = () => {
                         <div className="pt-8 flex gap-4 border-t-2 border-slate-100 dark:border-slate-800">
                             <Button variant="outline" className="flex-1 rounded-sm border-2 border-slate-200 font-black uppercase text-[10px] tracking-widest py-6" onClick={() => setSelectedPro(null)}>Fechar Dash</Button>
                             <Button className="flex-1 bg-slate-950 hover:bg-primary border-none text-white rounded-sm font-black uppercase text-[10px] tracking-widest py-6 shadow-xl shadow-black/20" onClick={() => { setSelectedPro(null); handleOpenModal(selectedPro); }}>
-                                Editar Perfil Técnico
+                                Editar Perfil
                             </Button>
                         </div>
                     </div>

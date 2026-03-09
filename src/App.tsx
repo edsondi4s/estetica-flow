@@ -9,6 +9,7 @@ import { Financeiro } from './pages/Financeiro';
 import { Configuracoes } from './pages/Configuracoes';
 import { Profissionais } from './pages/Profissionais';
 import { Chat } from './pages/Chat';
+import { BotFlows } from './pages/BotFlows';
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -123,6 +124,7 @@ function AppContent() {
       case 'profissionais': return <Profissionais />;
       case 'financeiro': return <Financeiro />;
       case 'chat': return <Chat />;
+      case 'fluxos': return <BotFlows />;
       case 'configuracoes': return <Configuracoes onLogout={handleLogout} />;
       default: return <Dashboard onPageChange={setCurrentPage} />;
     }

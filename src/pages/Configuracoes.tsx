@@ -565,12 +565,12 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         <div className="max-w-6xl mx-auto w-full space-y-10">
             <div className="bg-white dark:bg-slate-950 p-2 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
                 {[
-                    { id: 'info', label: 'Informações Gerais', icon: Building2 },
+                    { id: 'info', label: 'Informações da Empresa', icon: Building2 },
                     { id: 'enderecos', label: 'Endereços', icon: MapIcon },
                     { id: 'branding', label: 'Aparência', icon: Palette },
-                    { id: 'seo', label: 'SEO e Site', icon: Globe },
+                    { id: 'seo', label: 'Site e Busca (SEO)', icon: Globe },
                     { id: 'hours', label: 'Horário de Funcionamento', icon: Clock },
-                    { id: 'ai_agent', label: 'Inteligência Artificial (IA)', icon: Bot, highlight: true }
+                    { id: 'ai_agent', label: 'Assistente Virtual (IA)', icon: Bot, highlight: true }
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -595,19 +595,19 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 {activeTab === 'info' && (
                     <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div>
-                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Identidade <span className="text-primary">Corporativa</span></h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Metadados e Identificação da Unidade</p>
+                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Informações da <span className="text-primary">Empresa</span></h3>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dados básicos da sua unidade</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             <InputField
-                                label="Nome da Unidade"
+                                label="Nome da Empresa"
                                 icon={Building2}
                                 value={settings.business_name}
                                 onChange={(e) => setSettings({ ...settings, business_name: e.target.value })}
                             />
                             <InputField
-                                label="Linha Direta de Contato"
+                                label="Telefone de Contato"
                                 icon={Phone}
                                 type="tel"
                                 placeholder="(00) 00000-0000"
@@ -632,8 +632,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Localização de <span className="text-primary">Ativos</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Geolocalização de Pontos de Operação</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Nossos <span className="text-primary">Endereços</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Locais onde você atende</p>
                             </div>
                             <Button
                                 onClick={() => {
@@ -642,7 +642,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 }}
                                 className="bg-primary text-slate-950 rounded-none h-12 px-8 font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
                             >
-                                <Plus className="w-4 h-4 mr-2" /> Registrar Ponto
+                                <Plus className="w-4 h-4 mr-2" /> Adicionar Endereço
                             </Button>
                         </div>
 
@@ -657,7 +657,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                     <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-8 rounded-sm border border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/5 hover:border-primary/30 transition-all overflow-hidden">
                                         {addr.is_main && (
                                             <div className="absolute top-0 right-0 bg-primary text-slate-950 text-[9px] font-black px-4 py-1 tracking-widest uppercase">
-                                                Unidade Principal
+                                                Principal
                                             </div>
                                         )}
                                         <div className="flex gap-4 mb-6">
@@ -682,7 +682,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                                     setIsAddressModalOpen(true);
                                                 }}
                                             >
-                                                Configurar Ponto
+                                                Editar Endereço
                                             </button>
                                             <button
                                                 className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors"
@@ -705,8 +705,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <Globe className="w-8 h-8 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Indexação e <span className="text-primary">Busca Web</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Otimização de Mecanismos e Metadados SEO</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Aparecer no <span className="text-primary">Google</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configurações para seu site ser encontrado</p>
                             </div>
                         </div>
 
@@ -743,8 +743,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
                         <div className="pt-10 border-t border-slate-100 dark:border-slate-900">
                             <div className="mb-8">
-                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-2">Protocolos de <span className="text-primary">Rastreamento</span></h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Injeção de Scripts de Monitoramento (Analytics & Pixel)</p>
+                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-2">Códigos de <span className="text-primary">Rastreamento</span></h4>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Para Google Analytics, Facebook Pixel e outros</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -780,8 +780,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <Palette className="w-8 h-8 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Motor <span className="text-primary">Visual</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Protocolos de Identidade e Cromatismo</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Cores e <span className="text-primary">Logotipo</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Personalização visual do sistema</p>
                             </div>
                         </div>
 
@@ -909,10 +909,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         <div className="p-10 bg-slate-950 border border-slate-900 relative overflow-hidden group">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
                             <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                <Zap className="w-3 h-3" /> Inteligência Técnica
+                                <Zap className="w-3 h-3" /> Dica Visual
                             </h5>
                             <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-2xl">
-                                <span className="text-white uppercase font-black">Protocolo de Design:</span> Cores de alta saturação (Neon Lime) são otimizadas para monitoramento em ambientes escuros. O sistema recalibra automaticamente o espectro visual para manter a conformidade com as diretrizes de acessibilidade estéticas.
+                                <span className="text-white uppercase font-black">Design do Sistema:</span> Usamos cores modernas e alto contraste para garantir que o sistema seja fácil de ler e usar em qualquer tela.
                             </p>
                         </div>
                     </div>
@@ -925,8 +925,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <Clock className="w-8 h-8 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Ciclo <span className="text-primary">Operacional</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cronograma de Atividade da Unidade</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Horário de <span className="text-primary">Atendimento</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Defina quando sua empresa está aberta</p>
                             </div>
                         </div>
 
@@ -982,7 +982,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                             </div>
                                         </div>
                                         {!bh.is_working_day && (
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block opacity-30">Modo Offline</span>
+                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block opacity-30">Fechado</span>
                                         )}
                                     </div>
                                 ))}
@@ -991,10 +991,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
                         <div className="p-8 bg-primary/5 border-l-4 border-primary rounded-none">
                             <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
-                                <Info className="w-3 h-3" /> Aviso do Sistema
+                                <Info className="w-3 h-3" /> Importante
                             </h5>
                             <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                Alterações no <span className="text-slate-900 dark:text-white">Operational Cycle</span> afetam instantaneamente a disponibilidade de agendamentos no Portal do Cliente e na disponibilidade da Neural Core.
+                                Alterações no <span className="text-slate-900 dark:text-white">horário</span> afetam imediatamente quando os clientes podem agendar pelo site e o atendimento do robô.
                             </p>
                         </div>
                     </div>
@@ -1007,8 +1007,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <Zap className="w-8 h-8 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Núcleo <span className="text-primary">Neural</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Inteligência Sintética e Automação de Fluxo</p>
+                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Assistente <span className="text-primary">Virtual (IA)</span></h3>
+                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Seu agente que atende e agenda pelo WhatsApp</p>
                             </div>
                         </div>
 
@@ -1016,7 +1016,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         <div className="space-y-8 relative">
                             <div className="flex items-center gap-4 mb-8">
                                 <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Uplink de Hardware (WhatsApp)</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Conexão com WhatsApp</span>
                                 <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
                             </div>
 
@@ -1086,8 +1086,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         <Clock className="w-7 h-7 text-amber-500" />
                                     </div>
                                     <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Confirmação de <span className="text-amber-500">Pulso Neural</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Lembretes Preditivos de Presença</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Lembretes <span className="text-amber-500">Automáticos</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmar agendamentos sozinho</p>
                                     </div>
                                 </div>
                                 <div className="flex items-center gap-6">
@@ -1120,8 +1120,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20">
                                     <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
                                     <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                                        <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Detecção Autônoma:</span>
-                                        A rede neural analisa as respostas dos clientes e reajusta o status de agendamento em tempo real, eliminando a carga operacional humana.
+                                        <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Como funciona:</span>
+                                        O sistema entende as respostas dos clientes e confirma ou cancela o agendamento sozinho, poupando seu tempo.
                                     </p>
                                 </div>
                             </div>
@@ -1135,21 +1135,21 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         <Bot className="w-7 h-7 text-primary" />
                                     </div>
                                     <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Entidades Neurais <span className="text-primary">Ativas</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Matriz de Agentes Especializados</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Meus <span className="text-primary">Agentes de IA</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assistentes configurados para atender seus clientes</p>
                                     </div>
                                 </div>
                                 <Button onClick={() => handleOpenAgentModal()} className="gap-3 shrink-0 h-14 px-8 rounded-none uppercase font-black tracking-widest text-[11px]">
-                                    <Plus className="w-5 h-5" /> Implantar Nova Entidade
+                                    <Plus className="w-5 h-5" /> Criar Novo Agente
                                 </Button>
                             </div>
 
                             {agents.length === 0 ? (
                                 <div className="text-center py-24 bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-100 dark:border-slate-900">
                                     <Bot className="w-16 h-16 text-slate-300 dark:text-slate-800 mx-auto mb-6 opacity-50" />
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Nenhuma Entidade Ativa Detectada</p>
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Nenhum Agente Ativo</p>
                                     <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px]" onClick={() => handleOpenAgentModal()}>
-                                        Inicializar Primeira Sequência
+                                        Criar Meu Primeiro Agente
                                     </Button>
                                 </div>
                             ) : (
@@ -1180,7 +1180,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
                                             <div className="flex gap-4 pt-4 border-t border-slate-50 dark:border-slate-900">
                                                 <Button variant="outline" className="flex-1 h-12 rounded-none uppercase font-black tracking-widest text-[10px] border-slate-200 dark:border-slate-800" onClick={() => handleOpenAgentModal(agent)}>
-                                                    Acessar Logs e Configuração
+                                                    Editar e Ver Conversas
                                                 </Button>
                                                 <button
                                                     onClick={() => setAgentToDelete(agent)}
@@ -1203,29 +1203,29 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         <FileText className="w-7 h-7 text-slate-400" />
                                     </div>
                                     <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Dados de <span className="text-slate-400">Heurística Principal</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base de Conhecimento e Vínculo de Regras</p>
+                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Regras de <span className="text-slate-400">Atendimento</span></h4>
+                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base de conhecimento e regras para o assistente seguir</p>
                                     </div>
                                 </div>
                                 {!isAddingKnowledge && (
                                     <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-3 h-14 px-8 rounded-none border-slate-200 dark:border-slate-800 uppercase font-black tracking-widest text-[11px]">
-                                        <Plus className="w-5 h-5" /> Ingerir Heurística
+                                        <Plus className="w-5 h-5" /> Adicionar Regra
                                     </Button>
                                 )}
                             </div>
 
                             {isAddingKnowledge && (
                                 <div className="p-10 bg-slate-50 dark:bg-slate-950 border border-primary/20 rounded-none space-y-8 animate-in fade-in slide-in-from-top-4">
-                                    <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Nova Ingestão de Heurística</h5>
+                                    <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Nova Regra de Conhecimento</h5>
                                     <div className="space-y-6">
                                         <InputField
-                                            label="Entity Label / Key Phrase"
-                                            placeholder="Ex: PRICING_MODEL_BOTX"
+                                            label="Título da Regra"
+                                            placeholder="Ex: Preços de Botox"
                                             value={newKnowledge.title}
                                             onChange={(e) => setNewKnowledge({ ...newKnowledge, title: e.target.value })}
                                         />
                                         <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dados do Payload (Suporta Markdown)</label>
+                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conteúdo da Regra</label>
                                             <textarea
                                                 rows={8}
                                                 className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-y"
@@ -1236,8 +1236,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         </div>
                                     </div>
                                     <div className="flex justify-end gap-6 pt-6 border-t border-slate-100 dark:border-slate-900">
-                                        <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddingKnowledge(false)}>Abortar Comando</Button>
-                                        <Button className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" onClick={handleAddKnowledge}>Confirmar no Núcleo</Button>
+                                        <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddingKnowledge(false)}>Cancelar</Button>
+                                        <Button className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" onClick={handleAddKnowledge}>Salvar Regra</Button>
                                     </div>
                                 </div>
                             )}
@@ -1245,7 +1245,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             {knowledgeBase.length === 0 && !isAddingKnowledge ? (
                                 <div className="text-center py-16 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 opacity-50">
                                     <FileText className="w-12 h-12 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Processador de Heurísticas: Aguardando Dados...</p>
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sem regras salvas. Adicione informações para o Robô.</p>
                                 </div>
                             ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -1293,8 +1293,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
             <Modal
                 isOpen={isAgentModalOpen}
                 onClose={() => setIsAgentModalOpen(false)}
-                title={editingAgent ? `MOD_ENTIDADE: ${editingAgent.name}` : "INIT_NOVA_ENTIDADE"}
-                description={`Fase 0${agentFormStep}/03: ${agentFormStep === 1 ? 'ESPEC_IDENTIDADE' : agentFormStep === 2 ? 'LINK_NEURAL_PRINCIPAL' : 'HEURÍSTICAS_COMPORTAMENTAIS'}`}
+                title={editingAgent ? `Editar Agente: ${editingAgent.name}` : "Novo Agente"}
+                description={`Passo 0${agentFormStep} de 03: ${agentFormStep === 1 ? 'Identidade' : agentFormStep === 2 ? 'Conexão e Inteligência' : 'Comportamento'}`}
             >
                 <div className="space-y-8 py-4">
                     {/* Industrial Stepper */}
@@ -1310,8 +1310,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     {agentFormStep === 1 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             <InputField
-                                label="NOME_DA_ENTIDADE"
-                                placeholder="ex. RECEPCIONISTA_VIRTUAL_V2"
+                                label="Nome do Agente"
+                                placeholder="ex. Recepcionista Virtual"
                                 value={agentForm.name}
                                 onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                             />
@@ -1322,10 +1322,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                     value={agentForm.agent_role}
                                     onChange={(e) => setAgentForm({ ...agentForm, agent_role: e.target.value })}
                                 >
-                                    <option value="receptivo">RECEPTIVE_MODE (General Handling)</option>
-                                    <option value="vendas">SALES_ACCELERATOR (Conversion)</option>
-                                    <option value="recuperacao">CART_RECOVERY (Churn Prevention)</option>
-                                    <option value="confirmacao">APPOINTMENT_VALIDATOR (Confirmation)</option>
+                                    <option value="receptivo">Atendimento (Geral)</option>
+                                    <option value="vendas">Vendas (Agendamentos)</option>
+                                    <option value="recuperacao">Recuperação de Clientes</option>
+                                    <option value="confirmacao">Confirmação Automática</option>
                                 </select>
                             </div>
                         </div>
@@ -1458,7 +1458,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <textarea
                                     rows={10}
                                     className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none leading-relaxed"
-                                    placeholder="Enter natural language constraints..."
+                                    placeholder="Diga como o agente deve se comportar e o que deve responder..."
                                     value={agentForm.system_prompt}
                                     onChange={(e) => setAgentForm({ ...agentForm, system_prompt: e.target.value })}
                                 />
@@ -1470,8 +1470,8 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                         <Code className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-1">Diagnósticos_de_Telemetria</h4>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Armazenar logs detalhados de interação</p>
+                                        <h4 className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-1">Diagnóstico e Histórico</h4>
+                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Salvar detalhes das conversas para conferência</p>
                                     </div>
                                 </div>
                                 <button
@@ -1490,7 +1490,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <ChevronLeft className="w-5 h-5 mr-3" /> Back
                             </Button>
                         ) : (
-                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setIsAgentModalOpen(false)}>Abortar</Button>
+                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setIsAgentModalOpen(false)}>Cancelar</Button>
                         )}
 
                         {agentFormStep < 3 ? (
@@ -1499,7 +1499,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             </Button>
                         ) : (
                             <Button onClick={handleSaveAgent} disabled={isSaving} className="h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto shadow-xl shadow-primary/20" isLoading={isSaving}>
-                                <Save className="w-5 h-5 mr-3" /> Confirmar Entidade
+                                <Save className="w-5 h-5 mr-3" /> Salvar Agente
                             </Button>
                         )}
                     </div>

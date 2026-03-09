@@ -78,8 +78,7 @@ export const Login = ({ onLogin }: LoginProps) => {
                 <div className="bg-white dark:bg-slate-950 rounded-sm border-2 border-slate-100 dark:border-white/10 shadow-[20px_20px_60px_rgba(0,0,0,0.1)] dark:shadow-[0_0_50px_rgba(0,0,0,0.3)] overflow-hidden">
                     <div className="p-10 sm:p-14">
                         <div className="flex justify-center mb-10">
-                            <div className="relative group">
-                                <div className="absolute -inset-4 bg-primary/20 rounded-full blur-xl group-hover:bg-primary/40 transition-all opacity-0 group-hover:opacity-100" />
+                            <div className="relative">
                                 <div className={`${(theme === 'dark' ? (settings.logo_url_dark || settings.logo_url) : settings.logo_url) ? 'w-full h-24' : 'w-20 h-20 bg-slate-950 rounded-sm flex items-center justify-center text-primary border-2 border-primary/20 transition-all'} relative z-10 flex items-center justify-center overflow-hidden`}>
                                     {theme === 'dark' && settings.logo_url_dark ? (
                                         <img src={settings.logo_url_dark} alt="Logo" className="max-w-full max-h-full object-contain" />

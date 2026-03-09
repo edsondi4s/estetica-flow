@@ -174,9 +174,9 @@ export const Financeiro = () => {
                     </div>
                     <div>
                         <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                            Monitor <span className="text-primary">Financeiro</span>
+                            Meu <span className="text-primary">Financeiro</span>
                         </h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Gestão de Fluxo e Projeções</p>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Resumo de Ganhos e Previsões</p>
                     </div>
                 </div>
 
@@ -207,11 +207,11 @@ export const Financeiro = () => {
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                         <CheckCircle2 className="w-24 h-24 text-emerald-500" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Capital Confirmado</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Total Recebido</p>
                     <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(totalBalance)}</h3>
                     <div className="mt-6 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Saldo Realizado</span>
+                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Dinheiro em Caixa</span>
                     </div>
                 </div>
 
@@ -219,11 +219,11 @@ export const Financeiro = () => {
                     <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
                         <TrendingUp className="w-24 h-24 text-primary" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Receita Projetada</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Previsão de Recebimento</p>
                     <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(projectedBalance)}</h3>
                     <div className="mt-6 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">Previsão Operacional</span>
+                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">Valor Pendente</span>
                     </div>
                 </div>
             </div>
@@ -231,8 +231,8 @@ export const Financeiro = () => {
             <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/20">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
                     <div>
-                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Análise de <span className="text-primary">Performance</span></h3>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1">Oscilação de Receita por Intervalo</p>
+                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Gráfico de <span className="text-primary">Ganhos</span></h3>
+                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1">Variação de Receita no Período</p>
                     </div>
                     <div className="flex items-center bg-slate-900 p-1 divide-x divide-slate-800 border border-slate-800">
                         {(['diario', 'semanal', 'mensal'] as const).map(group => (
@@ -241,7 +241,7 @@ export const Financeiro = () => {
                                 onClick={() => setChartGroup(group)}
                                 className={`px-6 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${chartGroup === group ? 'bg-primary text-slate-950' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
                             >
-                                {group}
+                                {group === 'diario' ? 'Diário' : group === 'semanal' ? 'Semanal' : 'Mensal'}
                             </button>
                         ))}
                     </div>
@@ -254,7 +254,7 @@ export const Financeiro = () => {
                 ) : chartData.length === 0 ? (
                     <div className="h-80 flex flex-col items-center justify-center text-slate-600 gap-4">
                         <FileText className="w-12 h-12 opacity-10" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Aguardando logs de transação</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Nenhum movimento financeiro</p>
                     </div>
                 ) : (
                     <div className="h-96 w-full -ml-4">
@@ -290,8 +290,8 @@ export const Financeiro = () => {
             <div className="bg-white dark:bg-slate-900 rounded-sm border-2 border-slate-100 dark:border-slate-800 shadow-2xl shadow-black/5 overflow-hidden">
                 <div className="px-10 py-8 border-b border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Log de <span className="text-primary">Transações</span></h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Histórico de Atendimentos Confirmados</p>
+                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Lista de <span className="text-primary">Recebimentos</span></h3>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Histórico de Pagamentos Confirmados</p>
                     </div>
                     <div className="w-full sm:w-auto">
                         <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-none border border-slate-200 dark:border-slate-700">
@@ -304,10 +304,10 @@ export const Financeiro = () => {
                                     setCurrentPage(1);
                                 }}
                             >
-                                <option value={5}>05 LOGS</option>
-                                <option value={10}>10 LOGS</option>
-                                <option value={20}>20 LOGS</option>
-                                <option value={50}>50 LOGS</option>
+                                <option value={5}>05 ITENS</option>
+                                <option value={10}>10 ITENS</option>
+                                <option value={20}>20 ITENS</option>
+                                <option value={50}>50 ITENS</option>
                             </select>
                         </div>
                     </div>
@@ -328,10 +328,10 @@ export const Financeiro = () => {
                             <table className="w-full text-left border-collapse">
                                 <thead>
                                     <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Timeline</th>
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Especificação</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Cliente</th>
                                         <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Profissional</th>
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Fee Final</th>
+                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Valor</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y-2 divide-slate-50 dark:divide-slate-800">
@@ -348,16 +348,16 @@ export const Financeiro = () => {
                                             <td className="px-10 py-6">
                                                 <div className="flex flex-col">
                                                     <span className="text-base font-black text-slate-950 dark:text-white uppercase tracking-tight group-hover:text-primary transition-colors">
-                                                        {t.clients?.name || 'Undefined Entity'}
+                                                        {t.clients?.name || 'Cliente indefinido'}
                                                     </span>
                                                     <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-                                                        {t.services?.name || 'Core Protocol'}
+                                                        {t.services?.name || 'Serviço padrão'}
                                                     </span>
                                                 </div>
                                             </td>
                                             <td className="px-10 py-6 whitespace-nowrap">
                                                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 border border-slate-200 dark:border-slate-700">
-                                                    {t.professionals?.name || 'Sytem Agent'}
+                                                    {t.professionals?.name || 'Sistema'}
                                                 </span>
                                             </td>
                                             <td className="px-10 py-6 text-right">

@@ -357,7 +357,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 {/* Agendamentos Chart */}
                 <div className="lg:col-span-8">
                     <Card
-                        title="Vetor de Fluxo"
+                        title="Fluxo de Agendamentos"
                         extra={
                             <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-1 rounded-sm">
                                 {(['week', 'month', 'year'] as const).map((v) => (
@@ -419,34 +419,41 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 {/* Professional Ranking */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
                     <Card title="⚡ Ranking de Profissionais">
-                        <div className="space-y-3">
-                            {proRanking.map((pro, index) => (
-                                <div
-                                    key={pro.id}
-                                    className="relative flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
-                                >
-                                    <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"></div>
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <div className="flex flex-col items-center justify-center">
-                                            <div className={`text-xl font-black mb-1 ${getMedalColor(index)}`}>
-                                                0{index + 1}
+                        <div className="space-y-3 min-h-[300px] flex flex-col">
+                            {proRanking.length > 0 ? (
+                                proRanking.map((pro, index) => (
+                                    <div
+                                        key={pro.id}
+                                        className="relative flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
+                                    >
+                                        <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"></div>
+                                        <div className="flex items-center gap-4 relative z-10">
+                                            <div className="flex flex-col items-center justify-center">
+                                                <div className={`text-xl font-black mb-1 ${getMedalColor(index)}`}>
+                                                    0{index + 1}
+                                                </div>
+                                                <div className="w-4 h-[2px] bg-slate-200 dark:bg-slate-800"></div>
                                             </div>
-                                            <div className="w-4 h-[2px] bg-slate-200 dark:bg-slate-800"></div>
-                                        </div>
-                                        <div className="relative">
-                                            <Avatar name={pro.name} src={pro.photo} size="md" className="ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all" />
-                                            {index < 3 && <div className="absolute -top-1 -right-1 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-5 h-5 shadow-xl"><Medal className={`w-3 h-3 ${getMedalColor(index)}`} /></div>}
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{pro.name}</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                <p className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
+                                            <div className="relative">
+                                                <Avatar name={pro.name} src={pro.photo} size="md" className="ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all" />
+                                                {index < 3 && <div className="absolute -top-1 -right-1 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-5 h-5 shadow-xl"><Medal className={`w-3 h-3 ${getMedalColor(index)}`} /></div>}
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{pro.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
+                                                    <p className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
+                                ))
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center py-12 text-center opacity-50">
+                                    <Medal className="w-8 h-8 text-slate-300 dark:text-slate-800 mb-4" />
+                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum profissional com <br />atendimentos efetuados</p>
                                 </div>
-                            ))}
+                            )}
                         </div>
                     </Card>
 
@@ -590,9 +597,9 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 reveal-content delay-300">
-                <Card title="📈 Intensidade de Atendimento">
+                <Card title="📈 Horários mais Procurados">
                     <div className="flex flex-col gap-6 py-4">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de volume por horário (últimos 90 dias)</p>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de movimentação por horário (últimos 90 dias)</p>
                         <div className="flex gap-6">
                             <div className="flex flex-col justify-between py-2 text-[10px] font-black text-slate-500 w-8 text-right pr-2 border-r border-slate-100 dark:border-slate-900">
                                 <span>08H</span>
@@ -619,7 +626,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                                 }}
                                             >
                                                 <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-slate-950 text-white text-[10px] font-black py-2 px-3 border border-primary/50 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-30 shadow-2xl backdrop-blur-xl uppercase tracking-widest">
-                                                    <span className="text-primary">{day.count} Agendamentos</span> Detectados @ {row.hour}
+                                                    <span className="text-primary">{day.count} Agendamentos</span> Realizados às {row.hour}
                                                 </div>
                                             </div>
                                         ))
@@ -642,33 +649,40 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 </Card>
 
                 <Card title="📈 Meus Serviços" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
-                    <div className="space-y-6 py-2">
-                        {popularServices.map((service, i) => (
-                            <div key={i} className="group cursor-default">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-5">
-                                        <div className={`w-14 h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
-                                            <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                            <service.icon className="w-8 h-8 relative z-10" />
-                                        </div>
-                                        <div>
-                                            <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors tracking-tighter uppercase">{service.name}</p>
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-3 h-[1px] bg-slate-300 dark:bg-slate-700"></div>
-                                                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{service.count} Execuções</p>
+                    <div className="space-y-6 py-2 min-h-[300px] flex flex-col justify-center">
+                        {popularServices.length > 0 ? (
+                            popularServices.map((service, i) => (
+                                <div key={i} className="group cursor-default">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-5">
+                                            <div className={`w-14 h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
+                                                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                <service.icon className="w-8 h-8 relative z-10" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors tracking-tighter uppercase">{service.name}</p>
+                                                <div className="flex items-center gap-2">
+                                                    <div className="w-3 h-[1px] bg-slate-300 dark:bg-slate-700"></div>
+                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{service.count} Execuções</p>
+                                                </div>
                                             </div>
                                         </div>
+                                        <span className="text-xs font-black text-slate-950 dark:text-white tracking-tighter">{service.percent}.0%</span>
                                     </div>
-                                    <span className="text-xs font-black text-slate-950 dark:text-white tracking-tighter">{service.percent}.0%</span>
-                                </div>
-                                <div className="w-full bg-slate-100 dark:bg-slate-900 h-1.5 overflow-hidden rounded-sm relative">
-                                    <div className="absolute inset-0 bg-primary/5 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
-                                    <div className="bg-primary h-full relative" style={{ width: `${service.percent}%` }}>
-                                        <div className="absolute top-0 right-0 w-2 h-full bg-white opacity-20 blur-sm"></div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-900 h-1.5 overflow-hidden rounded-sm relative">
+                                        <div className="absolute inset-0 bg-primary/5 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
+                                        <div className="bg-primary h-full relative" style={{ width: `${service.percent}%` }}>
+                                            <div className="absolute top-0 right-0 w-2 h-full bg-white opacity-20 blur-sm"></div>
+                                        </div>
                                     </div>
                                 </div>
+                            ))
+                        ) : (
+                            <div className="text-center opacity-50 py-12">
+                                <Scissors className="w-8 h-8 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
+                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum serviço <br />popular detectado</p>
                             </div>
-                        ))}
+                        )}
                     </div>
                 </Card>
             </div>

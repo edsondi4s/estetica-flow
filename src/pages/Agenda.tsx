@@ -734,7 +734,7 @@ export const Agenda = () => {
                 ) : (
                     <div className="min-w-[800px] md:min-w-full flex flex-col h-full">
                         <div className={`grid ${view === 'week' ? 'grid-cols-8' : 'grid-cols-[60px_1fr]'} border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10`}>
-                            <div className="h-14 border-r border-slate-100 dark:border-slate-800 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500">GMT-3</div>
+                            <div className="h-14 border-r border-slate-100 dark:border-slate-800 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tighter">Hora</div>
                             {(view === 'week' ? weekDays : [currentDate]).map((dateObj, i) => {
                                 const dayNames = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
                                 const isToday = new Date().toDateString() === dateObj.toDateString();

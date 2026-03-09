@@ -14,6 +14,9 @@ export const Servicos = () => {
     const [showModal, setShowModal] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
     const [editingService, setEditingService] = useState<any>(null);
+    const [categories, setCategories] = useState<any[]>([]);
+    const [isAddingCategory, setIsAddingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState('');
 
     // Form states
     const [name, setName] = useState('');
@@ -31,6 +34,7 @@ export const Servicos = () => {
 
     useEffect(() => {
         fetchServices();
+        fetchCategories();
     }, []);
 
     const fetchServices = async () => {
@@ -49,6 +53,24 @@ export const Servicos = () => {
         }
     };
 
+    const fetchCategories = async () => {
+        try {
+            const { data, error } = await supabase
+                .from('service_categories')
+                .select('*')
+                .order('name');
+            if (error) throw error;
+            setCategories(data || []);
+
+            // Set default category if none selected and categories exist
+            if (data && data.length > 0 && !category) {
+                setCategory(data[0].name);
+            }
+        } catch (error) {
+            console.error('Erro ao buscar categorias:', error);
+        }
+    };
+
     const handleOpenModal = (service: any = null) => {
         if (service) {
             setEditingService(service);
@@ -56,7 +78,7 @@ export const Servicos = () => {
             setDesc(service.description || '');
             setDuration(service.duration_minutes.toString());
             setPrice(service.price.toString());
-            setCategory(service.category || 'Facial');
+            setCategory(service.category || '');
             setIsActive(service.is_active ?? true);
         } else {
             setEditingService(null);
@@ -64,7 +86,7 @@ export const Servicos = () => {
             setDesc('');
             setDuration('60');
             setPrice('');
-            setCategory('Facial');
+            setCategory(categories.length > 0 ? categories[0].name : '');
             setIsActive(true);
         }
         setShowModal(true);
@@ -79,7 +101,7 @@ export const Servicos = () => {
                 description: desc,
                 duration_minutes: parseInt(duration),
                 price: parseFloat(price.replace(',', '.')),
-                category,
+                category: isAddingCategory ? newCategoryName : category,
                 is_active: isActive
             };
 
@@ -96,9 +118,17 @@ export const Servicos = () => {
                     .insert([serviceData]);
                 if (error) throw error;
                 toast.success('Serviço cadastrado com sucesso!');
+
+                // If a new category was created, save it to the table too
+                if (isAddingCategory && newCategoryName) {
+                    await supabase.from('service_categories').insert([{ name: newCategoryName }]);
+                    fetchCategories();
+                }
             }
 
             setShowModal(false);
+            setIsAddingCategory(false);
+            setNewCategoryName('');
             fetchServices();
         } catch (error: any) {
             toast.error('Erro ao salvar serviço: ' + error.message);
@@ -144,12 +174,12 @@ export const Servicos = () => {
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div>
                     <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                        Catálogo <span className="text-primary">Técnico</span>
+                        Meus <span className="text-primary">Serviços</span>
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Engenharia de Procedimentos e Valores</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Lista de serviços e valores oferecidos</p>
                 </div>
                 <Button onClick={() => handleOpenModal()} className="gap-2 bg-slate-950 hover:bg-primary border-none shadow-xl shadow-black/10 transition-all hover:-translate-y-0.5 rounded-sm font-black uppercase text-[10px] tracking-widest whitespace-nowrap py-6 px-8">
-                    <Plus className="w-4 h-4" /> Novo Procedimento
+                    <Plus className="w-4 h-4" /> Novo Serviço
                 </Button>
             </div>
 
@@ -163,11 +193,11 @@ export const Servicos = () => {
                         <table className="w-full text-left border-collapse">
                             <thead>
                                 <tr className="bg-slate-50 dark:bg-slate-950 border-b-2 border-primary">
-                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Procedimento</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Serviço</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Classificação</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Duração</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em]">Valor (R$)</th>
-                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-center">Protocolo</th>
+                                    <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-center">Status</th>
                                     <th className="px-8 py-5 text-[10px] font-black text-primary uppercase tracking-[0.2em] text-right">Ações</th>
                                 </tr>
                             </thead>
@@ -236,7 +266,7 @@ export const Servicos = () => {
                                         <td colSpan={6} className="px-8 py-32 text-center">
                                             <div className="flex flex-col items-center">
                                                 <Clock className="w-12 h-12 text-slate-100 mb-4" />
-                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Aguardando injeção de dados técnico-comerciais</p>
+                                                <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhum serviço cadastrado.</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -250,13 +280,13 @@ export const Servicos = () => {
             <Modal
                 isOpen={showModal}
                 onClose={() => setShowModal(false)}
-                title="ESPECIFICAÇÃO TÉCNICA"
+                title="NOVO SERVIÇO"
             >
                 <form onSubmit={handleSaveService} className="space-y-6 pt-4">
                     <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800 focus-within:border-primary transition-all">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Identificação do Procedimento</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Nome do Serviço</label>
                         <input
-                            placeholder="NOME DO PROCEDIMENTO"
+                            placeholder="EX: LIMPEZA DE PELE"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             className="w-full bg-transparent text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter placeholder:text-slate-200 outline-none"
@@ -266,7 +296,7 @@ export const Servicos = () => {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Duração Estimada (Minutos)</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Duração (Minutos)</label>
                             <input
                                 type="number"
                                 value={duration}
@@ -276,7 +306,7 @@ export const Servicos = () => {
                             />
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Fee Profissional (R$)</label>
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Valor de Venda (R$)</label>
                             <input
                                 placeholder="0,00"
                                 value={price}
@@ -288,25 +318,47 @@ export const Servicos = () => {
                     </div>
 
                     <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Classificação de Domínio</label>
-                        <select
-                            className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none cursor-pointer"
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                        >
-                            <option value="Facial">Divisão Facial</option>
-                            <option value="Corporal">Mecânica Corporal</option>
-                            <option value="Sobrancelhas">Dermo-Arte</option>
-                            <option value="Injetáveis">Protocolo Invasivo</option>
-                            <option value="Outros">Operações Especiais</option>
-                        </select>
+                        <div className="flex justify-between items-center mb-2">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Classificação do Serviço</label>
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingCategory(!isAddingCategory)}
+                                className="text-[9px] font-black text-primary uppercase tracking-widest hover:underline"
+                            >
+                                {isAddingCategory ? '[ Selecionar Existente ]' : '[ + Nova Classificação ]'}
+                            </button>
+                        </div>
+
+                        {isAddingCategory ? (
+                            <input
+                                placeholder="NOME DA NOVA CLASSIFICAÇÃO"
+                                value={newCategoryName}
+                                onChange={(e) => setNewCategoryName(e.target.value)}
+                                className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none"
+                                autoFocus
+                            />
+                        ) : (
+                            <select
+                                className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none cursor-pointer"
+                                value={category}
+                                onChange={(e) => setCategory(e.target.value)}
+                            >
+                                {categories.length === 0 ? (
+                                    <option value="">Sem classificações disponíveis</option>
+                                ) : (
+                                    categories.map(cat => (
+                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                    ))
+                                )}
+                            </select>
+                        )}
                     </div>
 
                     <div className="bg-slate-50 dark:bg-slate-950 p-6 rounded-sm border-2 border-slate-100 dark:border-slate-800">
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Memória Manual (Descrição)</label>
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Descrição do Serviço</label>
                         <textarea
                             className="w-full bg-transparent text-xs font-bold text-slate-600 dark:text-slate-300 min-h-[100px] outline-none placeholder:text-slate-200 resize-none"
-                            placeholder="Descreva o passo a passo técnico..."
+                            placeholder="Descreva o que está incluso no serviço..."
                             value={desc}
                             onChange={(e) => setDesc(e.target.value)}
                         />
@@ -323,7 +375,7 @@ export const Servicos = () => {
                                     } inline-block h-3 w-3 transform rounded-none bg-slate-950 transition-transform`}
                             />
                         </button>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Protocolo Ativado no Catálogo</span>
+                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Serviço Ativo</span>
                     </div>
 
                     <div className="pt-8 flex gap-4 border-t-2 border-slate-100 dark:border-slate-800">
@@ -331,7 +383,7 @@ export const Servicos = () => {
                             Descartar
                         </Button>
                         <Button type="submit" className="flex-1 bg-slate-950 hover:bg-primary border-none text-white rounded-sm font-black uppercase text-[10px] tracking-widest py-6 shadow-xl shadow-black/20" disabled={isSaving}>
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Registrar Procedimento'}
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar Serviço'}
                         </Button>
                     </div>
                 </form>

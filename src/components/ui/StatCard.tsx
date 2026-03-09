@@ -54,7 +54,6 @@ export const StatCard = ({
             onClick={onClick}
             className={`group relative p-6 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 transition-all duration-500 ${onClick ? 'cursor-pointer hover:border-primary/50' : ''}`}
         >
-
             <div className="flex justify-between items-start mb-8 relative z-10">
                 <div className={`w-14 h-14 ${colors[color].bg} border ${colors[color].border} flex items-center justify-center rounded-sm group-hover:scale-110 transition-transform duration-500 shadow-sm`}>
                     <Icon className={`${colors[color].icon} w-8 h-8`} />

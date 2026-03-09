@@ -17,13 +17,36 @@ async function logToDb(supabase: any, level: string, message: string, payload?: 
     }
 }
 
-async function sendWhatsApp(supabase: any, settings: any, instance: string, remoteJid: string, text: string) {
+async function sendWhatsApp(supabase: any, settings: any, instance: string, remoteJid: string, content: string | { url: string, type: 'image' | 'audio', caption?: string }) {
     if (settings.provider_type !== 'evolution') return;
     let baseUrl = settings.provider_url || '';
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
     const cleanNumber = remoteJid.split('@')[0];
+
+    const headers = { 'Content-Type': 'application/json', 'apikey': settings.provider_token };
+
+    if (typeof content === 'object') {
+        const endpoint = content.type === 'image' ? 'sendImage' : 'sendAudio';
+        const url = `${baseUrl}/message/${endpoint}/${instance}`;
+        const body: any = { number: cleanNumber };
+
+        if (content.type === 'image') {
+            body.image = content.url;
+            if (content.caption) body.caption = content.caption;
+        } else {
+            body.audio = content.url;
+        }
+
+        try {
+            await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+        } catch (e: any) {
+            console.error(`WhatsApp ${content.type} error:`, e.message);
+        }
+        return;
+    }
+
     const url = `${baseUrl}/message/sendText/${instance}`;
-    const segments = text.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 0);
+    const segments = content.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 0);
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     for (let i = 0; i < segments.length; i++) {
@@ -34,7 +57,7 @@ async function sendWhatsApp(supabase: any, settings: any, instance: string, remo
         try {
             await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': settings.provider_token },
+                headers,
                 body: JSON.stringify({ number: cleanNumber, text: segments[i] })
             });
         } catch (e: any) {
@@ -89,21 +112,56 @@ function parseDate(dateStr: string): string {
  * Busca um cliente comparando apenas os dígitos finais (ignorando formatação e prefixo de país)
  */
 async function findClientByPhone(supabase: any, userId: string, rawPhone: string) {
+    // Se for um LID (@lid), tentamos buscar exatamente o JID completo no banco
+    if (rawPhone.includes('@lid')) {
+        const { data: lidMatch } = await supabase.from('clients')
+            .select('id, name, phone')
+            .eq('user_id', userId)
+            .eq('phone', rawPhone)
+            .maybeSingle();
+        if (lidMatch) return lidMatch;
+    }
+
     const cleanWhatsApp = rawPhone.replace(/\D/g, '');
-    const searchTarget = (cleanWhatsApp.startsWith('55') && (cleanWhatsApp.length === 12 || cleanWhatsApp.length === 13))
-        ? cleanWhatsApp.substring(2)
-        : cleanWhatsApp;
+
+    // Se não for número e não for LID, retornamos null
+    if (!cleanWhatsApp && !rawPhone.includes('@lid')) return null;
+
+    // Se for número brasileiro (começa com 55)
+    // Queremos ser resilientes ao nono dígito (12 ou 13 dígitos)
+    const getSearchTarget = (p: string) => {
+        if (p.startsWith('55')) return p.substring(2);
+        return p;
+    };
+    const searchTarget = getSearchTarget(cleanWhatsApp);
 
     const { data: clients } = await supabase.from('clients').select('id, name, phone').eq('user_id', userId);
     if (!clients) return null;
 
     return clients.find((c: any) => {
         if (!c.phone) return false;
+
+        // Se bater exatamente o LID ou PID salvo (sem formatação)
+        if (c.phone === rawPhone) return true;
+
         const cleanDb = c.phone.replace(/\D/g, '');
-        const dbTarget = (cleanDb.startsWith('55') && (cleanDb.length === 12 || cleanDb.length === 13))
-            ? cleanDb.substring(2)
-            : cleanDb;
-        return dbTarget === searchTarget || (dbTarget.slice(-8) === searchTarget.slice(-8) && searchTarget.length >= 8);
+        if (cleanDb === cleanWhatsApp && cleanWhatsApp !== "") return true;
+
+        const dbTarget = getSearchTarget(cleanDb);
+
+        // Match exato sem o 55
+        if (dbTarget === searchTarget && searchTarget !== "") return true;
+
+        // Fallback para Brasil: mesmo DDD e últimos 8 dígitos iguais (ignora nono dígito)
+        if (searchTarget.length >= 10 && dbTarget.length >= 10) {
+            const searchDDD = searchTarget.substring(0, 2);
+            const dbDDD = dbTarget.substring(0, 2);
+            const search8 = searchTarget.slice(-8);
+            const db8 = dbTarget.slice(-8);
+            return searchDDD === dbDDD && search8 === db8;
+        }
+
+        return false;
     });
 }
 
@@ -245,7 +303,7 @@ async function handleBookAppointment(supabase: any, userId: string, args: any, s
     if (!avail.available) return { success: false, reason: avail.reason };
 
     // 2. Localizar ou criar cliente de forma robusta
-    let client = await findClientByPhone(supabase, userId, cleanNumber);
+    let client = await findClientByPhone(supabase, userId, senderJid);
     if (!client) {
         const { data: newClient } = await supabase.from('clients').insert({
             name: client_name || "Cliente",
@@ -281,8 +339,8 @@ async function handleBookAppointment(supabase: any, userId: string, args: any, s
     return { success: true, message: "Agendamento realizado com sucesso!" };
 }
 
-async function handleGetClientAppointments(supabase: any, userId: string, cleanPhone: string) {
-    const client = await findClientByPhone(supabase, userId, cleanPhone);
+async function handleGetClientAppointments(supabase: any, userId: string, rawPhone: string) {
+    const client = await findClientByPhone(supabase, userId, rawPhone);
     if (!client) return { appointments: [], message: "Nenhum cadastro encontrado." };
 
     const today = new Date().toISOString().split('T')[0];
@@ -318,15 +376,15 @@ async function handleGetClientAppointments(supabase: any, userId: string, cleanP
     return { client_name: client.name, appointments: formatted, message: `Encontrei ${formatted.length} agendamento(s).` };
 }
 
-async function handleRescheduleAppointment(supabase: any, userId: string, args: any, cleanPhone?: string) {
+async function handleRescheduleAppointment(supabase: any, userId: string, args: any, rawPhone?: string) {
     let { appointment_id, new_date, new_time } = args;
     new_date = parseDate(new_date);
 
     const today = new Date().toISOString().split('T')[0];
     if (new_date < today) return { success: false, reason: `Data passada (${new_date}).` };
 
-    if ((!appointment_id || appointment_id.length !== 36) && cleanPhone) {
-        const apptsResult = await handleGetClientAppointments(supabase, userId, cleanPhone);
+    if ((!appointment_id || appointment_id.length !== 36) && rawPhone) {
+        const apptsResult = await handleGetClientAppointments(supabase, userId, rawPhone);
         const appts = apptsResult?.appointments || [];
         if (args.original_date) {
             const match = appts.find((a: any) => a.date_iso === args.original_date);
@@ -362,11 +420,11 @@ async function handleRescheduleAppointment(supabase: any, userId: string, args: 
     return { success: true, message: "Reagendado!" };
 }
 
-async function handleCancelAppointment(supabase: any, userId: string, args: any, cleanPhone?: string) {
+async function handleCancelAppointment(supabase: any, userId: string, args: any, rawPhone?: string) {
     let { appointment_id } = args;
 
-    if ((!appointment_id || appointment_id.length !== 36) && cleanPhone) {
-        const apptsResult = await handleGetClientAppointments(supabase, userId, cleanPhone);
+    if ((!appointment_id || appointment_id.length !== 36) && rawPhone) {
+        const apptsResult = await handleGetClientAppointments(supabase, userId, rawPhone);
         if (apptsResult?.appointments?.length === 1) appointment_id = apptsResult.appointments[0].id;
     }
 
@@ -523,39 +581,41 @@ Deno.serve(async (req: Request) => {
         // Função interna para extrair o melhor JID (priorizando @s.whatsapp.net sobre @lid)
         const getBestJid = (p: any, msg: any): { sender: string, chat: string } => {
             const chatFromKey = msg?.key?.remoteJid || "";
-            const altChat = msg?.key?.remoteJidAlt || "";
             const participant = msg?.participant || msg?.key?.participant || "";
             const rawEventSender = p?.data?.sender || "";
             const targetRaw = p?.target || "";
+            const remoteJidAlt = msg?.key?.remoteJidAlt || "";
+            const senderPn = msg?.senderPn || "";
 
-            // Candidatos em ordem de preferência de campo
             const allCandidates = [
-                chatFromKey,   // Preferência do usuário
+                chatFromKey,
+                remoteJidAlt,
+                senderPn,
                 targetRaw,
                 participant,
-                altChat,
                 rawEventSender
             ].map(j => {
                 if (!j || typeof j !== 'string') return "";
                 if (!j.includes('@') && /^\d+$/.test(j)) return `${j}@s.whatsapp.net`;
                 return j;
-            }).filter(j => j && j.includes('@'));
+            }).filter(j => j && j.includes('@') && !j.includes('status'));
 
-            // 1. Prioridade Absoluta: O que termina com @s.whatsapp.net
-            let winner = allCandidates.find(j => j.split(':')[0].endsWith('@s.whatsapp.net') && !j.includes('status'));
+            // Prioritiza PID (@s.whatsapp.net) over LID (@lid)
+            let winner = allCandidates.find(j => j.includes('@s.whatsapp.net'));
 
-            // 2. Limpeza de dispositivo se necessário
-            if (winner && winner.includes(':')) {
-                winner = winner.split(':')[0] + '@s.whatsapp.net';
-            }
-
-            // 3. Se ainda não temos um vencedor real, pegamos o primeiro que NÃO seja LID
             if (!winner) {
-                winner = allCandidates.find(j => !j.includes('@lid'));
+                winner = allCandidates.find(j => j.includes('@lid'));
             }
 
-            // 4. Última instância (pode ser o LID se for a única coisa que veio)
-            const finalSender = winner || allCandidates[0] || chatFromKey;
+            if (!winner) winner = allCandidates[0] || chatFromKey;
+
+            // Limpa sufixo de dispositivo: 5511999...:2@s.whatsapp.net -> 5511999...@s.whatsapp.net
+            let finalSender = winner;
+            if (finalSender.includes(':')) {
+                const parts = finalSender.split('@');
+                const userPart = parts[0].split(':')[0];
+                finalSender = `${userPart}@${parts[1]}`;
+            }
 
             return { sender: finalSender, chat: chatFromKey || targetRaw || finalSender };
         };
@@ -583,10 +643,217 @@ Deno.serve(async (req: Request) => {
         if (!st) return new Response('inactive', { headers: corsHeaders });
 
         const cleanPhone = senderJid.split('@')[0];
+
+        // --- BOT FLOW ENGINE ---
+        async function processBotFlow() {
+            // 1. Verificar se a mensagem é um gatilho de ALGUM fluxo (Gatilhos têm prioridade para iniciar/reiniciar)
+            const { data: flows } = await supabase
+                .from('bot_flows')
+                .select('*')
+                .eq('user_id', st.user_id)
+                .eq('is_active', true);
+
+            const triggeredFlow = flows?.find(f =>
+                f.trigger_keywords?.some((k: string) => textMessage.trim().toLowerCase() === k.toLowerCase())
+            );
+
+            let currentState = null;
+            let currentFlow = null;
+
+            if (triggeredFlow) {
+                // Se disparou um gatilho, nós REINICIAMOS ou iniciamos o fluxo
+                const startNode = triggeredFlow.nodes.find((n: any) => n.id === 'start-1' || n.type === 'start');
+
+                const { data: newState, error: upsertError } = await supabase
+                    .from('bot_flow_states')
+                    .upsert({
+                        user_id: st.user_id,
+                        flow_id: triggeredFlow.id,
+                        client_phone: cleanPhone,
+                        current_node_id: startNode?.id,
+                        collected_data: {},
+                        is_completed: false,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'user_id,client_phone' })
+                    .select()
+                    .single();
+
+                if (upsertError) {
+                    console.error("Erro ao dar upsert no fluxo:", upsertError);
+                    return false;
+                }
+                currentState = newState;
+                currentFlow = triggeredFlow;
+            } else {
+                // 2. Se não foi gatilho, verificar se já existe um fluxo em andamento
+                const { data: activeState } = await supabase
+                    .from('bot_flow_states')
+                    .select('*, bot_flows(*)')
+                    .eq('user_id', st.user_id)
+                    .eq('client_phone', cleanPhone)
+                    .eq('is_completed', false)
+                    .single();
+
+                if (activeState) {
+                    currentState = activeState;
+                    currentFlow = activeState.bot_flows;
+                } else {
+                    return false; // Nenhum gatilho e nenhum fluxo ativo
+                }
+            }
+
+            // 3. Processar o Nó Atual e Avançar
+            if (currentState && currentFlow) {
+                const nodes = currentFlow.nodes;
+                const edges = currentFlow.edges;
+
+                let nextNodeId = null;
+                const currentNode = nodes.find((n: any) => n.id === currentState.current_node_id);
+
+                if (!currentNode) return false;
+
+                // Se o nó atual for uma pergunta, salvar a resposta
+                if (currentNode.type === 'question') {
+                    const variableName = currentNode.data.variable || 'last_response';
+                    const updatedData = { ...currentState.collected_data, [variableName]: textMessage };
+                    await supabase.from('bot_flow_states').update({ collected_data: updatedData }).eq('id', currentState.id);
+                }
+
+                // Logic for Finding the Next Node based on branch / condition
+                if (currentNode.type === 'condition') {
+                    const { variable, operator, value } = currentNode.data;
+                    const envVar = currentState.collected_data[variable];
+                    let result = false;
+
+                    if (operator === '==') result = String(envVar) === String(value);
+                    else if (operator === '!=') result = String(envVar) !== String(value);
+                    else if (operator === 'contains') result = String(envVar).toLowerCase().includes(String(value).toLowerCase());
+                    else if (operator === 'exists') result = !!envVar && String(envVar).trim() !== "";
+
+                    const sourceHandle = result ? 'true' : 'false';
+                    const edge = edges.find((e: any) => e.source === currentNode.id && e.sourceHandle === sourceHandle);
+                    nextNodeId = edge?.target;
+                } else if (currentNode.type === 'buttons') {
+                    const choices = currentNode.data.choices || [];
+                    const matchIdx = choices.findIndex((c: string) => textMessage.trim().toLowerCase() === c.toLowerCase());
+
+                    if (matchIdx !== -1) {
+                        const edge = edges.find((e: any) => e.source === currentNode.id && e.sourceHandle === `choice-${matchIdx}`);
+                        nextNodeId = edge?.target;
+                    } else {
+                        // Resposta não bate com botões, deixamos para o AI Agent lidar ou pedimos novamente
+                        // Por simplicidade, cancelamos o fluxo aqui e deixamos o AI assumir
+                        await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                        return false;
+                    }
+                } else {
+                    // Default linear progress
+                    const edge = edges.find((e: any) => e.source === currentNode.id);
+                    nextNodeId = edge?.target;
+                }
+
+                if (!nextNodeId) {
+                    // Final do fluxo
+                    await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                    return false;
+                }
+
+                // Funções utilitárias dentro do processBotFlow
+                const interpolate = (text: string) => {
+                    if (!text) return text;
+                    return text.replace(/\{(\w+)\}/g, (match, key) => {
+                        return currentState.collected_data?.[key] || match;
+                    });
+                };
+
+                // Loop para pular nós "silenciosos" (ex: Mensagens, Imagens) e parar em nós de "espera" (ex: Question)
+                let tempNodeId = nextNodeId;
+                while (tempNodeId) {
+                    const nextNode = nodes.find((n: any) => n.id === tempNodeId);
+                    if (!nextNode) break;
+
+                    if (nextNode.type === 'message') {
+                        const finalMsg = interpolate(nextNode.data.text);
+                        await sendWhatsApp(supabase, st, instanceName, chatJid, finalMsg);
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+
+                        const nextEdge = edges.find((e: any) => e.source === nextNode.id);
+                        tempNodeId = nextEdge?.target;
+                        if (!tempNodeId) {
+                            await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                        }
+                    } else if (nextNode.type === 'image') {
+                        if (nextNode.data.url) {
+                            await sendWhatsApp(supabase, st, instanceName, chatJid, {
+                                url: nextNode.data.url,
+                                type: 'image',
+                                caption: interpolate(nextNode.data.caption)
+                            });
+                        }
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+                        const nextEdge = edges.find((e: any) => e.source === nextNode.id);
+                        tempNodeId = nextEdge?.target;
+                        if (!tempNodeId) {
+                            await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                        }
+                    } else if (nextNode.type === 'audio') {
+                        if (nextNode.data.url) {
+                            await sendWhatsApp(supabase, st, instanceName, chatJid, {
+                                url: nextNode.data.url,
+                                type: 'audio'
+                            });
+                        }
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+                        const nextEdge = edges.find((e: any) => e.source === nextNode.id);
+                        tempNodeId = nextEdge?.target;
+                        if (!tempNodeId) {
+                            await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                        }
+                    } else if (nextNode.type === 'question' || nextNode.type === 'buttons') {
+                        const finalMsg = interpolate(nextNode.data.text);
+                        await sendWhatsApp(supabase, st, instanceName, chatJid, finalMsg);
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+                        return true; // Para aqui e aguarda a resposta do usuário
+                    } else if (nextNode.type === 'wait') {
+                        const delaySeconds = nextNode.data.delay || 5;
+                        await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+                        const nextEdge = edges.find((e: any) => e.source === nextNode.id);
+                        tempNodeId = nextEdge?.target;
+                    } else if (nextNode.type === 'condition') {
+                        const { variable, operator, value } = nextNode.data;
+                        const envVar = currentState.collected_data[variable];
+                        let result = false;
+                        if (operator === '==') result = String(envVar) === String(value);
+                        else if (operator === '!=') result = String(envVar) !== String(value);
+                        else if (operator === 'contains') result = String(envVar).toLowerCase().includes(String(value).toLowerCase());
+                        else if (operator === 'exists') result = !!envVar && String(envVar).trim() !== "";
+
+                        const sourceHandle = result ? 'true' : 'false';
+                        const edge = edges.find((e: any) => e.source === nextNode.id && e.sourceHandle === sourceHandle);
+                        tempNodeId = edge?.target;
+                        await supabase.from('bot_flow_states').update({ current_node_id: nextNode.id }).eq('id', currentState.id);
+                        if (!tempNodeId) {
+                            await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                        }
+                    } else {
+                        break;
+                    }
+                }
+                return true;
+            }
+            return false;
+        }
+
+        const flowHandled = await processBotFlow();
+        if (flowHandled) return new Response('flow handled', { headers: corsHeaders });
+
+        // --- FIM BOT FLOW ENGINE ---
+
         const msgNorm = textMessage.trim().toUpperCase();
 
         if (['SIM', 'OK', 'CONFIRMO'].some(k => msgNorm.startsWith(k))) {
-            const client = await findClientByPhone(supabase, st.user_id, cleanPhone);
+            const client = await findClientByPhone(supabase, st.user_id, senderJid);
             if (client) {
                 const today = new Date().toISOString().split('T')[0];
                 const { data: appt } = await supabase.from('appointments').select('id').eq('client_id', client.id).eq('reminder_sent', true).gte('appointment_date', today).limit(1).single();
@@ -654,9 +921,9 @@ Deno.serve(async (req: Request) => {
             if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderJid, proServData.data);
-            else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, cleanPhone);
-            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, cleanPhone);
-            else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, cleanPhone);
+            else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, senderJid);
+            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, senderJid);
+            else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, senderJid);
 
             const followUpRes = await aiClient.chat.completions.create({
                 model: aiModel,

@@ -7,6 +7,7 @@ import {
     Settings,
     UserRound,
     MessageSquare,
+    Zap,
     LucideIcon
 } from 'lucide-react';
 
@@ -21,6 +22,7 @@ export const menuItems: MenuItem[] = [
     { id: 'agenda', label: 'Agenda', icon: Calendar },
     { id: 'clientes', label: 'Clientes', icon: Users },
     { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'fluxos', label: 'Fluxos', icon: Zap },
     { id: 'servicos', label: 'Serviços', icon: Scissors },
     { id: 'profissionais', label: 'Profissionais', icon: UserRound },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign },
