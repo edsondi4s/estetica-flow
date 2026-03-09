@@ -11,6 +11,7 @@ interface NavbarProps {
     currentPageId: string;
     user: User;
     onMenuClick?: () => void;
+    onPageChange: (id: string) => void;
 }
 
 type SearchResult = {
@@ -21,10 +22,10 @@ type SearchResult = {
     raw: any;
 };
 
-export const Navbar = ({ currentPageId, user, onMenuClick }: NavbarProps) => {
+export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: NavbarProps) => {
     const pageLabel = menuItems.find(i => i.id === currentPageId)?.label;
     const { theme, toggleTheme } = useTheme();
-    const { notifications, unreadCount, markAsRead } = useNotifications();
+    const { notifications, unreadCount, markAsRead, clearAll } = useNotifications();
 
     const [showNotifications, setShowNotifications] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -249,6 +250,7 @@ export const Navbar = ({ currentPageId, user, onMenuClick }: NavbarProps) => {
                                                     onClick={() => {
                                                         markAsRead(n.id);
                                                         setShowNotifications(false);
+                                                        if (n.link) onPageChange(n.link);
                                                     }}
                                                 >
                                                     {!n.is_read && <div className="absolute left-0 top-0 w-1 h-full bg-primary group-hover:w-1.5 transition-all"></div>}
@@ -267,7 +269,12 @@ export const Navbar = ({ currentPageId, user, onMenuClick }: NavbarProps) => {
                                         )}
                                     </div>
                                     <div className="p-4 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 text-center transition-colors">
-                                        <button className="text-[9px] font-black text-primary hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.3em] transition-all">Limpar todas notificações</button>
+                                        <button
+                                            onClick={() => clearAll()}
+                                            className="text-[9px] font-black text-primary hover:text-slate-900 dark:hover:text-white uppercase tracking-[0.3em] transition-all"
+                                        >
+                                            Limpar todas notificações
+                                        </button>
                                     </div>
                                 </div>
                             </>

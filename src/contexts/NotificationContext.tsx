@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { toast } from 'react-hot-toast';
 
 interface Notification {
     id: string;
@@ -7,13 +8,15 @@ interface Notification {
     message: string;
     is_read: boolean;
     created_at: string;
+    link?: string;
 }
 
 interface NotificationContextType {
     notifications: Notification[];
     unreadCount: number;
     markAsRead: (id: string) => Promise<void>;
-    addNotification: (title: string, message: string) => Promise<void>;
+    clearAll: () => Promise<void>;
+    addNotification: (title: string, message: string, link?: string) => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -87,19 +90,42 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         }
     };
 
-    const addNotification = async (title: string, message: string) => {
+    const clearAll = async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        await supabase.from('notifications').insert({
+        const { error } = await supabase
+            .from('notifications')
+            .delete()
+            .eq('user_id', user.id);
+
+        if (!error) {
+            setNotifications([]);
+            toast.success('Notificações removidas');
+        } else {
+            console.error('Erro ao limpar notificações:', error);
+            toast.error('Erro ao limpar notificações do banco de dados');
+        }
+    };
+
+    const addNotification = async (title: string, message: string, link?: string) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { error } = await supabase.from('notifications').insert({
             user_id: user.id,
             title,
-            message
+            message,
+            link
         });
+
+        if (error) {
+            console.error('Erro ao adicionar notificação:', error);
+        }
     };
 
     return (
-        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, addNotification }}>
+        <NotificationContext.Provider value={{ notifications, unreadCount, markAsRead, clearAll, addNotification }}>
             {children}
         </NotificationContext.Provider>
     );

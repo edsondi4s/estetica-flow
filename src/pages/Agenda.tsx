@@ -6,6 +6,7 @@ import { InputField } from '../components/ui/InputField';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { supabase } from '../lib/supabase';
 import { useNotifications } from '../contexts/NotificationContext';
+import { useTheme } from '../contexts/ThemeContext';
 import toast from 'react-hot-toast';
 
 const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -18,6 +19,7 @@ const formatToISODate = (date: Date) => {
 
 export const Agenda = () => {
     const { addNotification } = useNotifications();
+    const { settings } = useTheme();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [clients, setClients] = useState<any[]>([]);
     const [services, setServices] = useState<any[]>([]);
@@ -246,6 +248,28 @@ export const Agenda = () => {
             toast.success('Agendamento cancelado com sucesso!');
         } catch (error: any) {
             toast.error('Erro ao excluir agendamento: ' + error.message);
+        }
+    };
+
+    const handleStatusUpdate = async (id: string, newStatus: string) => {
+        setIsSaving(true);
+        try {
+            const { error } = await supabase
+                .from('appointments')
+                .update({ status: newStatus })
+                .eq('id', id);
+
+            if (error) throw error;
+
+            toast.success(`Status atualizado para ${newStatus}`);
+
+            // Update local state for immediate feedback
+            setSelectedAppointment((prev: any) => prev ? { ...prev, status: newStatus } : null);
+            fetchAppointments();
+        } catch (error: any) {
+            toast.error('Erro ao atualizar status: ' + error.message);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -975,29 +999,37 @@ export const Agenda = () => {
                                     </div>
                                     <div>
                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Status</p>
-                                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold mt-1 uppercase tracking-wider
-                                        ${selectedAppointment.status === 'Pendente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' :
-                                                selectedAppointment.status === 'Confirmado' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' :
-                                                    (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' :
-                                                        'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
-                                            {selectedAppointment.status}
-                                        </span>
+                                        <select
+                                            className={`w-full mt-1 px-3 py-2 rounded-sm text-[11px] font-black uppercase tracking-widest border-2 transition-all outline-none cursor-pointer
+                                            ${selectedAppointment.status === 'Pendente' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-500/30 dark:text-amber-400' :
+                                                    selectedAppointment.status === 'Confirmado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400' :
+                                                        (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-900/20 dark:border-sky-500/30 dark:text-sky-400' :
+                                                            'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400'}`}
+                                            value={selectedAppointment.status}
+                                            onChange={(e) => handleStatusUpdate(selectedAppointment.id, e.target.value)}
+                                            disabled={isSaving}
+                                        >
+                                            <option value="Pendente">Pendente</option>
+                                            <option value="Confirmado">Confirmado</option>
+                                            <option value="Finalizado">Finalizado</option>
+                                            <option value="Cancelado">Cancelado</option>
+                                        </select>
                                     </div>
                                 </div>
 
-                                {/* Silk & Steel WhatsApp Command */}
+                                {/* Link de WhatsApp Humanizado */}
                                 {selectedAppointment.clients?.phone && (
                                     <div className="pt-2">
                                         <a
                                             href={`https://wa.me/55${selectedAppointment.clients.phone.replace(/\D/g, '')}?text=${encodeURIComponent(
-                                                `Olá ${selectedAppointment.clients.name}, passando para lembrar do seu agendamento de ${selectedAppointment.services?.name} no dia ${new Date(selectedAppointment.appointment_date + 'T12:00:00').toLocaleDateString()} às ${selectedAppointment.appointment_time.substring(0, 5)}. Podemos confirmar?`
+                                                `Olá ${selectedAppointment.clients.name}! Tudo bem?\n\nPassando para confirmar o seu horário de *${selectedAppointment.services?.name}* aqui na ${settings.business_name || 'EstéticaFlow'}.\n\n📅 *${new Date(selectedAppointment.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR')}* às *${selectedAppointment.appointment_time.substring(0, 5)}*\n\nPodemos confirmar a sua presença?`
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black rounded-none transition-all shadow-xl shadow-emerald-500/10 active:scale-[0.98] group uppercase tracking-widest text-[10px]"
+                                            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-950 hover:bg-primary text-white font-black rounded-sm transition-all shadow-xl shadow-black/10 active:scale-[0.98] group uppercase tracking-widest text-[11px]"
                                         >
                                             <MessageCircle className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                                            Disparar Lembrete WhatsApp [PROTOCOLO]
+                                            Enviar Lembrete Amigável
                                         </a>
                                     </div>
                                 )}

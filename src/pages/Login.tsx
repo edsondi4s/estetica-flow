@@ -118,7 +118,7 @@ export const Login = ({ onLogin }: LoginProps) => {
                                 <div className="space-y-2">
                                     <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">Identificação Completa</label>
                                     <input
-                                        placeholder="NOME DO ATIVO"
+                                        placeholder="Seu nome aqui"
                                         type="text"
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
@@ -131,7 +131,7 @@ export const Login = ({ onLogin }: LoginProps) => {
                             <div className="space-y-2">
                                 <label className="text-[10px] font-black text-slate-950 dark:text-white uppercase tracking-widest px-1">Seu E-mail</label>
                                 <input
-                                    placeholder="USUARIO@ESTETICAFLOW.COM.BR"
+                                    placeholder="exemplo@email.com"
                                     type="email"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -185,33 +185,19 @@ export const Login = ({ onLogin }: LoginProps) => {
                             </Button>
                         </form>
 
-                        <div className="relative my-12">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t-2 border-slate-100 dark:border-slate-800"></div>
-                            </div>
-                            <div className="relative flex justify-center text-[9px] font-black uppercase tracking-[0.5em] text-slate-300 dark:text-slate-700">
-                                <span className="bg-white dark:bg-slate-950 px-6 transition-colors font-black">ACESSO FEDERADO</span>
-                            </div>
-                        </div>
-
-                        <button className="w-full flex items-center justify-center gap-4 border-2 border-slate-100 dark:border-slate-800 py-5 rounded-none text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 transition-all hover:border-slate-300 dark:hover:border-slate-600 active:scale-[0.98] group">
-                            <svg className="w-5 h-5 group-hover:rotate-[360deg] transition-transform duration-700" viewBox="0 0 24 24">
-                                <path d="M12.0003 20.45c4.6483 0 8.545-3.2355 9.5936-7.702h-9.5936v-3.798h13.803c.123.637.189 1.303.189 1.99 0 7.363-5.029 12.55-12.046 12.55-6.627 0-12-5.373-12-12s5.373-12 12-12c3.15 0 6.027 1.134 8.283 3.018l-3.328 3.328c-1.077-.999-2.738-1.798-4.955-1.798-4.329 0-7.85 3.52-7.85 7.85s3.521 7.85 7.85 7.85V20.45z" fill="currentColor" />
-                            </svg>
-                            Sincronizar com Google ID
-                        </button>
-
-                        <div className="mt-12 text-center">
+                        <div className="mt-12 flex justify-center">
                             <button
                                 onClick={() => {
                                     setIsSignUp(!isSignUp);
                                     setError(null);
                                 }}
-                                className="text-[10px] font-black text-slate-400 uppercase tracking-widest hover:text-primary transition-colors group"
+                                className="text-[11px] font-bold text-slate-500 hover:text-primary transition-all group flex flex-col items-center gap-2 w-full max-w-xs"
                             >
-                                {isSignUp ? 'JÁ POSSUI CADASTRO? ' : 'NOVA OPERAÇÃO? '}
-                                <span className="text-slate-950 dark:text-white group-hover:text-primary underline underline-offset-4 font-black">
-                                    {isSignUp ? 'AUTORIZE AGORA' : 'INICIALIZAR MÓDULO'}
+                                <span className="uppercase tracking-[0.2em] opacity-60 w-full text-center">
+                                    {isSignUp ? 'Já tem uma conta?' : 'Novo por aqui?'}
+                                </span>
+                                <span className="text-slate-950 dark:text-white group-hover:text-primary underline underline-offset-8 font-black uppercase tracking-widest text-[12px] bg-slate-50 dark:bg-slate-900 px-4 py-2 rounded-sm mt-1 transition-all w-full text-center">
+                                    {isSignUp ? 'Fazer Login' : 'Criar meu acesso agora'}
                                 </span>
                             </button>
                         </div>

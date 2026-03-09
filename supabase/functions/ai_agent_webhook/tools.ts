@@ -229,7 +229,8 @@ export async function handleBookAppointment(supabase: any, userId: string, args:
     await supabase.from('notifications').insert({
         user_id: userId,
         title: 'Novo Agendamento via IA',
-        message: `${client.name} agendou ${service.name} com ${pro?.name || professional_name || 'Profissional'} para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`
+        message: `${client.name} agendou ${service.name} com ${pro?.name || professional_name || 'Profissional'} para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`,
+        link: 'agenda'
     });
 
     return { success: true, message: "Agendamento realizado com sucesso!" };
@@ -350,7 +351,8 @@ export async function handleRescheduleAppointment(supabase: any, userId: string,
     await supabase.from('notifications').insert({
         user_id: userId,
         title: 'Reagendamento via IA',
-        message: `Agendamento de ${original.services?.name} reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`
+        message: `Agendamento de ${original.services?.name} reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`,
+        link: 'agenda'
     });
 
     return { success: true, message: `Reagendado com sucesso para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} às ${new_time}.` };
@@ -394,7 +396,8 @@ export async function handleCancelAppointment(supabase: any, userId: string, arg
     await supabase.from('notifications').insert({
         user_id: userId,
         title: 'Cancelamento via IA',
-        message: `Agendamento de ${original.services?.name} com ${original.pro_name} foi cancelado pela IA.`
+        message: `Agendamento de ${original.services?.name} com ${original.pro_name} foi cancelado pela IA.`,
+        link: 'agenda'
     });
 
     return { success: true, message: `Agendamento de ${original.services?.name} com ${original.pro_name} cancelado com sucesso.` };

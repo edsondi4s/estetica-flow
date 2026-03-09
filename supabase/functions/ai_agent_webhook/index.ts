@@ -267,6 +267,17 @@ async function handleBookAppointment(supabase: any, userId: string, args: any, s
     });
 
     if (error) return { success: false, reason: error.message };
+
+    // Notificação para o sistema (Painel)
+    const { data: serviceData } = await supabase.from('services').select('name').eq('id', avail.service_id).single();
+    const { data: clientData } = await supabase.from('clients').select('name').eq('id', client.id).single();
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Novo Agendamento via IA',
+        message: `${clientData?.name || 'Cliente'} agendou ${serviceData?.name || 'Serviço'} para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`,
+        link: 'agenda'
+    });
+
     return { success: true, message: "Agendamento realizado com sucesso!" };
 }
 
@@ -339,6 +350,15 @@ async function handleRescheduleAppointment(supabase: any, userId: string, args: 
     }).eq('id', appointment_id);
 
     if (error) return { success: false, reason: error.message };
+
+    // Notificação para o sistema (Painel)
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Reagendamento via IA',
+        message: `Agendamento reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`,
+        link: 'agenda'
+    });
+
     return { success: true, message: "Reagendado!" };
 }
 
@@ -352,6 +372,14 @@ async function handleCancelAppointment(supabase: any, userId: string, args: any,
 
     const { error } = await supabase.from('appointments').update({ status: 'Cancelado' }).eq('id', appointment_id);
     if (error) return { success: false, reason: error.message };
+
+    // Notificação para o sistema (Painel)
+    await supabase.from('notifications').insert({
+        user_id: userId,
+        title: 'Cancelamento via IA',
+        message: `Um agendamento foi cancelado pela IA.`,
+        link: 'agenda'
+    });
 
     return { success: true, message: "Cancelado!" };
 }
