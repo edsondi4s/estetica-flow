@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import OpenAI from "npm:openai@^4.0.0";
+import Redis from "npm:ioredis@^5.4.0";
 
 const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
@@ -17,13 +18,36 @@ async function logToDb(supabase: any, level: string, message: string, payload?: 
     }
 }
 
-async function sendWhatsApp(supabase: any, settings: any, instance: string, remoteJid: string, text: string) {
+async function sendWhatsApp(supabase: any, settings: any, instance: string, remoteJid: string, content: string | { url: string, type: 'image' | 'audio', caption?: string }) {
     if (settings.provider_type !== 'evolution') return;
     let baseUrl = settings.provider_url || '';
     if (baseUrl.endsWith('/')) baseUrl = baseUrl.slice(0, -1);
     const cleanNumber = remoteJid.split('@')[0];
+
+    const headers = { 'Content-Type': 'application/json', 'apikey': settings.provider_token };
+
+    if (typeof content === 'object') {
+        const endpoint = content.type === 'image' ? 'sendImage' : 'sendAudio';
+        const url = `${baseUrl}/message/${endpoint}/${instance}`;
+        const body: any = { number: cleanNumber };
+
+        if (content.type === 'image') {
+            body.image = content.url;
+            if (content.caption) body.caption = content.caption;
+        } else {
+            body.audio = content.url;
+        }
+
+        try {
+            await fetch(url, { method: 'POST', headers, body: JSON.stringify(body) });
+        } catch (e: any) {
+            console.error(`WhatsApp ${content.type} error:`, e.message);
+        }
+        return;
+    }
+
     const url = `${baseUrl}/message/sendText/${instance}`;
-    const segments = text.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 0);
+    const segments = content.split(/\n\n+/).map(s => s.trim()).filter(s => s.length > 0);
     const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
     for (let i = 0; i < segments.length; i++) {
@@ -34,7 +58,7 @@ async function sendWhatsApp(supabase: any, settings: any, instance: string, remo
         try {
             await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'apikey': settings.provider_token },
+                headers,
                 body: JSON.stringify({ number: cleanNumber, text: segments[i] })
             });
         } catch (e: any) {
@@ -77,7 +101,8 @@ async function findClientByPhone(supabase: any, userId: string, rawPhone: string
     });
 }
 
-async function handleCheckAvailability(supabase: any, userId: string, args: any, services: any, pros: any, hours: any, proServicesData?: any) {
+// Global functions for AI Tools ported from the original logic
+async function handleCheckAvailability(supabase: any, userId: string, args: any, services: any, pros: any, hours: any, proServicesData?: any, ignore_appointment_id?: string) {
     const { date, time } = args;
     const service_name = args.service_name || args.service || "";
     const professional_name = args.professional_name || args.pro || args.professional || "";
@@ -89,12 +114,21 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
     const dayHours = hours?.find((h: any) => h.day_of_week === day);
     if (!dayHours || !dayHours.is_working_day) return { available: false, reason: "A clínica não abre neste dia." };
 
+    const duration = service.duration_minutes || 30;
     const cleanTime = time.length === 5 ? time + ":00" : time;
-    if (cleanTime < dayHours.start_time || cleanTime > dayHours.end_time) {
-        return { available: false, reason: `Fora do horário (${dayHours.start_time.substring(0, 5)} às ${dayHours.end_time.substring(0, 5)}).` };
+    const newStart = timeToMinutes(cleanTime);
+    const newEnd = newStart + duration;
+
+    const clinicStart = timeToMinutes(dayHours.start_time);
+    const clinicEnd = timeToMinutes(dayHours.end_time);
+
+    if (newStart < clinicStart || newEnd > clinicEnd) {
+        const lastSlot = clinicEnd - duration;
+        const lastH = String(Math.floor(lastSlot / 60)).padStart(2, '0');
+        const lastM = String(lastSlot % 60).padStart(2, '0');
+        return { available: false, reason: `Fora do horário (${dayHours.start_time.substring(0, 5)} às ${dayHours.end_time.substring(0, 5)}). Considerando a duração do serviço (${duration}m), o último horário é ${lastH}:${lastM}.` };
     }
 
-    const duration = service.duration_minutes || 30;
     const { data: dayAppointments } = await supabase.from('appointments')
         .select('appointment_time, professional_id, services(duration_minutes)')
         .eq('appointment_date', date)
@@ -105,14 +139,12 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
     if (args.professional_id) pro = pros?.find((p: any) => p.id === args.professional_id);
     else if (professional_name && professional_name !== "Assistente") pro = pros?.find((p: any) => p.name?.toLowerCase().includes(professional_name.toLowerCase()));
 
-    const newStart = timeToMinutes(cleanTime);
-    const newEnd = newStart + duration;
-
     if (pro) {
         if (proServicesData && !proServicesForService(proServicesData, pro.id, service.id)) {
             return { available: false, reason: `${pro.name} não oferece ${service.name}.` };
         }
         for (const appt of (dayAppointments || [])) {
+            if (ignore_appointment_id && appt.id === ignore_appointment_id) continue;
             if (appt.professional_id !== pro.id) continue;
             const apptStart = timeToMinutes(appt.appointment_time);
             const apptEnd = apptStart + (appt.services?.duration_minutes || 30);
@@ -127,6 +159,7 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
         if (proServicesData && !proServicesForService(proServicesData, p.id, service.id)) continue;
         let hasConflict = false;
         for (const appt of (dayAppointments || [])) {
+            if (ignore_appointment_id && appt.id === ignore_appointment_id) continue;
             if (appt.professional_id !== p.id) continue;
             const apptStart = timeToMinutes(appt.appointment_time);
             const apptEnd = apptStart + (appt.services?.duration_minutes || 30);
@@ -191,51 +224,57 @@ async function handleListAvailableSlots(supabase: any, userId: string, args: any
     };
 }
 
-async function handleBookAppointment(supabase: any, userId: string, args: any, services: any, pros: any, hours: any, senderJid: string, proServicesData?: any) {
+async function handleBookAppointment(supabase: any, redis: any, userId: string, args: any, services: any, pros: any, hours: any, senderJid: string, proServicesData?: any) {
     const { date, time, client_name } = args;
-    const service_name = args.service_name || args.service || "";
-    const professional_name = args.professional_name || args.pro || args.professional || "";
     const cleanNumber = senderJid.split('@')[0];
 
-    // 1. Validar disponibilidade tecnicamente antes de agendar
-    const avail = await handleCheckAvailability(supabase, userId, args, services, pros, hours, proServicesData);
-    if (!avail.available) return { success: false, reason: avail.reason };
-
-    // 2. Localizar ou criar cliente de forma robusta
-    let client = await findClientByPhone(supabase, userId, cleanNumber);
-    if (!client) {
-        const { data: newClient } = await supabase.from('clients').insert({
-            name: client_name || "Cliente",
-            phone: cleanNumber,
-            user_id: userId
-        }).select().single();
-        client = newClient;
+    let lockKey = "";
+    if (redis) {
+        lockKey = `lock:appointment:${userId}:${args.professional_id || 'any'}:${date}:${time}`;
+        const acquired = await redis.set(lockKey, 'locked', 'PX', 10000, 'NX');
+        if (!acquired) {
+            return { success: false, reason: "Este horário está sendo processado por outra pessoa. Tente novamente em alguns segundos." };
+        }
     }
 
-    const { error } = await supabase.from('appointments').insert({
-        user_id: userId,
-        client_id: client.id,
-        service_id: avail.service_id,
-        professional_id: avail.professional_id,
-        pro_name: (pros?.find((p: any) => p.id === avail.professional_id))?.name || "Profissional",
-        appointment_date: date,
-        appointment_time: time.length === 5 ? time + ":00" : time,
-        status: 'Confirmado'
-    });
+    try {
+        const avail = await handleCheckAvailability(supabase, userId, args, services, pros, hours, proServicesData);
+        if (!avail.available) return { success: false, reason: avail.reason };
 
-    if (error) return { success: false, reason: error.message };
+        let client = await findClientByPhone(supabase, userId, cleanNumber);
+        if (!client) {
+            const { data: newClient } = await supabase.from('clients').insert({
+                name: client_name || "Cliente",
+                phone: cleanNumber,
+                user_id: userId
+            }).select().single();
+            client = newClient;
+        }
 
-    // Notificação para o sistema (Painel)
-    const { data: serviceData } = await supabase.from('services').select('name').eq('id', avail.service_id).single();
-    const { data: clientData } = await supabase.from('clients').select('name').eq('id', client.id).single();
-    await supabase.from('notifications').insert({
-        user_id: userId,
-        title: 'Novo Agendamento via IA',
-        message: `${clientData?.name || 'Cliente'} agendou ${serviceData?.name || 'Serviço'} para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`,
-        link: 'agenda'
-    });
+        const { error } = await supabase.from('appointments').insert({
+            user_id: userId,
+            client_id: client.id,
+            service_id: avail.service_id,
+            professional_id: avail.professional_id,
+            pro_name: (pros?.find((p: any) => p.id === avail.professional_id))?.name || "Profissional",
+            appointment_date: date,
+            appointment_time: time.length === 5 ? time + ":00" : time,
+            status: 'Confirmado'
+        });
 
-    return { success: true, message: "Agendamento realizado com sucesso!" };
+        if (error) return { success: false, reason: error.message };
+
+        await supabase.from('notifications').insert({
+            user_id: userId,
+            title: 'Novo Agendamento via IA',
+            message: `${client?.name || 'Cliente'} agendou serviço para ${new Date(date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${time}.`,
+            link: 'agenda'
+        });
+
+        return { success: true, message: "Agendamento realizado com sucesso!" };
+    } finally {
+        if (redis && lockKey) await redis.del(lockKey);
+    }
 }
 
 async function handleGetClientAppointments(supabase: any, userId: string, cleanPhone: string) {
@@ -275,44 +314,65 @@ async function handleGetClientAppointments(supabase: any, userId: string, cleanP
     return { client_name: client.name, appointments: formatted, message: `Encontrei ${formatted.length} agendamento(s).` };
 }
 
-async function handleRescheduleAppointment(supabase: any, userId: string, args: any, cleanPhone?: string) {
+async function handleRescheduleAppointment(supabase: any, redis: any, userId: string, args: any, cleanPhone: string | undefined, services: any, pros: any, hours: any, proServicesData: any) {
     let { appointment_id, new_date, new_time } = args;
 
-    if ((!appointment_id || appointment_id.length !== 36) && cleanPhone) {
-        const apptsResult = await handleGetClientAppointments(supabase, userId, cleanPhone);
-        const appts = apptsResult?.appointments || [];
-        if (args.original_date) {
-            const match = appts.find((a: any) => a.date_iso === args.original_date);
-            if (match) appointment_id = match.id;
-        } else if (appts.length === 1) {
-            appointment_id = appts[0].id;
+    let lockKey = "";
+    if (redis) {
+        lockKey = `lock:reschedule:${userId}:${appointment_id || 'any'}:${new_date}:${new_time}`;
+        const acquired = await redis.set(lockKey, 'locked', 'PX', 10000, 'NX');
+        if (!acquired) {
+            return { success: false, reason: "Este reagendamento está sendo processado. Tente novamente." };
         }
     }
 
-    const { data: original } = await supabase.from('appointments')
-        .select('id, service_id, pro_name, professional_id, client_id, services(name, duration_minutes)')
-        .eq('id', appointment_id).eq('user_id', userId).single();
+    try {
+        if ((!appointment_id || appointment_id.length !== 36) && cleanPhone) {
+            const apptsResult = await handleGetClientAppointments(supabase, userId, cleanPhone);
+            const appts = apptsResult?.appointments || [];
+            if (args.original_date) {
+                const match = appts.find((a: any) => a.date_iso === args.original_date);
+                if (match) appointment_id = match.id;
+            } else if (appts.length === 1) {
+                appointment_id = appts[0].id;
+            }
+        }
 
-    if (!original) return { success: false, reason: "Agendamento não encontrado." };
+        const { data: original } = await supabase.from('appointments')
+            .select('id, service_id, pro_name, professional_id, client_id, services(name, duration_minutes)')
+            .eq('id', appointment_id).eq('user_id', userId).single();
 
-    const cleanTime = new_time.length === 5 ? new_time + ":00" : new_time;
-    const { error } = await supabase.from('appointments').update({
-        appointment_date: new_date,
-        appointment_time: cleanTime,
-        status: 'Confirmado'
-    }).eq('id', appointment_id);
+        if (!original) return { success: false, reason: "Agendamento não encontrado." };
 
-    if (error) return { success: false, reason: error.message };
+        const availArgs = {
+            date: new_date,
+            time: new_time,
+            service_id: original.service_id,
+            professional_id: original.professional_id
+        };
+        const avail = await handleCheckAvailability(supabase, userId, availArgs, services, pros, hours, proServicesData, appointment_id);
+        if (!avail.available) return { success: false, reason: avail.reason };
 
-    // Notificação para o sistema (Painel)
-    await supabase.from('notifications').insert({
-        user_id: userId,
-        title: 'Reagendamento via IA',
-        message: `Agendamento reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`,
-        link: 'agenda'
-    });
+        const cleanTime = new_time.length === 5 ? new_time + ":00" : new_time;
+        const { error } = await supabase.from('appointments').update({
+            appointment_date: new_date,
+            appointment_time: cleanTime,
+            status: 'Confirmado'
+        }).eq('id', appointment_id);
 
-    return { success: true, message: "Reagendado!" };
+        if (error) return { success: false, reason: error.message };
+
+        await supabase.from('notifications').insert({
+            user_id: userId,
+            title: 'Reagendamento via IA',
+            message: `Agendamento reagendado para ${new Date(new_date + 'T12:00:00').toLocaleDateString('pt-BR')} às ${new_time}.`,
+            link: 'agenda'
+        });
+
+        return { success: true, message: "Reagendado!" };
+    } finally {
+        if (redis && lockKey) await redis.del(lockKey);
+    }
 }
 
 async function handleCancelAppointment(supabase: any, userId: string, args: any, cleanPhone?: string) {
@@ -326,7 +386,6 @@ async function handleCancelAppointment(supabase: any, userId: string, args: any,
     const { error } = await supabase.from('appointments').update({ status: 'Cancelado' }).eq('id', appointment_id);
     if (error) return { success: false, reason: error.message };
 
-    // Notificação para o sistema (Painel)
     await supabase.from('notifications').insert({
         user_id: userId,
         title: 'Cancelamento via IA',
@@ -338,134 +397,172 @@ async function handleCancelAppointment(supabase: any, userId: string, args: any,
 }
 
 const aiTools: any = [
-    {
-        type: "function",
-        function: {
-            name: "check_availability",
-            description: "Verifica disponibilidade antes de marcar",
-            parameters: {
-                type: "object",
-                properties: {
-                    date: { type: "string", description: "YYYY-MM-DD" },
-                    time: { type: "string", description: "HH:MM" },
-                    service_name: { type: "string" },
-                    professional_name: { type: "string" }
-                },
-                required: ["date", "time", "service_name"]
+    { type: "function", function: { name: "check_availability", description: "Verifica disponibilidade", parameters: { type: "object", properties: { date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" }, professional_name: { type: "string" } }, required: ["date", "time", "service_name"] } } },
+    { type: "function", function: { name: "list_available_slots", description: "Lista horários livres", parameters: { type: "object", properties: { date: { type: "string" }, service_name: { type: "string" }, professional_name: { type: "string" } }, required: ["date", "service_name"] } } },
+    { type: "function", function: { name: "book_appointment", description: "Novo agendamento", parameters: { type: "object", properties: { date: { type: "string" }, time: { type: "string" }, service_name: { type: "string" }, client_name: { type: "string" }, professional_name: { type: "string" } }, required: ["date", "time", "service_name", "client_name"] } } },
+    { type: "function", function: { name: "get_client_appointments", description: "Lista agendamentos futuros", parameters: { type: "object", properties: {} } } },
+    { type: "function", function: { name: "reschedule_appointment", description: "Reagenda", parameters: { type: "object", properties: { appointment_id: { type: "string" }, new_date: { type: "string" }, new_time: { type: "string" } }, required: ["new_date", "new_time"] } } },
+    { type: "function", function: { name: "cancel_appointment", description: "Cancela", parameters: { type: "object", properties: { appointment_id: { type: "string" } } } } }
+];
+
+const redisUrl = Deno.env.get('REDIS_URL');
+const redis = redisUrl ? new Redis(redisUrl) : null;
+
+// Helper to extract robust JID/Phone Ported from v28
+function universalExtract(payload: any) {
+    const p = Array.isArray(payload) ? payload[0] : payload;
+    const data = p?.data || p;
+    const inst = p?.instance || p?.instance_name || data?.instance;
+    const msg = data?.message || data?.messages?.[0]?.message || data;
+    const key = data?.key || data?.messages?.[0]?.key;
+    
+    const rawJid = key?.remoteJid || data?.sender || data?.from || '';
+    const participant = data?.participant || (msg?.contactMessage?.vcard && msg.contactMessage.vcard.match(/waid=(\d+)/)?.[1]);
+    const remoteJidAlt = key?.remoteJidAlt || '';
+    const senderPn = data?.senderPn || '';
+
+    let jid = rawJid;
+    const candidates = [rawJid, participant, remoteJidAlt, senderPn].filter(Boolean);
+    const netMatch = candidates.find(c => typeof c === 'string' && c.includes('@s.whatsapp.net'));
+    if (netMatch) {
+        jid = netMatch;
+    } else {
+        const phoneMatch = candidates.find(c => typeof c === 'string' && !c.includes('@'));
+        if (phoneMatch) {
+            const clean = phoneMatch.replace(/\D/g, '');
+            if (clean.length >= 8) jid = `${clean}@s.whatsapp.net`;
+            else {
+                const lidMatch = candidates.find(c => typeof c === 'string' && c.includes('@lid'));
+                if (lidMatch) jid = lidMatch;
             }
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "list_available_slots",
-            description: "Lista várias opções de horários livres no dia",
-            parameters: {
-                type: "object",
-                properties: {
-                    date: { type: "string", description: "YYYY-MM-DD" },
-                    service_name: { type: "string" },
-                    professional_name: { type: "string" }
-                },
-                required: ["date", "service_name"]
-            }
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "book_appointment",
-            description: "Grava o agendamento",
-            parameters: {
-                type: "object",
-                properties: {
-                    date: { type: "string", description: "YYYY-MM-DD" },
-                    time: { type: "string", description: "HH:MM" },
-                    service_name: { type: "string" },
-                    client_name: { type: "string", description: "Nome obtido na conversa" },
-                    professional_name: { type: "string" }
-                },
-                required: ["date", "time", "service_name", "client_name"]
-            }
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "get_client_appointments",
-            description: "Lista agendamentos futuros do cliente atual",
-            parameters: { type: "object", properties: {} }
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "reschedule_appointment",
-            description: "Reagenda (muda a data ou hora)",
-            parameters: {
-                type: "object",
-                properties: {
-                    appointment_id: { type: "string", description: "Opcional" },
-                    new_date: { type: "string" },
-                    new_time: { type: "string" },
-                    original_date: { type: "string", description: "Data atual do agendamento (ajuda a localizar)." }
-                },
-                required: ["new_date", "new_time"]
-            }
-        }
-    },
-    {
-        type: "function",
-        function: {
-            name: "cancel_appointment",
-            description: "Desmarca horários",
-            parameters: {
-                type: "object",
-                properties: { appointment_id: { type: "string" } }
-            }
+        } else {
+            const lidMatch = candidates.find(c => typeof c === 'string' && c.includes('@lid'));
+            if (lidMatch) jid = lidMatch;
         }
     }
-];
+    
+    if (jid && typeof jid === 'string' && jid.includes(':')) {
+        const parts = jid.split('@');
+        const userPart = parts[0].split(':')[0];
+        jid = `${userPart}@${parts[1]}`;
+    }
+    
+    const txt = msg?.conversation || msg?.extendedTextMessage?.text || data?.content || '';
+    const fromMe = key?.fromMe ?? false;
+    const possibleRealPhone = participant || jid;
+    return { inst, jid, txt, fromMe, possibleRealPhone };
+}
 
 Deno.serve(async (req: Request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
-    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? Deno.env.get('SUPABASE_ANON_KEY')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
 
     try {
-        const payload = await req.json();
-        const instanceName = payload.instance;
-        const msgData = payload.data?.messages?.[0] || payload.data;
+        const body = await req.json();
+        const { inst, jid, txt, fromMe, possibleRealPhone } = universalExtract(body);
 
-        if (!msgData || msgData.key?.fromMe) return new Response('skip', { headers: corsHeaders });
+        if (fromMe || !jid || !txt) return new Response('skip', { headers: corsHeaders });
 
-        const senderNumber = msgData.key.remoteJid;
-        const textMessage = msgData.message?.conversation || msgData.message?.extendedTextMessage?.text || payload.data?.content || '';
-
-        if (!textMessage) return new Response('no text', { headers: corsHeaders });
-
-        const { data: st } = await supabase.from('ai_agent_settings').select('*').eq('provider_instance', instanceName).eq('is_active', true).single();
+        const { data: st } = await supabase.from('ai_agent_settings').select('*').eq('provider_instance', inst).eq('is_active', true).single();
         if (!st) return new Response('inactive', { headers: corsHeaders });
 
-        const cleanPhone = senderNumber.split('@')[0];
-        const msgNorm = textMessage.trim().toUpperCase();
+        const cleanPhone = possibleRealPhone.split('@')[0].replace(/\D/g, '');
 
-        if (['SIM', 'OK', 'CONFIRMO'].some(k => msgNorm.startsWith(k))) {
-            const client = await findClientByPhone(supabase, st.user_id, cleanPhone);
-            if (client) {
-                const today = new Date().toISOString().split('T')[0];
-                const { data: appt } = await supabase.from('appointments').select('id').eq('client_id', client.id).eq('reminder_sent', true).gte('appointment_date', today).limit(1).single();
-                if (appt) {
-                    await supabase.from('appointments').update({ status: 'Confirmado' }).eq('id', appt.id);
-                    await sendWhatsApp(supabase, st, instanceName, senderNumber, "✅ Confirmado! Te esperamos.");
-                    return new Response('ok', { headers: corsHeaders });
-                }
+        // --- BOT FLOW ENGINE ---
+        const processBotFlow = async () => {
+            const { data: flows } = await supabase.from('bot_flows').select('*').eq('user_id', st.user_id).eq('is_active', true);
+            const triggeredFlow = flows?.find(f => f.trigger_keywords?.some((k: string) => txt.trim().toLowerCase() === k.toLowerCase()));
+
+            let currentState = null;
+            let currentFlow = null;
+
+            if (triggeredFlow) {
+                const startNode = triggeredFlow.nodes.find((n: any) => n.type === 'start' || n.id === 'start-1');
+                const { data: newState } = await supabase.from('bot_flow_states').upsert({
+                    user_id: st.user_id, flow_id: triggeredFlow.id, client_phone: cleanPhone,
+                    current_node_id: startNode?.id, collected_data: {}, is_completed: false, updated_at: new Date().toISOString()
+                }, { onConflict: 'user_id,client_phone' }).select().single();
+                currentState = newState;
+                currentFlow = triggeredFlow;
+            } else {
+                const { data: activeState } = await supabase.from('bot_flow_states').select('*, bot_flows(*)').eq('user_id', st.user_id).eq('client_phone', cleanPhone).eq('is_completed', false).maybeSingle();
+                if (activeState) {
+                    currentState = activeState;
+                    currentFlow = activeState.bot_flows;
+                } else return false;
             }
-        }
 
-        const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', senderNumber).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(20);
+            if (currentState && currentFlow) {
+                const nodes = currentFlow.nodes;
+                const edges = currentFlow.edges;
+                const currentNode = nodes.find((n: any) => n.id === currentState.current_node_id);
+                if (!currentNode) return false;
+
+                if (currentNode.type === 'question') {
+                    const varName = currentNode.data.variable || 'last_response';
+                    const data = { ...currentState.collected_data, [varName]: txt };
+                    await supabase.from('bot_flow_states').update({ collected_data: data }).eq('id', currentState.id);
+                }
+
+                let nextNodeId = null;
+                if (currentNode.type === 'condition') {
+                    const { variable, operator, value } = currentNode.data;
+                    const val = currentState.collected_data[variable];
+                    let res = false;
+                    if (operator === '==') res = String(val) === String(value);
+                    else if (operator === '!=') res = String(val) !== String(value);
+                    else if (operator === 'contains') res = String(val).toLowerCase().includes(String(value).toLowerCase());
+                    else if (operator === 'exists') res = !!val && String(val).trim() !== "";
+                    nextNodeId = edges.find((e: any) => e.source === currentNode.id && e.sourceHandle === (res ? 'true' : 'false'))?.target;
+                } else if (currentNode.type === 'buttons') {
+                    const matchIdx = (currentNode.data.choices || []).findIndex((c: string) => txt.trim().toLowerCase() === c.toLowerCase());
+                    if (matchIdx !== -1) nextNodeId = edges.find((e: any) => e.source === currentNode.id && e.sourceHandle === `choice-${matchIdx}`)?.target;
+                    else { await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id); return false; }
+                } else {
+                    nextNodeId = edges.find((e: any) => e.source === currentNode.id)?.target;
+                }
+
+                if (!nextNodeId) { await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id); return false; }
+
+                const interpolate = (t: string) => t.replace(/\{(\w+)\}/g, (m, k) => currentState.collected_data?.[k] || m);
+                let tempId = nextNodeId;
+                while (tempId) {
+                    const next = nodes.find((n: any) => n.id === tempId);
+                    if (!next) break;
+                    if (next.type === 'message') {
+                        await sendWhatsApp(supabase, st, inst, jid, interpolate(next.data.text));
+                        await supabase.from('bot_flow_states').update({ current_node_id: next.id }).eq('id', currentState.id);
+                        const edge = edges.find((e: any) => e.source === next.id);
+                        tempId = edge?.target;
+                        if (!tempId) await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                    } else if (next.type === 'image' || next.type === 'audio') {
+                        if (next.data.url) await sendWhatsApp(supabase, st, inst, jid, { url: next.data.url, type: next.type as any, caption: next.type === 'image' ? interpolate(next.data.caption) : undefined });
+                        await supabase.from('bot_flow_states').update({ current_node_id: next.id }).eq('id', currentState.id);
+                        const edge = edges.find((e: any) => e.source === next.id);
+                        tempId = edge?.target;
+                        if (!tempId) await supabase.from('bot_flow_states').update({ is_completed: true }).eq('id', currentState.id);
+                    } else if (next.type === 'question' || next.type === 'buttons') {
+                        await sendWhatsApp(supabase, st, inst, jid, interpolate(next.data.text));
+                        await supabase.from('bot_flow_states').update({ current_node_id: next.id }).eq('id', currentState.id);
+                        return true;
+                    } else if (next.type === 'wait') {
+                        await new Promise(r => setTimeout(r, (next.data.delay || 5) * 1000));
+                        await supabase.from('bot_flow_states').update({ current_node_id: next.id }).eq('id', currentState.id);
+                        tempId = edges.find((e: any) => e.source === next.id)?.target;
+                    } else break;
+                }
+                return true;
+            }
+            return false;
+        };
+
+        if (await processBotFlow()) return new Response('flow handled', { headers: corsHeaders });
+
+        // --- AI AGENT LOGIC ---
+        const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', jid).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(6);
         const history = (hs || []).filter((h: any) => h.role === 'user' || h.role === 'assistant').reverse();
 
         const [kb, serv, hrs, proD, proServData] = await Promise.all([
@@ -476,72 +573,50 @@ Deno.serve(async (req: Request) => {
             supabase.from('professional_services').select('*')
         ]);
 
-        const context = `Contexto:\nServiços: ${JSON.stringify(serv.data)}\nHorários: ${JSON.stringify(hrs.data)}\nProfissionais: ${JSON.stringify(proD.data)}\nInfo: ${kb.data?.map(k => k.content).join(' ')}`;
+        const context = `Serviços: ${JSON.stringify(serv.data)}\nHorários: ${JSON.stringify(hrs.data)}\nProfissionais: ${JSON.stringify(proD.data)}\nInfo: ${kb.data?.map(k => k.content).join(' ')}`;
         const now = new Date();
-        const days = ['domingo', 'segunda-feira', 'terça-feira', 'quarta-feira', 'quinta-feira', 'sexta-feira', 'sábado'];
-        const dateStr = `${days[now.getUTCDay()]}, ${now.getUTCDate().toString().padStart(2, '0')}/${(now.getUTCMonth() + 1).toString().padStart(2, '0')}/2026`;
-        const systemPrompt = `${st.system_prompt}\n${context}\nDATA ATUAL: ${dateStr}. IMPORTANTE: Estamos no ano de 2026. NÃO ofereça agendamentos para dias que a clínica está fechada (conforme horários no contexto). Remova "*" asteriscos e evite negrito. USE SEMPRE AS FERRAMENTAS PARA CONSULTAS E AGENDAMENTOS!`;
+        const dateStr = `${now.getDate()}/${now.getMonth()+1}/2026`;
+        const systemPrompt = `${st.system_prompt}\nContexto:\n${context}\nDATA HOJE: ${dateStr}. USE TOOLS SEMPRE!`;
 
         const aiClient = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
-        const aiModel = st.ai_model || 'gpt-4o-mini';
+        const aiRes = await aiClient.chat.completions.create({
+            model: st.ai_model || 'gpt-4o-mini',
+            messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: txt }] as any,
+            tools: aiTools,
+            tool_choice: "auto"
+        });
 
-        await logToDb(supabase, 'INFO', `Iniciando AI Tools (${aiModel})`, { sender: cleanPhone }, st);
+        let aiMsg = aiRes.choices[0].message, aiText = aiMsg.content || '';
 
-        let initialRes: any;
-        try {
-            initialRes = await aiClient.chat.completions.create({
-                model: aiModel,
-                messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: textMessage }] as any,
-                tools: aiTools,
-                tool_choice: "auto"
-            });
-        } catch (err: any) {
-            await logToDb(supabase, 'WARN', `Model failed with tools, retry without (${err.message})`, {}, st);
-            initialRes = await aiClient.chat.completions.create({
-                model: aiModel,
-                messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: textMessage }] as any
-            });
-        }
-
-        let aiMsg = initialRes.choices[0].message;
-        let aiText = aiMsg.content || '';
-
-        if (aiMsg.tool_calls && aiMsg.tool_calls.length > 0) {
-            let tc = aiMsg.tool_calls[0];
-            let rawArgs = tc.function.arguments || "{}";
-            let args = {};
-            try { args = JSON.parse(rawArgs); } catch (e) { args = {}; }
-            let toolRes: any = { err: "Desconhecida" };
-
-            await logToDb(supabase, 'INFO', `Tool Call: ${tc.function.name}`, { args }, st);
-
+        if (aiMsg.tool_calls) {
+            const tc = aiMsg.tool_calls[0];
+            const args = JSON.parse(tc.function.arguments);
+            let toolRes: any = {};
             if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
-            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderNumber, proServData.data);
-            else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, cleanPhone);
-            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, cleanPhone);
-            else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, cleanPhone);
+            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, redis, st.user_id, args, serv.data, proD.data, hrs.data, jid, proServData.data);
+            else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, jid);
+            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, redis, st.user_id, args, jid, serv.data, proD.data, hrs.data, proServData.data);
+            else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, jid);
 
-            const followUpRes = await aiClient.chat.completions.create({
-                model: aiModel,
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    ...history,
-                    { role: 'user', content: textMessage },
-                    aiMsg,
-                    { role: 'tool', content: JSON.stringify(toolRes), tool_call_id: tc.id }
-                ] as any
+            const finalRes = await aiClient.chat.completions.create({
+                model: st.ai_model || 'gpt-4o-mini',
+                messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: txt }, aiMsg, { role: 'tool', content: JSON.stringify(toolRes), tool_call_id: tc.id }] as any
             });
-            aiText = followUpRes.choices[0].message.content || 'Concluído.';
+            aiText = finalRes.choices[0].message.content || '';
         }
 
         aiText = aiText.replace(/\*/g, '').trim();
-        await supabase.from('ai_chat_history').insert([{ user_id: st.user_id, sender_number: senderNumber, role: 'user', content: textMessage }, { user_id: st.user_id, sender_number: senderNumber, role: 'assistant', content: aiText }]);
-        await sendWhatsApp(supabase, st, instanceName, senderNumber, aiText);
+        if (aiText) {
+            await supabase.from('ai_chat_history').insert([{ user_id: st.user_id, sender_number: jid, role: 'user', content: txt }, { user_id: st.user_id, sender_number: jid, role: 'assistant', content: aiText }]);
+            await sendWhatsApp(supabase, st, inst, jid, aiText);
+        }
 
+        await supabase.from('debug_logs').insert({ level: 'INFO', message: "Webhook Consolidado Success", payload: { jid, response: aiText } });
         return new Response('ok', { headers: corsHeaders });
+
     } catch (e: any) {
-        await supabase.from('debug_logs').insert({ level: 'ERROR', message: "Crit Error", payload: e.message });
+        await supabase.from('debug_logs').insert({ level: 'ERROR', message: "Consolidado Error", payload: { err: e.message } });
         return new Response(e.message, { status: 500, headers: corsHeaders });
     }
 });

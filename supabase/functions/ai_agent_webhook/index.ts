@@ -182,9 +182,19 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
     const dayHours = hours?.find((h: any) => h.day_of_week === day);
     if (!dayHours || !dayHours.is_working_day) return { available: false, reason: "A clínica não abre neste dia (Domingo/Feriado)." };
 
+    const duration = service.duration_minutes || 30;
     const cleanTime = time.length === 5 ? time + ":00" : time;
-    if (cleanTime < dayHours.start_time || cleanTime > dayHours.end_time) {
-        return { available: false, reason: `Fora do horário de funcionamento (${dayHours.start_time.substring(0, 5)} às ${dayHours.end_time.substring(0, 5)}).` };
+    const newStart = timeToMinutes(cleanTime);
+    const newEnd = newStart + duration;
+
+    const clinicStart = timeToMinutes(dayHours.start_time);
+    const clinicEnd = timeToMinutes(dayHours.end_time);
+
+    if (newStart < clinicStart || newEnd > clinicEnd) {
+        const lastSlot = clinicEnd - duration;
+        const lastH = String(Math.floor(lastSlot / 60)).padStart(2, '0');
+        const lastM = String(lastSlot % 60).padStart(2, '0');
+        return { available: false, reason: `Fora do horário (${dayHours.start_time.substring(0, 5)} às ${dayHours.end_time.substring(0, 5)}). Considerando a duração do serviço (${duration}m), o último horário é ${lastH}:${lastM}.` };
     }
 
     const duration = service.duration_minutes || 30;
@@ -194,18 +204,15 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
         .eq('user_id', userId)
         .neq('status', 'Cancelado');
 
-    let pro = null;
     if (args.professional_id) pro = pros?.find((p: any) => p.id === args.professional_id);
     else if (professional_name && professional_name !== "Assistente") pro = pros?.find((p: any) => p.name?.toLowerCase().includes(professional_name.toLowerCase()));
-
-    const newStart = timeToMinutes(cleanTime);
-    const newEnd = newStart + duration;
 
     if (pro) {
         if (proServicesData && !proServicesForService(proServicesData, pro.id, service.id)) {
             return { available: false, reason: `${pro.name} não oferece ${service.name}.` };
         }
         for (const appt of (dayAppointments || [])) {
+            if (args.ignore_appointment_id && appt.id === args.ignore_appointment_id) continue;
             if (appt.professional_id !== pro.id) continue;
             const apptStart = timeToMinutes(appt.appointment_time);
             const apptEnd = apptStart + (appt.services?.duration_minutes || 30);
@@ -220,6 +227,7 @@ async function handleCheckAvailability(supabase: any, userId: string, args: any,
         if (proServicesData && !proServicesForService(proServicesData, p.id, service.id)) continue;
         let hasConflict = false;
         for (const appt of (dayAppointments || [])) {
+            if (args.ignore_appointment_id && appt.id === args.ignore_appointment_id) continue;
             if (appt.professional_id !== p.id) continue;
             const apptStart = timeToMinutes(appt.appointment_time);
             const apptEnd = apptStart + (appt.services?.duration_minutes || 30);
@@ -376,7 +384,7 @@ async function handleGetClientAppointments(supabase: any, userId: string, rawPho
     return { client_name: client.name, appointments: formatted, message: `Encontrei ${formatted.length} agendamento(s).` };
 }
 
-async function handleRescheduleAppointment(supabase: any, userId: string, args: any, rawPhone?: string) {
+async function handleRescheduleAppointment(supabase: any, userId: string, args: any, rawPhone: string | undefined, services: any, pros: any, hours: any, proServicesData: any) {
     let { appointment_id, new_date, new_time } = args;
     new_date = parseDate(new_date);
 
@@ -399,6 +407,16 @@ async function handleRescheduleAppointment(supabase: any, userId: string, args: 
         .eq('id', appointment_id).eq('user_id', userId).single();
 
     if (!original) return { success: false, reason: "Agendamento não encontrado." };
+
+    const availArgs = {
+        date: new_date,
+        time: new_time,
+        service_id: original.service_id,
+        professional_id: original.professional_id,
+        ignore_appointment_id: appointment_id
+    };
+    const avail = await handleCheckAvailability(supabase, userId, availArgs, services, pros, hours, proServicesData);
+    if (!avail.available) return { success: false, reason: avail.reason };
 
     const cleanTime = new_time.length === 5 ? new_time + ":00" : new_time;
     const { error } = await supabase.from('appointments').update({
@@ -596,7 +614,12 @@ Deno.serve(async (req: Request) => {
                 rawEventSender
             ].map(j => {
                 if (!j || typeof j !== 'string') return "";
-                if (!j.includes('@') && /^\d+$/.test(j)) return `${j}@s.whatsapp.net`;
+                if (j.includes('@')) return j;
+                
+                // Se for um número de telefone formatado, limpamos tudo menos dígitos
+                const cleanPhone = j.replace(/\D/g, '');
+                if (cleanPhone.length >= 8) return `${cleanPhone}@s.whatsapp.net`;
+                
                 return j;
             }).filter(j => j && j.includes('@') && !j.includes('status'));
 
@@ -883,7 +906,14 @@ Deno.serve(async (req: Request) => {
         const dateExtenso = `${days[now.getUTCDay()]}, ${now.getUTCDate()} de ${months[now.getUTCMonth()]} de 2026`;
         const dateISO = "2026-03-08";
 
-        const systemPrompt = `${st.system_prompt}\n${context}\n\n[MEMÓRIA TEMPORAL OBRIGATÓRIA]\n- DATA DE HOJE: ${dateExtenso}.\n- ANO: 2026 (ignore qualquer outro ano).\n- MÊS: MARÇO.\n- FORMATO DO USUÁRIO: Brasileiro (DD/MM). 11/03 é 11 de MARÇO.\n- REGRA DE OURO: Você vive em 2026. Se pensar em 2023, você está errado. Corrija-se imediatamente.\n- Se o usuário não disser o ano, use SEMPRE 2026.\n- Use YYYY-MM-DD nas ferramentas.`;
+        const dataHoraAtual = new Date().toLocaleString('pt-BR', {
+            timeZone: 'America/Sao_Paulo',
+            dateStyle: 'full',
+            timeStyle: 'short'
+        });
+        const promptReplaced = (st.system_prompt || "").replace(/\{\{DATA_HORA_ATUAL\}\}/g, dataHoraAtual);
+
+        const systemPrompt = `${promptReplaced}\n${context}\n\n[MEMÓRIA TEMPORAL OBRIGATÓRIA]\n- DATA DE HOJE: ${dateExtenso}.\n- ANO: 2026 (ignore qualquer outro ano).\n- MÊS: MARÇO.\n- FORMATO DO USUÁRIO: Brasileiro (DD/MM). 11/03 é 11 de MARÇO.\n- REGRA DE OURO: Você vive em 2026. Se pensar em 2023, você está errado. Corrija-se imediatamente.\n- Se o usuário não disser o ano, use SEMPRE 2026.\n- Use YYYY-MM-DD nas ferramentas.`;
 
         const aiClient = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
         const aiModel = st.ai_model || 'gpt-4o-mini';
@@ -922,7 +952,7 @@ Deno.serve(async (req: Request) => {
             else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, st.user_id, args, serv.data, proD.data, hrs.data, senderJid, proServData.data);
             else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, senderJid);
-            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, senderJid);
+            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, st.user_id, args, senderJid, serv.data, proD.data, hrs.data, proServData.data);
             else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, senderJid);
 
             const followUpRes = await aiClient.chat.completions.create({

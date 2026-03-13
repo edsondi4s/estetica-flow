@@ -1,0 +1,32 @@
+[
+  {
+    "id": "a3eaec5c-a17b-47b9-a624-52ab86cc5ba9",
+    "created_at": "2026-03-13T13:58:29.92229+00:00",
+    "level": "INFO",
+    "message": "v28 Success",
+    "payload": {
+      "jid": "212794305728763@lid",
+      "response": "Ótimo! Você deseja agendar a limpeza de pele para amanhã, dia 27/10/2023. \n\nQual horário você prefere? 😊"
+    }
+  },
+  {
+    "id": "f038d6cc-50ae-4dd9-bcc1-a7a114ab9ca3",
+    "created_at": "2026-03-13T13:58:29.068799+00:00",
+    "level": "INFO",
+    "message": "Envio WhatsApp Status: 201",
+    "payload": {
+      "target": "212794305728763@lid",
+      "response": "{\"key\":{\"remoteJid\":\"559291571034@s.whatsapp.net\",\"fromMe\":true,\"id\":\"3EB0A713DE16CD87AF2323\"},\"pushName\":\"Você\",\"status\":\"PENDING\",\"message\":{\"conversation\":\"Qual horário você prefere? 😊\"},\"contextInfo\":{\"mentionedJid\":[],\"groupMentions\":[],\"ephemeralSettingTimestamp\":{\"low\":1773237508,\"high\":0,\"unsigned\":false},\"disappearingMode\":{\"initiator\":0}},\"messageType\":\"conversation\",\"messageTimestamp\":1773410308,\"instanceId\":\"80762c62-fbda-4b18-bc13-d7be3432c075\",\"source\":\"web\"}"
+    }
+  },
+  {
+    "id": "12c46677-5465-4aa5-81b4-887b36f752ae",
+    "created_at": "2026-03-13T13:58:28.028276+00:00",
+    "level": "INFO",
+    "message": "Envio WhatsApp Status: 201",
+    "payload": {
+      "target": "212794305728763@lid",
+      "response": "{\"key\":{\"remoteJid\":\"559291571034@s.whatsapp.net\",\"fromMe\":true,\"id\":\"3EB0F5B0A4A993302AAF11\"},\"pushName\":\"Você\",\"status\":\"PENDING\",\"message\":{\"conversation\":\"Ótimo! Você deseja agendar a limpeza de pele para amanhã, dia 27/10/2023.\"},\"contextInfo\":{\"mentionedJid\":[],\"groupMentions\":[],\"ephemeralSettingTimestamp\":{\"low\":1773237507,\"high\":0,\"unsigned\":false},\"disappearingMode\":{\"initiator\":0}},\"messageType\":\"conversation\",\"messageTimestamp\":1773410307,\"instanceId\":\"80762c62-fbda-4b18-bc13-d7be3432c075\",\"source\":\"web\"}"
+    }
+  }
+]
