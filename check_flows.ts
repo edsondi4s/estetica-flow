@@ -1,39 +1,28 @@
 import { createClient } from '@supabase/supabase-js';
-import * as dotenv from 'dotenv';
-
+import dotenv from 'dotenv';
 dotenv.config();
 
-const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
-const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY || '';
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(
+  process.env.VITE_SUPABASE_URL!,
+  process.env.VITE_SUPABASE_ANON_KEY!
+);
 
-async function check() {
-    console.log('--- Checking Bot Flows ---');
-    const { data: flows, error: flowsError } = await supabase
-        .from('bot_flows')
-        .select('id, name, is_active, trigger_keywords');
-    
-    if (flowsError) {
-        console.error('Error fetching flows:', flowsError);
-    } else {
-        console.log(`Found ${flows?.length || 0} flows:`);
-        flows?.forEach(f => console.log(`- ${f.name} (Active: ${f.is_active}, Triggers: ${f.trigger_keywords})`));
-    }
+async function checkFlows() {
+  console.log('Verificando fluxos ativos...');
+  const { data, error } = await supabase
+    .from('bot_flows')
+    .select('*')
+    .eq('is_active', true);
 
-    console.log('\n--- Checking Recent Debug Logs (Flow related) ---');
-    const { data: logs, error: logsError } = await supabase
-        .from('debug_logs')
-        .select('*')
-        .ilike('message', '%Flow%')
-        .order('created_at', { ascending: false })
-        .limit(10);
+  if (error) {
+    console.error('Erro ao buscar fluxos:', error);
+    return;
+  }
 
-    if (logsError) {
-        console.error('Error fetching logs:', logsError);
-    } else {
-        console.log(`Recent Flow Logs:`);
-        logs?.forEach(l => console.log(`[${l.created_at}] ${l.level}: ${l.message}`));
-    }
+  console.log('Fluxos ativos:', data?.length);
+  data?.forEach(f => {
+      console.log(`- ${f.name} (Keywords: ${f.trigger_keywords?.join(', ')})`);
+  });
 }
 
-check();
+checkFlows();

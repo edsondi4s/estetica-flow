@@ -15,13 +15,14 @@ import { Session } from '@supabase/supabase-js';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { NotificationProvider } from './contexts/NotificationContext';
 import { Toaster } from 'react-hot-toast';
+import { useAppointmentRealtime } from './hooks/useAppointmentRealtime';
 
 export default function App() {
   return (
     <ThemeProvider>
       <NotificationProvider>
         <Toaster
-          position="top-right"
+          position="bottom-right"
           toastOptions={{
             style: {
               zIndex: 99999,
@@ -38,6 +39,8 @@ function AppContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isLoading, setIsLoading] = useState(true);
+
+  useAppointmentRealtime();
 
   useEffect(() => {
     // Check active sessions and sets the user
