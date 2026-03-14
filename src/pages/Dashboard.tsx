@@ -62,6 +62,31 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
         fetchDashboardData();
     }, [chartView]);
 
+    useEffect(() => {
+        const appointmentsSubscription = supabase
+            .channel('dashboard_appointments')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'appointments' },
+                () => fetchDashboardData()
+            )
+            .subscribe();
+
+        const clientsSubscription = supabase
+            .channel('dashboard_clients')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'clients' },
+                () => fetchDashboardData()
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(appointmentsSubscription);
+            supabase.removeChannel(clientsSubscription);
+        };
+    }, []);
+
     const fetchDashboardData = async () => {
         setIsLoading(true);
         try {

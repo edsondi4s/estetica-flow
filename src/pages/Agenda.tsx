@@ -102,6 +102,23 @@ export const Agenda = () => {
         fetchAppointments();
     }, [currentDate, view]);
 
+    useEffect(() => {
+        const subscription = supabase
+            .channel('appointments_changes')
+            .on(
+                'postgres_changes',
+                { event: '*', schema: 'public', table: 'appointments' },
+                () => {
+                    fetchAppointments();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            supabase.removeChannel(subscription);
+        };
+    }, [currentDate, view]);
+
     const fetchFormData = async () => {
         try {
             const [

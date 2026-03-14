@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, Bot, MessageSquare, Key, Link as LinkIcon, FileText, Trash2, Info, ChevronRight, ChevronLeft, Check, Globe, Map as MapIcon, Search, Zap, X, Code } from 'lucide-react';
+import { Camera, Plus, Building2, Phone, Mail, MapPin, Save, Clock, Loader2, Palette, Image as ImageIcon, FileText, Trash2, Info, Check, Globe, Map as MapIcon, Zap } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { InputField } from '../components/ui/InputField';
 import { Card } from '../components/ui/Card';
 import { supabase } from '../lib/supabase';
 import toast from 'react-hot-toast';
 import { Modal } from '../components/ui/Modal';
-import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 interface ConfiguracoesProps {
     onLogout?: () => void;
@@ -15,7 +14,7 @@ interface ConfiguracoesProps {
 const DAYS_OF_WEEK = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
-    const [activeTab, setActiveTab] = useState<'info' | 'enderecos' | 'branding' | 'seo' | 'hours' | 'ai_agent'>('info');
+    const [activeTab, setActiveTab] = useState<'info' | 'enderecos' | 'branding' | 'seo' | 'hours'>('info');
     const [businessHours, setBusinessHours] = useState<any[]>([]);
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
     const [settings, setSettings] = useState({
@@ -40,6 +39,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         tracking_code_body: '',
         favicon_url: '',
         favicon_url_dark: '',
+        chat_cleanup_days: 30,
     });
 
     const [addresses, setAddresses] = useState<any[]>([]);
@@ -47,43 +47,49 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
     const [addressForm, setAddressForm] = useState({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: false });
     const [isSearchingCep, setIsSearchingCep] = useState(false);
 
-    // Legacy support state
-    const [agentSettings, setAgentSettings] = useState<any>({});
-    const [knowledgeBase, setKnowledgeBase] = useState<any[]>([]);
-    const [isAddingKnowledge, setIsAddingKnowledge] = useState(false);
-    const [newKnowledge, setNewKnowledge] = useState({ title: '', content: '' });
-
-    const [agents, setAgents] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
 
-    // Agent Modal States
-    const [isAgentModalOpen, setIsAgentModalOpen] = useState(false);
-    const [editingAgent, setEditingAgent] = useState<any>(null);
-    const [agentFormStep, setAgentFormStep] = useState(1);
-    const [agentForm, setAgentForm] = useState({
-        name: '',
-        agent_role: 'receptivo',
-        is_active: true,
-        ai_provider: 'openai',
-        ai_model: '',
-        ai_api_key: '',
-        system_prompt: 'Você é um assistente virtual gentil e prestativo...'
-    });
+    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'light' | 'dark' | 'favicon-light' | 'favicon-dark' = 'light') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
 
-    // Deletion Modal State
-    const [agentToDelete, setAgentToDelete] = useState<any>(null);
+        setIsUploadingLogo(true);
+        try {
+            const fileExt = file.name.split('.').pop();
+            const fileName = `${type}-${Math.random()}.${fileExt}`;
+            const filePath = `${fileName}`;
 
-    // OpenRouter model state
-    const [openrouterModels, setOpenrouterModels] = useState<any[]>([]);
-    const [isFetchingModels, setIsFetchingModels] = useState(false);
-    const [modelSearch, setModelSearch] = useState('');
+            const { error: uploadError } = await supabase.storage
+                .from('clinic-assets')
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: { publicUrl } } = supabase.storage
+                .from('clinic-assets')
+                .getPublicUrl(filePath);
+
+            if (type === 'light') {
+                setSettings({ ...settings, logo_url: publicUrl });
+            } else if (type === 'dark') {
+                setSettings({ ...settings, logo_url_dark: publicUrl });
+            } else if (type === 'favicon-light') {
+                setSettings({ ...settings, favicon_url: publicUrl });
+            } else if (type === 'favicon-dark') {
+                setSettings({ ...settings, favicon_url_dark: publicUrl });
+            }
+            toast.success(`Upload de imagem (${type}) concluído. Salve para confirmar.`);
+        } catch (error: any) {
+            toast.error('Erro ao fazer upload: ' + error.message);
+        } finally {
+            setIsUploadingLogo(false);
+        }
+    };
 
     useEffect(() => {
         fetchSettings();
         fetchBusinessHours();
-        fetchAgentSettings();
-        fetchKnowledgeBase();
         fetchAddresses();
     }, []);
 
@@ -181,24 +187,6 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         }
     };
 
-    const fetchOpenRouterModels = async (apiKey?: string) => {
-        setIsFetchingModels(true);
-        try {
-            const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-            if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
-            const res = await fetch('https://openrouter.ai/api/v1/models', { headers });
-            const json = await res.json();
-            const sorted = (json.data || []).sort((a: any, b: any) =>
-                (a.name || '').localeCompare(b.name || '')
-            );
-            setOpenrouterModels(sorted);
-        } catch (e) {
-            console.error('Erro ao buscar modelos OpenRouter:', e);
-        } finally {
-            setIsFetchingModels(false);
-        }
-    };
-
     const fetchSettings = async () => {
         try {
             const { data: sData, error: sError } = await supabase
@@ -235,222 +223,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         }
     };
 
-    const fetchAgentSettings = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('ai_agent_settings')
-                .select('*')
-                .order('created_at', { ascending: true });
 
-            if (error) {
-                console.error('Erro ao buscar agentes:', error);
-            } else if (data) {
-                setAgents(data);
-            }
-        } catch (error) {
-            console.error('Erro ao buscar configurações dos agentes:', error);
-        }
-    };
-
-    const fetchKnowledgeBase = async () => {
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const { data, error } = await supabase
-                .from('ai_knowledge_base')
-                .select('*')
-                .eq('user_id', user.id)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            setKnowledgeBase(data || []);
-        } catch (error) {
-            console.error('Erro ao buscar base de conhecimento:', error);
-        }
-    };
-
-    const handleAddKnowledge = async () => {
-        if (!newKnowledge.title || !newKnowledge.content) {
-            toast.error('Preencha o título e o conteúdo da regra.');
-            return;
-        }
-
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) return;
-
-            const { data, error } = await supabase
-                .from('ai_knowledge_base')
-                .insert([{
-                    user_id: user.id,
-                    title: newKnowledge.title,
-                    content: newKnowledge.content,
-                    type: 'text'
-                }])
-                .select()
-                .single();
-
-            if (error) throw error;
-
-            setKnowledgeBase([data, ...knowledgeBase]);
-            setNewKnowledge({ title: '', content: '' });
-            setIsAddingKnowledge(false);
-            toast.success('Regra adicionada à base de conhecimento!');
-        } catch (error: any) {
-            toast.error('Erro ao adicionar regra: ' + error.message);
-        }
-    };
-
-    const handleDeleteKnowledge = async (id: string) => {
-        if (!confirm('Deseja realmente excluir esta regra da base de conhecimento do robô?')) return;
-
-        try {
-            const { error } = await supabase
-                .from('ai_knowledge_base')
-                .delete()
-                .eq('id', id);
-
-            if (error) throw error;
-
-            setKnowledgeBase(knowledgeBase.filter(kb => kb.id !== id));
-            toast.success('Regra excluída com sucesso.');
-        } catch (error: any) {
-            toast.error('Erro ao excluir regra: ' + error.message);
-        }
-    };
-
-    const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'light' | 'dark' | 'favicon-light' | 'favicon-dark' = 'light') => {
-        const file = e.target.files?.[0];
-        if (!file) return;
-
-        setIsUploadingLogo(true);
-        try {
-            const fileExt = file.name.split('.').pop();
-            const fileName = `${type}-${Math.random()}.${fileExt}`;
-            const filePath = `${fileName}`;
-
-            const { error: uploadError } = await supabase.storage
-                .from('clinic-assets')
-                .upload(filePath, file);
-
-            if (uploadError) throw uploadError;
-
-            const { data: { publicUrl } } = supabase.storage
-                .from('clinic-assets')
-                .getPublicUrl(filePath);
-
-            if (type === 'light') {
-                setSettings({ ...settings, logo_url: publicUrl });
-            } else if (type === 'dark') {
-                setSettings({ ...settings, logo_url_dark: publicUrl });
-            } else if (type === 'favicon-light') {
-                setSettings({ ...settings, favicon_url: publicUrl });
-            } else if (type === 'favicon-dark') {
-                setSettings({ ...settings, favicon_url_dark: publicUrl });
-            }
-            toast.success(`Upload de imagem (${type}) concluído. Salve para confirmar.`);
-        } catch (error: any) {
-            toast.error('Erro ao fazer upload: ' + error.message);
-        } finally {
-            setIsUploadingLogo(false);
-        }
-    };
-
-    const handleOpenAgentModal = (agent: any = null) => {
-        if (agent) {
-            setEditingAgent(agent);
-            setAgentForm({
-                name: agent.name || '',
-                agent_role: agent.agent_role || 'receptivo',
-                is_active: agent.is_active ?? true,
-                ai_provider: agent.ai_provider || 'openai',
-                ai_model: agent.ai_model || '',
-                ai_api_key: agent.ai_api_key || '',
-                system_prompt: agent.system_prompt || '',
-                enable_logs: agent.enable_logs ?? false
-            });
-        } else {
-            setEditingAgent(null);
-            setAgentForm({
-                name: '',
-                agent_role: 'receptivo',
-                is_active: true,
-                ai_provider: 'openai',
-                ai_model: '',
-                ai_api_key: '',
-                system_prompt: 'Você é um assistente virtual gentil e prestativo...',
-                enable_logs: false
-            });
-        }
-        setAgentFormStep(1);
-        setIsAgentModalOpen(true);
-    };
-
-    const handleSaveAgent = async () => {
-        setIsSaving(true);
-        try {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) throw new Error('Não autenticado');
-
-            const agentData = {
-                ...agentForm,
-                user_id: user.id
-            };
-
-            if (editingAgent) {
-                const { error } = await supabase
-                    .from('ai_agent_settings')
-                    .update(agentData)
-                    .eq('id', editingAgent.id);
-                if (error) throw error;
-                toast.success('Agente atualizado com sucesso!');
-            } else {
-                const { error } = await supabase
-                    .from('ai_agent_settings')
-                    .insert([agentData]);
-                if (error) throw error;
-                toast.success('Novo agente criado com sucesso!');
-            }
-
-            setIsAgentModalOpen(false);
-            fetchAgentSettings();
-        } catch (error: any) {
-            toast.error('Erro ao salvar agente: ' + error.message);
-        } finally {
-            setIsSaving(false);
-        }
-    };
-
-    const handleToggleAgent = async (agent: any) => {
-        try {
-            const { error } = await supabase
-                .from('ai_agent_settings')
-                .update({ is_active: !agent.is_active })
-                .eq('id', agent.id);
-            if (error) throw error;
-            fetchAgentSettings();
-            toast.success(`Agente ${!agent.is_active ? 'ativado' : 'pausado'}`);
-        } catch (error: any) {
-            toast.error('Erro ao alternar status do agente: ' + error.message);
-        }
-    };
-
-    const handleDeleteAgent = async () => {
-        if (!agentToDelete) return;
-        try {
-            const { error } = await supabase
-                .from('ai_agent_settings')
-                .delete()
-                .eq('id', agentToDelete.id);
-            if (error) throw error;
-            fetchAgentSettings();
-            setAgentToDelete(null);
-            toast.success('Agente removido com sucesso!');
-        } catch (error: any) {
-            toast.error('Erro ao excluir agente: ' + error.message);
-        }
-    };
 
     const handleSave = async () => {
         setIsSaving(true);
@@ -479,6 +252,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         tracking_code_body: settings.tracking_code_body,
                         favicon_url: settings.favicon_url,
                         favicon_url_dark: settings.favicon_url_dark,
+                        chat_cleanup_days: settings.chat_cleanup_days,
                     })
                     .eq('id', settings.id);
                 if (error) throw error;
@@ -506,6 +280,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         tracking_code_body: settings.tracking_code_body,
                         favicon_url: settings.favicon_url,
                         favicon_url_dark: settings.favicon_url_dark,
+                        chat_cleanup_days: settings.chat_cleanup_days,
                     }]);
                 if (error) throw error;
             }
@@ -569,8 +344,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     { id: 'enderecos', label: 'Endereços', icon: MapIcon },
                     { id: 'branding', label: 'Aparência', icon: Palette },
                     { id: 'seo', label: 'Site e Busca (SEO)', icon: Globe },
-                    { id: 'hours', label: 'Horário de Funcionamento', icon: Clock },
-                    { id: 'ai_agent', label: 'Assistente Virtual (IA)', icon: Bot, highlight: true }
+                    { id: 'hours', label: 'Horário de Funcionamento', icon: Clock }
                 ].map((tab) => (
                     <button
                         key={tab.id}
@@ -1000,280 +774,6 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     </div>
                 )}
 
-                {activeTab === 'ai_agent' && (
-                    <div className="p-10 space-y-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                        <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
-                                <Zap className="w-8 h-8 text-primary" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Assistente <span className="text-primary">Virtual (IA)</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Seu agente que atende e agenda pelo WhatsApp</p>
-                            </div>
-                        </div>
-
-                        {/* 1. Conexão Global do WhatsApp */}
-                        <div className="space-y-8 relative">
-                            <div className="flex items-center gap-4 mb-8">
-                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Conexão com WhatsApp</span>
-                                <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-                            </div>
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Protocolo de Conexão</label>
-                                    <select
-                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white transition-all appearance-none cursor-pointer"
-                                        value={settings.whatsapp_provider_type}
-                                        onChange={(e) => setSettings({ ...settings, whatsapp_provider_type: e.target.value })}
-                                    >
-                                        <option value="evolution">EVOLUTION API (v2.0 Native)</option>
-                                        <option value="zapi">Z-API (Cloud Bridge)</option>
-                                    </select>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Endereço do Endpoint (URL)</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
-                                            value={settings.whatsapp_provider_url || ''}
-                                            placeholder="https://api.instance.sh"
-                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_url: e.target.value })}
-                                        />
-                                        <LinkIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ID da Instância / Identificador</label>
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
-                                            value={settings.whatsapp_provider_instance || ''}
-                                            placeholder="ESTETICA_FLOW_CORE"
-                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_instance: e.target.value })}
-                                        />
-                                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    </div>
-                                </div>
-
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Token de Autenticação de Segurança</label>
-                                    <div className="relative">
-                                        <input
-                                            type="password"
-                                            className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
-                                            value={settings.whatsapp_provider_token || ''}
-                                            placeholder="••••••••••••••••"
-                                            onChange={(e) => setSettings({ ...settings, whatsapp_provider_token: e.target.value })}
-                                        />
-                                        <Key className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 2. Lembretes Automáticos */}
-                        <div className="p-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 blur-3xl rounded-full -mr-20 -mt-20"></div>
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
-                                        <Clock className="w-7 h-7 text-amber-500" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Lembretes <span className="text-amber-500">Automáticos</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmar agendamentos sozinho</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-6">
-                                    <span className={`text-[10px] font-black uppercase tracking-widest ${settings.reminder_active ? 'text-primary' : 'text-slate-400'}`}>
-                                        {settings.reminder_active ? 'Status: Ativo' : 'Status: Em Espera'}
-                                    </span>
-                                    <button
-                                        onClick={() => setSettings({ ...settings, reminder_active: !settings.reminder_active })}
-                                        className={`w-14 h-7 rounded-none relative transition-all border ${settings.reminder_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
-                                    >
-                                        <div className={`absolute top-0.5 w-5 h-5 bg-slate-950 rounded-none transition-all ${settings.reminder_active ? 'left-8 bg-white' : 'left-0.5'}`} />
-                                    </button>
-                                </div>
-                            </div>
-
-                            <div className={`mt-10 pt-10 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-10 transition-all duration-500 ${!settings.reminder_active ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Intervalo de Transmissão</label>
-                                    <select
-                                        className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
-                                        value={settings.reminder_minutes}
-                                        onChange={(e) => setSettings({ ...settings, reminder_minutes: parseInt(e.target.value) })}
-                                    >
-                                        <option value={30}>T-30 Minutos (Rapid Response)</option>
-                                        <option value={60}>T-60 Minutos (Standard)</option>
-                                        <option value={120}>T-120 Minutos (Extended)</option>
-                                        <option value={1440}>T-24 Hours (Long Term)</option>
-                                    </select>
-                                </div>
-                                <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20">
-                                    <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
-                                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                                        <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Como funciona:</span>
-                                        O sistema entende as respostas dos clientes e confirma ou cancela o agendamento sozinho, poupando seu tempo.
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 3. Gestão de Agentes */}
-                        <div className="space-y-10">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
-                                        <Bot className="w-7 h-7 text-primary" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Meus <span className="text-primary">Agentes de IA</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Assistentes configurados para atender seus clientes</p>
-                                    </div>
-                                </div>
-                                <Button onClick={() => handleOpenAgentModal()} className="gap-3 shrink-0 h-14 px-8 rounded-none uppercase font-black tracking-widest text-[11px]">
-                                    <Plus className="w-5 h-5" /> Criar Novo Agente
-                                </Button>
-                            </div>
-
-                            {agents.length === 0 ? (
-                                <div className="text-center py-24 bg-slate-50 dark:bg-slate-950 border-2 border-dashed border-slate-100 dark:border-slate-900">
-                                    <Bot className="w-16 h-16 text-slate-300 dark:text-slate-800 mx-auto mb-6 opacity-50" />
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Nenhum Agente Ativo</p>
-                                    <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px]" onClick={() => handleOpenAgentModal()}>
-                                        Criar Meu Primeiro Agente
-                                    </Button>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {agents.map((agent) => (
-                                        <div key={agent.id} className="p-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 shadow-sm hover:border-primary/50 transition-all group relative">
-                                            <div className="flex items-center gap-6 mb-8">
-                                                <div className={`w-14 h-14 flex items-center justify-center border transition-all ${agent.is_active ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-                                                    <Bot className="w-7 h-7" />
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest truncate">{agent.name}</h5>
-                                                    <span className="text-[9px] uppercase tracking-[0.2em] font-black text-primary/70 bg-primary/5 px-3 py-1 mt-1 inline-block">
-                                                        Função: {agent.agent_role}
-                                                    </span>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleToggleAgent(agent)}
-                                                    className={`w-12 h-6 rounded-none relative transition-all border ${agent.is_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
-                                                >
-                                                    <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agent.is_active ? 'left-7 bg-white' : 'left-0.5'}`} />
-                                                </button>
-                                            </div>
-
-                                            <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-8 line-clamp-3">
-                                                "{agent.system_prompt}"
-                                            </p>
-
-                                            <div className="flex gap-4 pt-4 border-t border-slate-50 dark:border-slate-900">
-                                                <Button variant="outline" className="flex-1 h-12 rounded-none uppercase font-black tracking-widest text-[10px] border-slate-200 dark:border-slate-800" onClick={() => handleOpenAgentModal(agent)}>
-                                                    Editar e Ver Conversas
-                                                </Button>
-                                                <button
-                                                    onClick={() => setAgentToDelete(agent)}
-                                                    className="w-12 h-12 flex items-center justify-center border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Base de Conhecimento */}
-                        <div className="space-y-10">
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 border-b border-slate-100 dark:border-slate-800 pb-8">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
-                                        <FileText className="w-7 h-7 text-slate-400" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Regras de <span className="text-slate-400">Atendimento</span></h4>
-                                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Base de conhecimento e regras para o assistente seguir</p>
-                                    </div>
-                                </div>
-                                {!isAddingKnowledge && (
-                                    <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-3 h-14 px-8 rounded-none border-slate-200 dark:border-slate-800 uppercase font-black tracking-widest text-[11px]">
-                                        <Plus className="w-5 h-5" /> Adicionar Regra
-                                    </Button>
-                                )}
-                            </div>
-
-                            {isAddingKnowledge && (
-                                <div className="p-10 bg-slate-50 dark:bg-slate-950 border border-primary/20 rounded-none space-y-8 animate-in fade-in slide-in-from-top-4">
-                                    <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Nova Regra de Conhecimento</h5>
-                                    <div className="space-y-6">
-                                        <InputField
-                                            label="Título da Regra"
-                                            placeholder="Ex: Preços de Botox"
-                                            value={newKnowledge.title}
-                                            onChange={(e) => setNewKnowledge({ ...newKnowledge, title: e.target.value })}
-                                        />
-                                        <div className="space-y-2">
-                                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conteúdo da Regra</label>
-                                            <textarea
-                                                rows={8}
-                                                className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-y"
-                                                placeholder="# Core Rules...\n- Protocol 01: Fast responses\n- Protocol 02: Be precise"
-                                                value={newKnowledge.content}
-                                                onChange={(e) => setNewKnowledge({ ...newKnowledge, content: e.target.value })}
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end gap-6 pt-6 border-t border-slate-100 dark:border-slate-900">
-                                        <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddingKnowledge(false)}>Cancelar</Button>
-                                        <Button className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" onClick={handleAddKnowledge}>Salvar Regra</Button>
-                                    </div>
-                                </div>
-                            )}
-
-                            {knowledgeBase.length === 0 && !isAddingKnowledge ? (
-                                <div className="text-center py-16 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 opacity-50">
-                                    <FileText className="w-12 h-12 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sem regras salvas. Adicione informações para o Robô.</p>
-                                </div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                    {knowledgeBase.map((kb) => (
-                                        <div key={kb.id} className="p-8 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 shadow-sm relative group overflow-hidden flex flex-col">
-                                            <div className="flex justify-between items-start mb-6">
-                                                <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest pr-12">{kb.title}</h5>
-                                                <button
-                                                    onClick={() => handleDeleteKnowledge(kb.id)}
-                                                    className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100"
-                                                >
-                                                    <Trash2 className="w-5 h-5" />
-                                                </button>
-                                            </div>
-                                            <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-6 flex-1 leading-relaxed">
-                                                {kb.content}
-                                            </p>
-                                            <div className="mt-6 pt-6 border-t border-slate-50 dark:border-slate-900">
-                                                <span className="text-[8px] font-black text-slate-400 uppercase tracking-[0.3em]">Integridade da Heurística: Verificada</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                )}
-
                 <div className="p-10 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-8">
                     {onLogout && (
                         <Button variant="danger" className="rounded-none uppercase font-black tracking-[0.2em] text-[10px] h-12 px-8 opacity-50 hover:opacity-100 transition-opacity" onClick={onLogout}>
@@ -1289,231 +789,6 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 </div>
             </Card>
 
-            {/* Modal de Criação/Edição de Agente (Multi-step) */}
-            <Modal
-                isOpen={isAgentModalOpen}
-                onClose={() => setIsAgentModalOpen(false)}
-                title={editingAgent ? `Editar Agente: ${editingAgent.name}` : "Novo Agente"}
-                description={`Passo 0${agentFormStep} de 03: ${agentFormStep === 1 ? 'Identidade' : agentFormStep === 2 ? 'Conexão e Inteligência' : 'Comportamento'}`}
-            >
-                <div className="space-y-8 py-4">
-                    {/* Industrial Stepper */}
-                    <div className="flex items-center gap-1 mb-8">
-                        {[1, 2, 3].map((step) => (
-                            <div key={step} className="flex-1 flex flex-col gap-2">
-                                <div className={`h-1.5 transition-all duration-500 ${agentFormStep >= step ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-900 border border-slate-300 dark:border-slate-800'}`} />
-                                <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${agentFormStep >= step ? 'text-primary' : 'text-slate-400'}`}>Fase 0{step}</span>
-                            </div>
-                        ))}
-                    </div>
-
-                    {agentFormStep === 1 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <InputField
-                                label="Nome do Agente"
-                                placeholder="ex. Recepcionista Virtual"
-                                value={agentForm.name}
-                                onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
-                            />
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Função_Operacional</label>
-                                <select
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
-                                    value={agentForm.agent_role}
-                                    onChange={(e) => setAgentForm({ ...agentForm, agent_role: e.target.value })}
-                                >
-                                    <option value="receptivo">Atendimento (Geral)</option>
-                                    <option value="vendas">Vendas (Agendamentos)</option>
-                                    <option value="recuperacao">Recuperação de Clientes</option>
-                                    <option value="confirmacao">Confirmação Automática</option>
-                                </select>
-                            </div>
-                        </div>
-                    )}
-
-                    {agentFormStep === 2 && (
-                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Provedor_de_Inteligência</label>
-                                <select
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
-                                    value={agentForm.ai_provider}
-                                    onChange={(e) => {
-                                        const provider = e.target.value;
-                                        setAgentForm({ ...agentForm, ai_provider: provider, ai_model: '' });
-                                        setModelSearch('');
-                                        if (provider === 'openrouter') {
-                                            fetchOpenRouterModels(agentForm.ai_api_key);
-                                        }
-                                    }}
-                                >
-                                    <option value="openai">OpenAI (GPT_CORE)</option>
-                                    <option value="groq">Groq (LP_STABLE)</option>
-                                    <option value="openrouter">OpenRouter (MULTI_MODAL)</option>
-                                    <option value="gemini">Google Gemini (FLASH_NATIVE)</option>
-                                    <option value="anthropic">Anthropic Claude (OPS_SAFETY)</option>
-                                </select>
-                            </div>
-
-                            {agentForm.ai_provider === 'openrouter' ? (
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Modelo de Inteligência Artificial</label>
-
-                                    {!agentForm.ai_api_key && (
-                                        <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">
-                                            <Info className="w-4 h-4 shrink-0" />
-                                            Chave necessária para sincronização de modelos.
-                                        </div>
-                                    )}
-
-                                    <div className="relative">
-                                        <input
-                                            type="text"
-                                            placeholder={isFetchingModels ? 'SINCRONIZANDO...' : 'BUSCAR MODELO...'}
-                                            className="w-full pl-6 pr-12 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white placeholder-slate-400"
-                                            value={modelSearch}
-                                            onChange={(e) => setModelSearch(e.target.value)}
-                                            disabled={isFetchingModels}
-                                        />
-                                        {isFetchingModels && (
-                                            <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-primary animate-spin" />
-                                        )}
-                                    </div>
-
-                                    {agentForm.ai_model && (
-                                        <div className="flex items-center gap-4 p-4 bg-primary/5 border border-primary/20">
-                                            <div className="w-2 h-2 bg-primary animate-pulse" />
-                                            <span className="text-[11px] font-mono text-primary font-black truncate uppercase tracking-widest">{agentForm.ai_model}</span>
-                                            <button className="ml-auto text-slate-400 hover:text-red-500" onClick={() => setAgentForm({ ...agentForm, ai_model: '' })}>
-                                                <X className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {openrouterModels.length > 0 && modelSearch.trim().length > 0 && (
-                                        <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 shadow-2xl z-50 relative">
-                                            {openrouterModels
-                                                .filter(m =>
-                                                    m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
-                                                    (m.name || '').toLowerCase().includes(modelSearch.toLowerCase())
-                                                )
-                                                .slice(0, 30)
-                                                .map((model: any) => (
-                                                    <button
-                                                        key={model.id}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setAgentForm({ ...agentForm, ai_model: model.id });
-                                                            setModelSearch('');
-                                                        }}
-                                                        className="w-full text-left px-6 py-4 hover:bg-primary/5 transition-all group flex flex-col gap-1"
-                                                    >
-                                                        <span className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-widest truncate group-hover:text-primary transition-colors">{model.name || model.id}</span>
-                                                        <div className="flex items-center gap-4">
-                                                            <span className="text-[9px] font-mono text-slate-400 uppercase">{model.id}</span>
-                                                            <span className="h-3 w-px bg-slate-200 dark:bg-slate-700"></span>
-                                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Modelo Verificado</span>
-                                                        </div>
-                                                    </button>
-                                                ))
-                                            }
-                                        </div>
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Nome do Modelo (ID)</label>
-                                    <input
-                                        type="text"
-                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
-                                        placeholder="ex. gpt-4o-mini"
-                                        value={agentForm.ai_model}
-                                        onChange={(e) => setAgentForm({ ...agentForm, ai_model: e.target.value })}
-                                    />
-                                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em]">
-                                        Substituição manual necessária para provedores nativos.
-                                    </p>
-                                </div>
-                            )}
-
-                            <InputField
-                                label="Chave de API (Secret Key)"
-                                type="password"
-                                placeholder="sk-pro-••••••••••••••••"
-                                value={agentForm.ai_api_key}
-                                onChange={(e) => {
-                                    setAgentForm({ ...agentForm, ai_api_key: e.target.value });
-                                    if (agentForm.ai_provider === 'openrouter' && (e.target.value?.length || 0) > 10) {
-                                        fetchOpenRouterModels(e.target.value);
-                                    }
-                                }}
-                            />
-                        </div>
-                    )}
-
-                    {agentFormStep === 3 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Diretrizes_Principais (System Prompt)</label>
-                                <textarea
-                                    rows={10}
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none leading-relaxed"
-                                    placeholder="Diga como o agente deve se comportar e o que deve responder..."
-                                    value={agentForm.system_prompt}
-                                    onChange={(e) => setAgentForm({ ...agentForm, system_prompt: e.target.value })}
-                                />
-                            </div>
-
-                            <div className="p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between group">
-                                <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 flex items-center justify-center border ${agentForm.enable_logs ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-                                        <Code className="w-5 h-5" />
-                                    </div>
-                                    <div>
-                                        <h4 className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-1">Diagnóstico e Histórico</h4>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Salvar detalhes das conversas para conferência</p>
-                                    </div>
-                                </div>
-                                <button
-                                    onClick={() => setAgentForm({ ...agentForm, enable_logs: !agentForm.enable_logs })}
-                                    className={`w-12 h-6 rounded-none relative transition-all border ${agentForm.enable_logs ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
-                                >
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agentForm.enable_logs ? 'left-7 bg-white' : 'left-0.5'}`} />
-                                </button>
-                            </div>
-                        </div>
-                    )}
-
-                    <div className="flex justify-between pt-8 gap-6 border-t border-slate-100 dark:border-slate-900">
-                        {agentFormStep > 1 ? (
-                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setAgentFormStep(v => v - 1)}>
-                                <ChevronLeft className="w-5 h-5 mr-3" /> Back
-                            </Button>
-                        ) : (
-                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setIsAgentModalOpen(false)}>Cancelar</Button>
-                        )}
-
-                        {agentFormStep < 3 ? (
-                            <Button onClick={() => setAgentFormStep(v => v + 1)} className="h-12 px-10 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto group">
-                                Próxima Fase <ChevronRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        ) : (
-                            <Button onClick={handleSaveAgent} disabled={isSaving} className="h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto shadow-xl shadow-primary/20" isLoading={isSaving}>
-                                <Save className="w-5 h-5 mr-3" /> Salvar Agente
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </Modal>
-
-            <ConfirmModal
-                isOpen={!!agentToDelete}
-                onClose={() => setAgentToDelete(null)}
-                onConfirm={handleDeleteAgent}
-                title="Excluir Agente"
-                message={`Tem certeza que deseja excluir o agente "${agentToDelete?.name}"? Esta ação não pode ser desfeita.`}
-                confirmLabel="Excluir Agente"
-            />
 
             {/* Modal de Endereço */}
             <Modal

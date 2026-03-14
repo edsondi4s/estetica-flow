@@ -88,8 +88,8 @@ export const BotFlows = () => {
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="relative">
                     <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-12 bg-primary/20 blur-sm"></div>
-                    <h2 className="text-3xl font-black text-slate-950 dark:text-white uppercase tracking-tighter flex items-center gap-3">
-                        Fluxos <span className="text-primary italic">Automatizados</span>
+                    <h2 className="text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tighter flex items-center gap-3">
+                        Fluxos <span className="text-primary">Automatizados</span>
                         <div className="bg-primary/10 border border-primary/20 p-1 rounded-sm">
                             <Zap className="w-4 h-4 text-primary fill-primary/20" />
                         </div>

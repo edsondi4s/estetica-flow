@@ -92,53 +92,114 @@ async function checkCollision(sp: any, uid: string, propId: string, date: string
     return { collision: false };
 }
 
-async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, services: any[], pros: any[]) {
+async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, services: any[], pros: any[], foundClient: any, bizHours: any[]) {
     const name = tc.function.name;
-    const args = typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments;
+    let args: any;
+    try {
+        args = typeof tc.function.arguments === 'string' ? JSON.parse(tc.function.arguments) : tc.function.arguments;
+    } catch (err: any) {
+        return { success: false, reason: "Erro ao interpretar argumentos (JSON inválido). Peça para tentar novamente." };
+    }
 
     try {
         if (name === 'create_client') {
-            let found = await findClientByPhone(sp, st.user_id, cleanPhone);
-            if (found) return { success: true, client: found, message: "Cliente já existe." };
+            if (foundClient) return { success: true, client: foundClient, message: "Cliente já existe." };
             const { data, error } = await sp.from('clients').insert({ name: args.name, phone: cleanPhone, user_id: st.user_id }).select().single();
             return error ? { success: false, reason: error.message } : { success: true, client: data };
         }
 
         if (name === 'book_appointment') {
-            let client = await findClientByPhone(sp, st.user_id, cleanPhone);
-            if (!client) return { success: false, reason: "Use create_client primeiro." };
+            if (!foundClient) return { success: false, reason: "Use create_client primeiro." };
+            if (!args.service_id || !args.professional_id) return { success: false, reason: "Serviço ou profissional ausente. Pergunte ao cliente o que ele deseja agendar e com quem." };
+            if (!args.time || !args.date) return { success: false, reason: "Data ou horário ausente. Pergunte ao cliente." };
+
+            const reqDate = new Date(args.date + "T00:00:00");
+            const dayOfWeek = reqDate.getDay();
+            const bizDay = (bizHours || []).find((b: any) => b.day_of_week === dayOfWeek);
+            
+            if (!bizDay || !bizDay.is_working_day) {
+                return { success: false, reason: `A clínica está fechada neste dia (${DAYS[dayOfWeek]}). Peça ao cliente para escolher outro dia úil.` };
+            }
+            
+            const reqTimeFmt = (args.time.length === 5) ? args.time + ":00" : args.time;
+            const reqTimeSec = toSec(reqTimeFmt);
+            const startSec = toSec(bizDay.start_time);
+            const endSec = toSec(bizDay.end_time);
+            const svc = (services || []).find((s: any) => s.id === args.service_id);
+            const duration = (svc?.duration_minutes || 60) * 60;
+            
+            if (reqTimeSec < startSec || (reqTimeSec + duration) > endSec) {
+                return { success: false, reason: `Fora do horário de atendimento. No dia ${DAYS[dayOfWeek]}, o horário da clínica é das ${bizDay.start_time.slice(0,5)} às ${bizDay.end_time.slice(0,5)}. O serviço dura ${svc?.duration_minutes || 60} min. Sugira outro horário ou o próprio cliente pode propor outro.` };
+            }
+
             const collision = await checkCollision(sp, st.user_id, args.professional_id, args.date, args.time, args.service_id, services);
-            if (collision.collision) return { success: false, reason: `Conflito de horário: ${collision.range}.` };
-            const pro = pros.find(p => p.id === args.professional_id);
+            if (collision.collision) return { success: false, reason: `Conflito de horário: o horário ${collision.range} já está ocupado. Sugira outro horário.` };
+            const pro = pros.find((p: any) => p.id === args.professional_id);
             const { data, error } = await sp.from('appointments').insert({ 
-                user_id: st.user_id, client_id: client.id, service_id: args.service_id, 
+                user_id: st.user_id, client_id: foundClient.id, service_id: args.service_id, 
                 professional_id: args.professional_id, pro_name: pro?.name || 'Profissional',
                 appointment_date: args.date, 
-                appointment_time: args.time.length === 5 ? args.time + ":00" : args.time, 
+                appointment_time: reqTimeFmt, 
                 status: 'Confirmado' 
             }).select('*, services(name), professionals(name)').single();
             return error ? { success: false, reason: error.message } : { success: true, appointment: data };
         }
 
         if (name === 'list_my_appointments' || name === 'get_my_appointments' || name === 'list_appointments') {
-            let client = await findClientByPhone(sp, st.user_id, cleanPhone);
-            if (!client) return { success: false, reason: "Nenhum cadastro encontrado para este número." };
+            if (!foundClient) return { success: false, reason: "Nenhum cadastro encontrado para este número." };
             const today = new Date().toISOString().split('T')[0];
-            const { data } = await sp.from('appointments').select('id, appointment_date, appointment_time, status, services(name), professionals(name)').eq('client_id', client.id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today).order('appointment_date');
-            return { success: true, appointments: data || [], client_name: client.name };
+            const { data } = await sp.from('appointments').select('id, appointment_date, appointment_time, status, services(name), professionals(name)').eq('client_id', foundClient.id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today).order('appointment_date');
+            return { success: true, appointments: data || [], client_name: foundClient.name };
         }
 
         if (name === 'cancel_appointment') {
-            const { error } = await sp.from('appointments').update({ status: 'Cancelado' }).eq('id', args.appointment_id).eq('user_id', st.user_id);
-            return error ? { success: false, reason: error.message } : { success: true, message: "Agendamento cancelado com sucesso." };
+            const { data, error } = await sp.from('appointments').update({ status: 'Cancelado' })
+                .eq('id', args.appointment_id).eq('user_id', st.user_id).select();
+            if (error) return { success: false, reason: error.message };
+            if (!data || data.length === 0) return { success: false, reason: "ID de agendamento não encontrado. Certifique-se de listar primeiro e usar o 'id' exato (UUID) retornado na tabela." };
+            return { success: true, message: "Agendamento cancelado com sucesso." };
+        }
+
+        if (name === 'reschedule_appointment') {
+            if (!args.appointment_id || !args.date || !args.time) return { success: false, reason: "Parâmetros ausentes." };
+            
+            const { data: existing } = await sp.from('appointments').select('*').eq('id', args.appointment_id).eq('user_id', st.user_id).single();
+            if (!existing) return { success: false, reason: "ID de agendamento não encontrado." };
+
+            const reqDate = new Date(args.date + "T00:00:00");
+            const dayOfWeek = reqDate.getDay();
+            const bizDay = (bizHours || []).find((b: any) => b.day_of_week === dayOfWeek);
+            
+            if (!bizDay || !bizDay.is_working_day) {
+                return { success: false, reason: `Clínica fechada no dia (${DAYS[dayOfWeek]}).` };
+            }
+            
+            const reqTimeFmt = (args.time.length === 5) ? args.time + ":00" : args.time;
+            const reqTimeSec = toSec(reqTimeFmt);
+            const startSec = toSec(bizDay.start_time);
+            const endSec = toSec(bizDay.end_time);
+            const svc = (services || []).find((s: any) => s.id === existing.service_id);
+            const duration = (svc?.duration_minutes || 60) * 60;
+            
+            if (reqTimeSec < startSec || (reqTimeSec + duration) > endSec) {
+                return { success: false, reason: `Fora do horário de atendimento. No dia ${DAYS[dayOfWeek]}, a clínica opera das ${bizDay.start_time.slice(0,5)} às ${bizDay.end_time.slice(0,5)}.` };
+            }
+
+            const collision = await checkCollision(sp, st.user_id, existing.professional_id, args.date, args.time, existing.service_id, services, args.appointment_id);
+            if (collision.collision) return { success: false, reason: `Horário ${collision.range} já ocupado.` };
+            
+            const { data: updated, error } = await sp.from('appointments').update({ 
+                appointment_date: args.date, appointment_time: reqTimeFmt 
+            }).eq('id', args.appointment_id).eq('user_id', st.user_id).select('*, services(name), professionals(name)').single();
+            
+            return error ? { success: false, reason: error.message } : { success: true, appointment: updated };
         }
 
         if (name === 'cancel_all_my_appointments') {
-            let client = await findClientByPhone(sp, st.user_id, cleanPhone);
-            if (!client) return { success: false, reason: "Cadastro não encontrado." };
+            if (!foundClient) return { success: false, reason: "Cadastro não encontrado." };
             const today = new Date().toISOString().split('T')[0];
-            const { error, count } = await sp.from('appointments').update({ status: 'Cancelado' }).eq('client_id', client.id).eq('user_id', st.user_id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today);
-            return error ? { success: false, reason: error.message } : { success: true, message: `Todos os agendamentos (${count || 'futuros'}) foram cancelados.` };
+            const { error, count } = await sp.from('appointments').update({ status: 'Cancelado' }).eq('client_id', foundClient.id).eq('user_id', st.user_id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today);
+            return error ? { success: false, reason: error.message } : { success: true, message: `Todos os agendamentos foram cancelados.` };
         }
     } catch (e: any) {
         return { success: false, reason: `Erro na execução da tool ${name}: ${e.message}` };
@@ -293,25 +354,41 @@ Deno.serve(async (req) => {
         }).join('\n');
 
         const bizSummary = (bizHours.data || []).map(b => `${DAYS[b.day_of_week]}: ${b.is_working_day ? `${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}` : 'FECHADO'}`).join('\n');
-        const now = new Date();
-        const dateStr = `${now.getDate()}/${now.getMonth()+1}/2026`;
+        
+        const sysPromptRaw = st.system_prompt || '';
+        
+        // Ajuste de fuso horário simples para BRT (-3)
+        const now = new Date(new Date().getTime() - 3 * 3600 * 1000);
+        const todayDayName = DAYS[now.getUTCDay()];
+        const dateStr = `${now.getUTCDate().toString().padStart(2, '0')}/${(now.getUTCMonth()+1).toString().padStart(2, '0')}/2026`;
+        const timeStr = `${now.getUTCHours().toString().padStart(2, '0')}:${now.getUTCMinutes().toString().padStart(2, '0')}`;
+        const fullDateStr = `${todayDayName}, ${dateStr}, ${timeStr}`;
 
-        const sys = `${st.system_prompt}
-### PROTOCOLO DE ESTADO (v28.3) ###
-- DATA HOJE: ${dateStr} (ANO 2026)
+        // Substituir variáveis comuns do prompt criadas pelo usuário
+        let sysPromptProcessed = sysPromptRaw
+            .replace(/\{\{DATA_HORA_ATUAL\}\}/g, fullDateStr)
+            .replace(/\{\{FUSO_HORARIO\}\}/g, 'America/Sao_Paulo');
+
+        const sys = `${sysPromptProcessed}
+### PROTOCOLO DE ESTADO (v28.6) ###
+- HOJE É: ${dateStr} (${todayDayName})
 - CLIENTE: ${foundClient ? `"${foundClient.name}"` : 'NÃO CADASTRADO'}
 - TELEFONE: ${cleanPhone}
 
-### REGRAS CRÍTICAS:
-1. SE O CLIENTE JÁ TIVER NOME, use-o sempre.
-2. SE O NOME FOR "NÃO CADASTRADO", use 'create_client' IMEDIATAMENTE antes de qualquer outra ação.
-3. PARA QUALQUER DÚVIDA SOBRE AGENDAMENTOS, use 'list_my_appointments'. NUNCA assuma que sabe os horários.
-4. SE O CLIENTE PEDIR PARA CANCELAR TUDO, use 'cancel_all_my_appointments'.
-5. OBRIGATÓRIO: Use tools para agendar, listar ou cancelar.
+### REGRAS CRÍTICAS INEGOCIÁVEIS:
+1. NUNCA REAPROVEITE DADOS: Se o cliente pedir um NOVO agendamento, OBRIGATORIAMENTE PERGUNTE qual o Serviço, Profissional, Data e Horário. NÃO USE dados de agendamentos citados no histórico.
+2. NUNCA INVENTE OU CHUTE NADA: Se faltar UM ÚNICO DOS 4 DADOS acima para o agendamento, NÃO CHAME a tool 'book_appointment'. Envie uma mensagem perguntando o que falta.
+3. RESPEITE O HORÁRIO DE FUNCIONAMENTO. Nunca agende fora do horário ou em dias fechados.
+4. CLIENTE SEM NOME: Use 'create_client' IMEDIATAMENTE antes de responder.
+5. DÚVIDAS E MANIPULAÇÕES: Sempre use 'list_my_appointments' antes de cancelar ou reagendar para obter o UUID exato do agendamento.
+6. CANCELAR TUDO: Use 'cancel_all_my_appointments'.
+7. OBRIGATÓRIO: Sempre verifique se os parâmetros exigidos pelas tools estão corretos antes de enviá-los. Nunca chute o ID de um agendamento.
+8. NÃO TENTE BUSCAR SERVIÇOS EM BANCO: A lista completa de serviços e horários da clínica já foi ejetada abaixo neste prompt. Apenas leia e mostre ao paciente!
+9. TOM COMUNICATIVO RESTRITO: Use Emojis com parcimônia. O emoji 🎉 (confete) DEVE ser usado APENAS EM NOVOS AGENDAMENTOS. NUNCA utilize confetes para responder a Cancelamentos e Reagendamentos.
 
-SERVIÇOS:
+SERVIÇOS DISPONÍVEIS NA CLÍNICA:
 ${matrix}
-FUNCIONAMENTO:
+HORÁRIO DE FUNCIONAMENTO:
 ${bizSummary}`;
 
         const historyDb = await sp.from('ai_chat_history').select('role,content').eq('sender_number', jid).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(6);
@@ -320,33 +397,77 @@ ${bizSummary}`;
         const ai = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
         const tools: any = [
             { type: "function", function: { name: "create_client", description: "Cadastra nome do cliente", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } } },
-            { type: "function", function: { name: "book_appointment", description: "Novo agendamento", parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, service_id: { type: "string" }, professional_id: { type: "string" } }, required: ["date", "time", "service_id", "professional_id"] } } },
-            { type: "function", function: { name: "list_my_appointments", description: "Ver agendamentos futuros do cliente" } },
-            { type: "function", function: { name: "cancel_appointment", description: "Cancela um agendamento específico", parameters: { type: "object", properties: { appointment_id: { type: "string" } }, required: ["appointment_id"] } } },
+            { type: "function", function: { name: "book_appointment", description: "Novo agendamento", parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, service_id: { type: "string" }, professional_id: { type: "string" } } } } },
+            { type: "function", function: { name: "list_my_appointments", description: "Ver agendamentos futuros do cliente para obter seus respectivos IDs." } },
+            { type: "function", function: { name: "cancel_appointment", description: "Cancela um agendamento", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento" } } } } },
+            { type: "function", function: { name: "reschedule_appointment", description: "Altera apenas data/hora de agendamento existente sem mudar o serviço ou profissional. Exige o UUID exato", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento vindo de list_my_appointments" }, date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" } } } } },
             { type: "function", function: { name: "cancel_all_my_appointments", description: "Cancela TODOS os agendamentos futuros do cliente" } }
         ];
 
-        const res = await ai.chat.completions.create({ model: st.ai_model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, ...history, { role: 'user', content: txt }] as any, tools });
-        let aM = res.choices[0].message, aTxt = aM.content || '', toolCalls = aM.tool_calls || [];
-        const xmlCall = parseXmlToolCall(aTxt);
-        if (xmlCall) toolCalls.push({ id: 'xml-' + Math.random().toString(36).substring(7), type: 'function', function: { name: xmlCall.name, arguments: JSON.stringify(xmlCall.arguments) } });
-
-        if (toolCalls.length > 0) {
-            let tcContext = [];
-            for (const tc of toolCalls) {
-                const tr = await handleToolCall(sp, st, tc, cleanPhone, services.data, pros.data);
-                tcContext.push({ role: 'tool', content: JSON.stringify(tr), tool_call_id: tc.id });
+        let msgs = [{ role: 'system', content: sys }, ...history, { role: 'user', content: txt }] as any[];
+        let aTxt = '';
+        let currentClient = foundClient;
+        let allToolCalls: any[] = [];
+        
+        for (let i = 0; i < 4; i++) {
+            const res = await ai.chat.completions.create({ model: st.ai_model || 'gpt-4o-mini', messages: msgs, tools });
+            let aM: any = res.choices[0].message;
+            let currentTxt = aM.content || '';
+            let toolCalls = aM.tool_calls || [];
+            
+            const xmlCall = parseXmlToolCall(currentTxt);
+            if (xmlCall && toolCalls.length === 0) {
+                toolCalls = [{ id: 'call_' + Math.random().toString(36).substring(7), type: 'function', function: { name: xmlCall.name, arguments: JSON.stringify(xmlCall.arguments) } }];
+                aM.tool_calls = toolCalls;
             }
-            const final = await ai.chat.completions.create({ model: st.ai_model || 'gpt-4o-mini', messages: [{ role: 'system', content: sys }, ...history, { role: 'user', content: txt }, aM, ...tcContext] as any });
-            aTxt = final.choices[0].message.content || '';
+
+            msgs.push(aM);
+
+            if (toolCalls.length > 0) {
+                allToolCalls.push(...toolCalls);
+                for (const tc of toolCalls) {
+                    const tr = await handleToolCall(sp, st, tc, cleanPhone, services.data, pros.data, currentClient, bizHours.data || []);
+                    if (tc.function.name === 'create_client' && tr.success && tr.client) {
+                        currentClient = tr.client;
+                    }
+                    msgs.push({ role: 'tool', content: JSON.stringify(tr), tool_call_id: tc.id });
+                }
+                // Se atingimos o limite mas ainda há chamadas de ferramenta, tentamos uma última vez para obter texto
+                if (i === 3) {
+                   const finalRes = await ai.chat.completions.create({ model: st.ai_model || 'gpt-4o-mini', messages: msgs });
+                   aTxt = finalRes.choices[0].message.content || '';
+                }
+            } else {
+                aTxt = currentTxt;
+                break;
+            }
+        }
+        
+        if (!aTxt) {
+           // Busca o último conteúdo de assistente se o loop falhou em definir aTxt
+           for (let i = msgs.length - 1; i >= 0; i--) {
+               if (msgs[i].role === 'assistant' && msgs[i].content) {
+                   aTxt = msgs[i].content;
+                   break;
+               }
+           }
+           if (!aTxt) aTxt = "Um pequeno erro ocorreu no processamento, poderia repetir detalhadamente o que deseja?"; 
         }
 
         aTxt = aTxt.replace(/\*/g, '').trim();
+        await logDb(sp, 'INFO', "v28.5 Debug Execution", { 
+            msgs_steps: msgs.length,
+            allToolCalls: allToolCalls.map((t: any) => ({ name: t.function.name, args: t.function.arguments })), 
+            final_aTxt: aTxt 
+        });
+
         if (aTxt && !aTxt.includes('<tool_call>')) {
             await Promise.all([
                 sp.from('ai_chat_history').insert({ user_id: st.user_id, sender_number: jid, role: 'assistant', content: aTxt }),
                 sendWhatsApp(sp, st, inst, jid, aTxt)
             ]);
+        } else if (!aTxt || aTxt.includes('<tool_call>')) {
+            await logDb(sp, 'ERROR', "v28.5 Empty or invalid response", { phone: cleanPhone, txt, aTxt });
         }
         return new Response('ok', { headers: corsHeaders });
     } catch (e: any) {

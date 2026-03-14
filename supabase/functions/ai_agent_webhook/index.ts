@@ -600,7 +600,7 @@ Deno.serve(async (req: Request) => {
         const getBestJid = (p: any, msg: any): { sender: string, chat: string } => {
             const chatFromKey = msg?.key?.remoteJid || "";
             const participant = msg?.participant || msg?.key?.participant || "";
-            const rawEventSender = p?.data?.sender || "";
+            const rawEventSender = p?.sender || p?.data?.sender || "";
             const targetRaw = p?.target || "";
             const remoteJidAlt = msg?.key?.remoteJidAlt || "";
             const senderPn = msg?.senderPn || "";

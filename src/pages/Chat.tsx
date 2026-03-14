@@ -112,7 +112,91 @@ export function Chat() {
         setIsLoadingContacts(false);
     }, [search]);
 
-    useEffect(() => { fetchContacts(); }, [fetchContacts]);
+    const cleanupChatHistory = useCallback(async () => {
+        try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) return;
+
+            // 1. Buscar configurações de limpeza
+            const { data: settings } = await supabase
+                .from('settings')
+                .select('chat_cleanup_days')
+                .single();
+
+            const cleanupDays = settings?.chat_cleanup_days || 30;
+
+            // 2. Buscar clientes e seus últimos agendamentos concluídos
+            // Precisamos de clientes que tenham pelo menos um agendamento concluído
+            const { data: clientAppointments, error } = await supabase
+                .from('appointments')
+                .select(`
+                    client_id,
+                    status,
+                    appointment_date,
+                    clients (phone)
+                `)
+                .eq('user_id', user.id);
+
+            if (error || !clientAppointments) return;
+
+            // Agrupar por cliente para encontrar o último agendamento e verificar se existem pendentes
+            const clientStats: Record<string, { lastCompleted: string | null, hasUpcoming: boolean, phone: string }> = {};
+
+            const nowStr = new Date().toISOString().split('T')[0];
+
+            for (const app of clientAppointments) {
+                const clientId = app.client_id;
+                const phone = (app.clients as any)?.phone;
+                if (!clientId || !phone) continue;
+
+                if (!clientStats[clientId]) {
+                    clientStats[clientId] = { lastCompleted: null, hasUpcoming: false, phone };
+                }
+
+                if (app.status === 'completed') {
+                    if (!clientStats[clientId].lastCompleted || app.appointment_date > clientStats[clientId].lastCompleted) {
+                        clientStats[clientId].lastCompleted = app.appointment_date;
+                    }
+                }
+
+                if (app.status === 'pending' || app.status === 'confirmed' || app.appointment_date >= nowStr) {
+                    clientStats[clientId].hasUpcoming = true;
+                }
+            }
+
+            // 3. Identificar números para apagar
+            const retentionDate = new Date();
+            retentionDate.setDate(retentionDate.getDate() - cleanupDays);
+            const retentionDateStr = retentionDate.toISOString().split('T')[0];
+
+            const numbersToDelete: string[] = [];
+            for (const clientId in clientStats) {
+                const stats = clientStats[clientId];
+                if (stats.lastCompleted && stats.lastCompleted < retentionDateStr && !stats.hasUpcoming) {
+                    numbersToDelete.push(stats.phone);
+                    numbersToDelete.push(`${stats.phone}@c.us`);
+                    numbersToDelete.push(`${stats.phone}@s.whatsapp.net`);
+                }
+            }
+
+            if (numbersToDelete.length > 0) {
+                console.log(`Limpando histórico para ${numbersToDelete.length / 3} clientes antigos...`);
+                await supabase
+                    .from('ai_chat_history')
+                    .delete()
+                    .eq('user_id', user.id)
+                    .in('sender_number', numbersToDelete);
+            }
+
+        } catch (err) {
+            console.error('Erro na limpeza automática de chat:', err);
+        }
+    }, []);
+
+    useEffect(() => { 
+        fetchContacts(); 
+        cleanupChatHistory();
+    }, [fetchContacts, cleanupChatHistory]);
 
     useEffect(() => {
         const q = search.toLowerCase();

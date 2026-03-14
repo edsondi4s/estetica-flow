@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, Moon, Sun, User as UserIcon, Scissors, Star, Calendar, X, Loader2, Phone, Briefcase, Menu, Cpu } from 'lucide-react';
+import { Search, Bell, Moon, Sun, User as UserIcon, Scissors, Star, Calendar, X, Loader2, Phone, Briefcase, Menu, Cpu, Settings } from 'lucide-react';
 import { menuItems } from '../../types/navigation';
 import { User } from '@supabase/supabase-js';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -23,7 +23,9 @@ type SearchResult = {
 };
 
 export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: NavbarProps) => {
-    const pageLabel = menuItems.find(i => i.id === currentPageId)?.label;
+    const activeItem = menuItems.find(i => i.id === currentPageId);
+    const pageLabel = currentPageId === 'configuracoes' ? 'Configurações' : activeItem?.label;
+    const ActiveIcon = currentPageId === 'configuracoes' ? Settings : (activeItem?.icon || Cpu);
     const { theme, toggleTheme } = useTheme();
     const { notifications, unreadCount, markAsRead, clearAll } = useNotifications();
 
@@ -132,9 +134,8 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                     <Menu className="w-5 h-5" />
                 </button>
                 <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] mb-1">Módulo Ativo</span>
-                    <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] flex items-center gap-3">
-                        <Cpu className="w-5 h-5 text-primary animate-pulse" />
+                    <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] flex items-center gap-3 mt-1">
+                        <ActiveIcon className="w-5 h-5 text-primary" />
                         {pageLabel}
                     </h2>
                 </div>
@@ -219,6 +220,13 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                         className="p-3 text-slate-500 hover:text-primary transition-all rounded-sm hover:bg-slate-50 dark:hover:bg-slate-900 border border-transparent hover:border-slate-200 dark:hover:border-slate-800"
                     >
                         {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+                    </button>
+
+                    <button
+                        onClick={() => onPageChange('configuracoes')}
+                        className={`p-3 transition-all rounded-sm border relative group ${currentPageId === 'configuracoes' ? 'bg-slate-50 dark:bg-slate-900 border-primary/50 text-primary' : 'text-slate-500 hover:text-primary bg-transparent border-transparent hover:border-slate-200 dark:hover:border-slate-800'}`}
+                    >
+                        <Settings className="w-5 h-5" />
                     </button>
 
                     <div className="relative">

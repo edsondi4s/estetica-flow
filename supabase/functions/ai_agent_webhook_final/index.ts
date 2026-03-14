@@ -589,19 +589,29 @@ Deno.serve(async (req: Request) => {
         let aiMsg = aiRes.choices[0].message, aiText = aiMsg.content || '';
 
         if (aiMsg.tool_calls) {
-            const tc = aiMsg.tool_calls[0];
-            const args = JSON.parse(tc.function.arguments);
-            let toolRes: any = {};
-            if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
-            else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
-            else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, redis, st.user_id, args, serv.data, proD.data, hrs.data, jid, proServData.data);
-            else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, jid);
-            else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, redis, st.user_id, args, jid, serv.data, proD.data, hrs.data, proServData.data);
-            else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, jid);
+            let tcContext = [];
+            for (const tc of aiMsg.tool_calls) {
+                let toolRes: any = {};
+                try {
+                    const args = JSON.parse(tc.function.arguments);
+                    
+                    if (tc.function.name === 'check_availability') toolRes = await handleCheckAvailability(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
+                    else if (tc.function.name === 'list_available_slots') toolRes = await handleListAvailableSlots(supabase, st.user_id, args, serv.data, proD.data, hrs.data, proServData.data);
+                    else if (tc.function.name === 'book_appointment') toolRes = await handleBookAppointment(supabase, redis, st.user_id, args, serv.data, proD.data, hrs.data, jid, proServData.data);
+                    else if (tc.function.name === 'get_client_appointments') toolRes = await handleGetClientAppointments(supabase, st.user_id, jid);
+                    else if (tc.function.name === 'reschedule_appointment') toolRes = await handleRescheduleAppointment(supabase, redis, st.user_id, args, jid, serv.data, proD.data, hrs.data, proServData.data);
+                    else if (tc.function.name === 'cancel_appointment') toolRes = await handleCancelAppointment(supabase, st.user_id, args, jid);
+                    else toolRes = { success: false, reason: "Ferramenta desconhecida." };
+                } catch (err: any) {
+                    toolRes = { success: false, reason: "Erro ao interpretar argumentos da ferramenta (JSON inválido). Peça para a IA tentar novamente." };
+                }
+                
+                tcContext.push({ role: 'tool', content: JSON.stringify(toolRes), tool_call_id: tc.id });
+            }
 
             const finalRes = await aiClient.chat.completions.create({
                 model: st.ai_model || 'gpt-4o-mini',
-                messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: txt }, aiMsg, { role: 'tool', content: JSON.stringify(toolRes), tool_call_id: tc.id }] as any
+                messages: [{ role: 'system', content: systemPrompt }, ...history, { role: 'user', content: txt }, aiMsg, ...tcContext] as any
             });
             aiText = finalRes.choices[0].message.content || '';
         }

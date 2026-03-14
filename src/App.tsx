@@ -7,6 +7,7 @@ import { Agenda } from './pages/Agenda';
 import { Servicos } from './pages/Servicos';
 import { Financeiro } from './pages/Financeiro';
 import { Configuracoes } from './pages/Configuracoes';
+import { AgentesIA } from './pages/AgentesIA';
 import { Profissionais } from './pages/Profissionais';
 import { Chat } from './pages/Chat';
 import { BotFlows } from './pages/BotFlows';
@@ -128,7 +129,10 @@ function AppContent() {
       case 'financeiro': return <Financeiro />;
       case 'chat': return <Chat />;
       case 'fluxos': return <BotFlows />;
-      case 'configuracoes': return <Configuracoes onLogout={handleLogout} />;
+      case 'configuracoes':
+        return <Configuracoes onLogout={handleLogout} />;
+      case 'agentes_ia':
+        return <AgentesIA />;
       default: return <Dashboard onPageChange={setCurrentPage} />;
     }
   };
