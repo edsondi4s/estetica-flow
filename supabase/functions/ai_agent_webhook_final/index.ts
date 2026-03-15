@@ -565,18 +565,28 @@ Deno.serve(async (req: Request) => {
         const { data: hs } = await supabase.from('ai_chat_history').select('role, content').eq('sender_number', jid).eq('user_id', st.user_id).order('created_at', { ascending: false }).limit(6);
         const history = (hs || []).filter((h: any) => h.role === 'user' || h.role === 'assistant').reverse();
 
-        const [kb, serv, hrs, proD, proServData] = await Promise.all([
+        const [kb, serv, hrs, proD, proServData, addressesData] = await Promise.all([
             supabase.from('ai_knowledge_base').select('content').eq('user_id', st.user_id),
             supabase.from('services').select('*').eq('user_id', st.user_id).eq('is_active', true),
             supabase.from('business_hours').select('*').eq('user_id', st.user_id),
             supabase.from('professionals').select('*').eq('user_id', st.user_id).eq('is_active', true),
-            supabase.from('professional_services').select('*')
+            supabase.from('professional_services').select('*'),
+            supabase.from('addresses').select('*')
         ]);
 
-        const context = `Serviços: ${JSON.stringify(serv.data)}\nHorários: ${JSON.stringify(hrs.data)}\nProfissionais: ${JSON.stringify(proD.data)}\nInfo: ${kb.data?.map(k => k.content).join(' ')}`;
+        const context = `Serviços: ${JSON.stringify(serv.data)}\nHorários: ${JSON.stringify(hrs.data)}\nProfissionais: ${JSON.stringify(proD.data)}\nEndereços da Clínica: ${JSON.stringify(addressesData.data)}\nInfo: ${kb.data?.map(k => k.content).join(' ')}`;
         const now = new Date();
-        const dateStr = `${now.getDate()}/${now.getMonth()+1}/2026`;
-        const systemPrompt = `${st.system_prompt}\nContexto:\n${context}\nDATA HOJE: ${dateStr}. USE TOOLS SEMPRE!`;
+        const dateStr = `${now.getDate()}/${now.getMonth()+1}/${now.getFullYear()}`;
+        
+        const strictRules = `
+REGRAS ESTABELECIDAS DE AGENDAMENTO E ENDEREÇO (MUITO IMPORTANTE):
+1. NUNCA PRESUMA INFORMAÇÕES DE AGENDAMENTOS ANTERIORES. Toda vez que um novo agendamento for iniciado, VOCÊ DEVE PERGUNTAR explicitamente ao cliente: o serviço desejado, a data e o horário, e o profissional (se aplicável). NÃO crie agendamentos com antigos dados no histórico sem confirmação absoluta das necessidades ATUAIS.
+2. SOBRE O ENDEREÇO DA CLÍNICA:
+   - Se houver APENAS 1 (um) endereço cadastrado na clínica, VOCÊ NÃO PRECISA PERGUNTAR ao cliente qual o endereço. Apenas INFORME o endereço completo (incluindo número, bairro e cidade) NO FINAL, junto com a mensagem de confirmação do agendamento concluído (preferencialmente enviando um link do Google Maps pesquisando "Rua tal, numero tal, cidade tal" se aplicável).
+   - Se houver 2 (DOIS) ou mais endereços cadastrados, VOCÊ DEVE, em algum momento durante a conversa de agendamento (antes de finalizar), PERGUNTAR ao cliente em qual unidade/endereço ele deseja ser atendido, listando sutilmente as opções de endereços e bairros/cidades. Use este dado para informar o profissional correto e confirmar o agendamento no local certo.
+`;
+
+        const systemPrompt = `${st.system_prompt}\nContexto:\n${context}\nDATA HOJE: ${dateStr}. USE TOOLS SEMPRE!\n${strictRules}`;
 
         const aiClient = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
         const aiRes = await aiClient.chat.completions.create({

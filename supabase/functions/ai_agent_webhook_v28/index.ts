@@ -18,7 +18,7 @@ async function sendWhatsApp(sp: any, st: any, inst: string, jid: string, content
 
     if (typeof content === 'object') {
         const endpoint = content.type === 'image' ? 'sendImage' : 'sendAudio';
-        const url = `${baseUrl}/message/${endpoint}/${instance}`;
+        const url = `${baseUrl}/message/${endpoint}/${inst}`;
         const body: any = { number: cleanNumber };
         if (content.type === 'image') {
             body.image = content.url;
@@ -340,11 +340,12 @@ Deno.serve(async (req) => {
         await sp.from('ai_chat_history').insert({ user_id: st.user_id, sender_number: jid, role: 'user', content: txt });
 
         const foundClient = await findClientByPhone(sp, st.user_id, possibleRealPhone);
-        const [services, pros, mapping, bizHours] = await Promise.all([
+        const [services, pros, mapping, bizHours, addressesData] = await Promise.all([
             sp.from('services').select('*').eq('user_id', st.user_id).eq('is_active', true),
             sp.from('professionals').select('id,name').eq('user_id', st.user_id).eq('is_active', true),
             sp.from('professional_services').select('professional_id,service_id').eq('user_id', st.user_id),
-            sp.from('business_hours').select('*').eq('user_id', st.user_id).order('day_of_week')
+            sp.from('business_hours').select('*').eq('user_id', st.user_id).order('day_of_week'),
+            sp.from('addresses').select('*')
         ]);
 
         const matrix = (services.data || []).map(s => {
@@ -355,6 +356,10 @@ Deno.serve(async (req) => {
 
         const bizSummary = (bizHours.data || []).map(b => `${DAYS[b.day_of_week]}: ${b.is_working_day ? `${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}` : 'FECHADO'}`).join('\n');
         
+        const addressesText = (addressesData?.data || []).map((a: any) => {
+            return `Unidade: ${a.name || 'Principal'} - Endereço: ${a.street || ''}, ${a.number || 'S/N'}${a.complement ? ' ('+a.complement+')' : ''} - ${a.neighborhood || ''}, ${a.city || ''} - ${a.state || ''}. CEP: ${a.zip_code || ''}`;
+        }).join('\n');
+
         const sysPromptRaw = st.system_prompt || '';
         
         // Ajuste de fuso horário simples para BRT (-3)
@@ -385,6 +390,12 @@ Deno.serve(async (req) => {
 7. OBRIGATÓRIO: Sempre verifique se os parâmetros exigidos pelas tools estão corretos antes de enviá-los. Nunca chute o ID de um agendamento.
 8. NÃO TENTE BUSCAR SERVIÇOS EM BANCO: A lista completa de serviços e horários da clínica já foi ejetada abaixo neste prompt. Apenas leia e mostre ao paciente!
 9. TOM COMUNICATIVO RESTRITO: Use Emojis com parcimônia. O emoji 🎉 (confete) DEVE ser usado APENAS EM NOVOS AGENDAMENTOS. NUNCA utilize confetes para responder a Cancelamentos e Reagendamentos.
+10. SOBRE O ENDEREÇO DA CLÍNICA:
+   - Se houver APENAS 1 (um) endereço cadastrado na clínica, VOCÊ NÃO PRECISA PERGUNTAR ao cliente qual o endereço. Apenas INFORME o endereço completo (incluindo número, bairro e cidade) NO FINAL, junto com a mensagem de confirmação do agendamento concluído (preferencialmente enviando um link do Google Maps pesquisando "Rua tal, numero tal, cidade tal" se aplicável).
+   - Se houver 2 (DOIS) ou mais endereços cadastrados, VOCÊ DEVE, em algum momento durante a conversa de agendamento (antes de finalizar), PERGUNTAR ao cliente em qual unidade/endereço ele deseja ser atendido, listando sutilmente as opções de endereços e bairros/cidades. Use este dado para informar o profissional correto e confirmar o agendamento no local certo.
+
+ENDEREÇOS DA CLÍNICA:
+${addressesText || 'Nenhum endereço cadastrado'}
 
 SERVIÇOS DISPONÍVEIS NA CLÍNICA:
 ${matrix}
