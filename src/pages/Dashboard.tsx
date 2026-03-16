@@ -467,7 +467,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                                 <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{pro.name}</p>
                                                 <div className="flex items-center gap-2">
                                                     <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                    <p className="text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
+                                                    <p className="text-[10px] md:text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -476,7 +476,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                             ) : (
                                 <div className="flex-1 flex flex-col items-center justify-center py-12 text-center opacity-50">
                                     <Medal className="w-8 h-8 text-slate-300 dark:text-slate-800 mb-4" />
-                                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum profissional com <br />atendimentos efetuados</p>
+                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum profissional com <br />atendimentos efetuados</p>
                                 </div>
                             )}
                         </div>
@@ -515,7 +515,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     extra={
                         <button
                             onClick={() => onPageChange?.('agenda')}
-                            className="text-[10px] font-black text-primary uppercase tracking-[0.2em] hover:opacity-70 transition-all flex items-center gap-2"
+                            className="text-xs font-black text-primary uppercase tracking-[0.2em] hover:opacity-70 transition-all flex items-center gap-2"
                         >
                             Ver Tudo <ArrowRight className="w-4 h-4" />
                         </button>
@@ -524,7 +524,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-[10px] uppercase tracking-[0.2em] font-black border-b border-slate-100 dark:border-slate-900">
+                                <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs md:text-[10px] uppercase tracking-[0.2em] font-black border-b border-slate-100 dark:border-slate-900">
                                     <th className="px-8 py-6 font-black">Cliente</th>
                                     <th className="px-8 py-6 font-black">Serviço</th>
                                     <th className="px-8 py-6 font-black">Profissional</th>
@@ -554,7 +554,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                                     {row.professionals?.name || 'Profissional'}
                                                 </td>
                                                 <td className="px-8 py-5">
-                                                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-sm">
+                                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-sm">
                                                         {row.appointment_date ? new Date(row.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR') : '--/--/----'}
                                                     </span>
                                                 </td>
@@ -580,7 +580,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     {recentAppointments.length > 0 && (
                         <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-950/50">
                             <div className="flex items-center gap-4">
-                                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Registros por Bloco:</span>
+                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registros por Bloco:</span>
                                 <select
                                     value={itemsPerPage}
                                     onChange={(e) => {
@@ -624,7 +624,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 reveal-content delay-300">
                 <Card title="📈 Horários mais Procurados">
                     <div className="flex flex-col gap-6 py-4">
-                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de movimentação por horário (últimos 90 dias)</p>
+                        <p className="text-[10px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de movimentação por horário (últimos 90 dias)</p>
                         <div className="flex gap-6">
                             <div className="flex flex-col justify-between py-2 text-[10px] font-black text-slate-500 w-8 text-right pr-2 border-r border-slate-100 dark:border-slate-900">
                                 <span>08H</span>

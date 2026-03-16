@@ -127,12 +127,6 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
             </div>
 
             <div className="flex items-center gap-6 relative z-10 text-slate-950 dark:text-white">
-                <button
-                    onClick={onMenuClick}
-                    className="p-3 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-none hover:bg-primary dark:hover:bg-primary transition-all md:hidden shadow-xl shadow-black/10 flex items-center justify-center shrink-0"
-                >
-                    <Menu className="w-5 h-5" />
-                </button>
                 <div className="flex flex-col">
                     <h2 className="text-sm md:text-base font-black uppercase tracking-[0.2em] flex items-center gap-3 mt-1">
                         <ActiveIcon className="w-5 h-5 text-primary" />
@@ -148,7 +142,7 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                         <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none"></div>
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
                         <input
-                            className="pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-900 focus:border-primary/50 rounded-sm text-[11px] font-black uppercase tracking-widest w-72 dark:text-slate-200 outline-none transition-all placeholder:text-slate-500"
+                            className="pl-12 pr-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-900 focus:border-primary/50 rounded-sm text-xs font-black uppercase tracking-widest w-72 dark:text-slate-200 outline-none transition-all placeholder:text-slate-500"
                             placeholder="Buscar no sistema..."
                             value={searchQuery}
                             onChange={(e) => {
@@ -168,7 +162,7 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                     {showResults && searchQuery.trim() && (
                         <div className="absolute top-full right-0 mt-3 w-96 bg-white dark:bg-slate-950 rounded-sm shadow-[0_20px_50px_rgba(0,0,0,0.5)] border border-slate-200 dark:border-slate-900 overflow-hidden z-50 animate-in fade-in slide-in-from-top-4 duration-300 backdrop-blur-xl">
                             <div className="p-3 bg-slate-50 dark:bg-slate-950 border-b border-slate-100 dark:border-slate-900 flex justify-between items-center transition-colors">
-                                <p className="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resultados Encontrados [{searchResults.length}]</p>
+                                <p className="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Resultados Encontrados [{searchResults.length}]</p>
                                 <div className="flex gap-1">
                                     <div className="w-2 h-2 rounded-full bg-primary/50"></div>
                                     <div className="w-2 h-2 rounded-full bg-primary/30"></div>
@@ -193,11 +187,11 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                                             </div>
                                             <div className="min-w-0 flex-1">
                                                 <div className="flex justify-between items-center mb-1">
-                                                    <span className="text-[9px] font-black text-primary uppercase tracking-widest">{item.type}</span>
+                                                    <span className="text-xs font-black text-primary uppercase tracking-widest">{item.type}</span>
                                                     <div className="w-0 group-hover:w-8 h-[1px] bg-primary transition-all"></div>
                                                 </div>
-                                                <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tighter truncate">{item.title}</p>
-                                                <p className="text-[10px] font-bold text-slate-500 truncate">{item.subtitle}</p>
+                                                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter truncate">{item.title}</p>
+                                                <p className="text-xs font-bold text-slate-500 truncate">{item.subtitle}</p>
                                             </div>
                                         </button>
                                     ))}
@@ -262,10 +256,10 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
                                                     }}
                                                 >
                                                     {!n.is_read && <div className="absolute left-0 top-0 w-1 h-full bg-primary group-hover:w-1.5 transition-all"></div>}
-                                                    <p className={`text-[11px] font-black uppercase tracking-widest mb-1 ${!n.is_read ? 'text-slate-950 dark:text-white' : 'text-slate-500'}`}>{n.title}</p>
-                                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter leading-relaxed mb-3">{n.message}</p>
+                                                    <p className={`text-xs font-black uppercase tracking-widest mb-1 ${!n.is_read ? 'text-slate-950 dark:text-white' : 'text-slate-500'}`}>{n.title}</p>
+                                                    <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter leading-relaxed mb-3">{n.message}</p>
                                                     <div className="flex justify-between items-center">
-                                                        <p className="text-[9px] font-mono text-primary font-black uppercase">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                                                        <p className="text-[10px] font-mono text-primary font-black uppercase">{new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
                                                         <div className="w-6 h-[1px] bg-slate-200 dark:bg-slate-800 group-hover:w-full group-hover:bg-primary/20 transition-all ml-4"></div>
                                                     </div>
                                                 </div>

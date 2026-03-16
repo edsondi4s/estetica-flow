@@ -140,7 +140,7 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
                 professional_id: args.professional_id, pro_name: pro?.name || 'Profissional',
                 appointment_date: args.date, 
                 appointment_time: reqTimeFmt, 
-                status: 'Confirmado' 
+                status: 'Pendente' 
             }).select('*, services(name), professionals(name)').single();
             return error ? { success: false, reason: error.message } : { success: true, appointment: data };
         }
@@ -158,6 +158,14 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
             if (error) return { success: false, reason: error.message };
             if (!data || data.length === 0) return { success: false, reason: "ID de agendamento não encontrado. Certifique-se de listar primeiro e usar o 'id' exato (UUID) retornado na tabela." };
             return { success: true, message: "Agendamento cancelado com sucesso." };
+        }
+
+        if (name === 'confirm_appointment') {
+            const { data, error } = await sp.from('appointments').update({ status: 'Confirmado' })
+                .eq('id', args.appointment_id).eq('user_id', st.user_id).select();
+            if (error) return { success: false, reason: error.message };
+            if (!data || data.length === 0) return { success: false, reason: "ID de agendamento não encontrado. O UUID deve estar perfeitamente correto." };
+            return { success: true, message: "Agendamento confirmado com sucesso." };
         }
 
         if (name === 'reschedule_appointment') {
@@ -393,6 +401,8 @@ Deno.serve(async (req) => {
 10. SOBRE O ENDEREÇO DA CLÍNICA:
    - Se houver APENAS 1 (um) endereço cadastrado na clínica, VOCÊ NÃO PRECISA PERGUNTAR ao cliente qual o endereço. Apenas INFORME o endereço completo (incluindo número, bairro e cidade) NO FINAL, junto com a mensagem de confirmação do agendamento concluído (preferencialmente enviando um link do Google Maps pesquisando "Rua tal, numero tal, cidade tal" se aplicável).
    - Se houver 2 (DOIS) ou mais endereços cadastrados, VOCÊ DEVE, em algum momento durante a conversa de agendamento (antes de finalizar), PERGUNTAR ao cliente em qual unidade/endereço ele deseja ser atendido, listando sutilmente as opções de endereços e bairros/cidades. Use este dado para informar o profissional correto e confirmar o agendamento no local certo.
+11. CONFIRMAÇÃO DE PRESENÇA (LEMBRETES): Ao o cliente confirmar uma presença para hoje ou uma data futura baseada no recebimento de um lembrete automático, OBRIGATORIAMENTE obtenha o ID do agendamento (usando list_my_appointments). IMPORTANTE: Verifique atentamente se existem múltiplos agendamentos pendentes retornados! Cruze os dados do serviço informado ou o horário informado no lembrete recebido há pouco a fim de identificar qual dos múltiplos UUIDs usar na tool 'confirm_appointment' para garantir a vaga certa. Após isso, avise-o amigavelmente que aquele agendamento em questão foi confirmado.
+
 
 ENDEREÇOS DA CLÍNICA:
 ${addressesText || 'Nenhum endereço cadastrado'}
@@ -410,6 +420,7 @@ ${bizSummary}`;
             { type: "function", function: { name: "create_client", description: "Cadastra nome do cliente", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } } },
             { type: "function", function: { name: "book_appointment", description: "Novo agendamento", parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, service_id: { type: "string" }, professional_id: { type: "string" } } } } },
             { type: "function", function: { name: "list_my_appointments", description: "Ver agendamentos futuros do cliente para obter seus respectivos IDs." } },
+            { type: "function", function: { name: "confirm_appointment", description: "Confirma a presença em um agendamento", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento" } } } } },
             { type: "function", function: { name: "cancel_appointment", description: "Cancela um agendamento", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento" } } } } },
             { type: "function", function: { name: "reschedule_appointment", description: "Altera apenas data/hora de agendamento existente sem mudar o serviço ou profissional. Exige o UUID exato", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento vindo de list_my_appointments" }, date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" } } } } },
             { type: "function", function: { name: "cancel_all_my_appointments", description: "Cancela TODOS os agendamentos futuros do cliente" } }

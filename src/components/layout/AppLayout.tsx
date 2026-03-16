@@ -1,6 +1,7 @@
 import { ReactNode, useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { Navbar } from './Navbar';
+import { MobileTabBar } from './MobileTabBar';
 import { motion, AnimatePresence } from 'motion/react';
 import { User } from '@supabase/supabase-js';
 
@@ -37,7 +38,7 @@ export const AppLayout = ({ children, currentPage, onPageChange, user, onLogout 
                     onPageChange={onPageChange}
                 />
 
-                <div className="flex-1 overflow-y-auto p-4 md:p-8">
+                <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-28 md:pb-8">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentPage}
@@ -52,6 +53,13 @@ export const AppLayout = ({ children, currentPage, onPageChange, user, onLogout 
                     </AnimatePresence>
                 </div>
             </main>
+
+            <MobileTabBar 
+                currentPageId={currentPage}
+                onPageChange={(id) => onPageChange(id)}
+                onMenuClick={() => setIsMobileMenuOpen(true)}
+                user={user}
+            />
         </div>
     );
 };

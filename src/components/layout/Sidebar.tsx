@@ -157,7 +157,7 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
                             onClick={() => onPageChange(item.id)}
                             className={`
                                 w-full flex items-center rounded-sm transition-all relative group overflow-hidden
-                                ${isCollapsed ? 'justify-center px-0 py-4' : 'px-4 py-3 gap-3'}
+                                ${isCollapsed ? 'justify-center px-0 py-4' : 'px-4 py-4 md:py-3 gap-3'}
                                 ${currentPage === item.id
                                     ? 'bg-slate-50 dark:bg-slate-900 text-primary shadow-xl border border-slate-100 dark:border-slate-800'
                                     : 'text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-950 dark:hover:text-white border border-transparent'
@@ -176,7 +176,7 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
 
                             {!isCollapsed && (
                                 <span className={`
-                                    text-[11px] font-black flex-1 text-left uppercase tracking-widest truncate animate-in fade-in slide-in-from-left-2 duration-500
+                                    text-xs font-black flex-1 text-left uppercase tracking-widest truncate animate-in fade-in slide-in-from-left-2 duration-500
                                     ${currentPage === item.id ? 'text-primary' : 'text-slate-500 dark:text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white'}
                                 `}>
                                     {item.label}
@@ -225,10 +225,10 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
                         </div>
                         {!isCollapsed && (
                             <div className="flex flex-col overflow-hidden flex-1 relative z-10 animate-in fade-in slide-in-from-left-2 duration-500">
-                                <p className="text-[11px] font-black text-slate-950 dark:text-white truncate uppercase leading-none mb-1">
+                                <p className="text-xs font-black text-slate-950 dark:text-white truncate uppercase leading-none mb-1">
                                     {user.user_metadata?.full_name || 'Usuário'}
                                 </p>
-                                <p className="text-[9px] font-bold text-slate-400 truncate uppercase tracking-tighter">ID: {user.email?.split('@')[0]}</p>
+                                <p className="text-[10px] md:text-[9px] font-bold text-slate-400 truncate uppercase tracking-tighter">ID: {user.email?.split('@')[0]}</p>
                             </div>
                         )}
                     </div>
@@ -237,8 +237,8 @@ export const Sidebar = ({ currentPage, onPageChange, user, onLogout, isMobileOpe
                         onClick={onLogout}
                         title={isCollapsed ? "Encerrar Sessão" : undefined}
                         className={`
-                            w-full mt-4 flex items-center justify-center bg-white dark:bg-slate-950 text-rose-500 border border-slate-100 dark:border-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all font-black text-[10px] uppercase tracking-[0.2em] group
-                            ${isCollapsed ? 'px-0 py-4' : 'px-4 py-3 gap-2'}
+                            w-full mt-4 flex items-center justify-center bg-white dark:bg-slate-950 text-rose-500 border border-slate-100 dark:border-slate-900 hover:bg-rose-50 dark:hover:bg-rose-950/20 transition-all font-black text-xs uppercase tracking-[0.2em] group
+                            ${isCollapsed ? 'px-0 py-4' : 'px-4 py-4 md:py-3 gap-2'}
                         `}
                     >
                         <LogOut className={`w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform ${isCollapsed ? 'group-hover:-translate-x-0 group-hover:scale-110' : ''}`} />
