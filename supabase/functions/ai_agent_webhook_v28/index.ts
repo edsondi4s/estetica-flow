@@ -132,6 +132,12 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
                 return { success: false, reason: `Fora do horário de atendimento. No dia ${DAYS[dayOfWeek]}, o horário da clínica é das ${bizDay.start_time.slice(0,5)} às ${bizDay.end_time.slice(0,5)}. O serviço dura ${svc?.duration_minutes || 60} min. Sugira outro horário ou o próprio cliente pode propor outro.` };
             }
 
+            const now = new Date();
+            const requestedDateTimeUTC = new Date(`${args.date}T${reqTimeFmt}-03:00`);
+            if (requestedDateTimeUTC < now) {
+                return { success: false, reason: `O horário solicitado (${args.date} às ${reqTimeFmt.slice(0, 5)}) já passou. Informe ao cliente que não é possível agendar no passado e sugira um horário futuro.` };
+            }
+
             const collision = await checkCollision(sp, st.user_id, args.professional_id, args.date, args.time, args.service_id, services);
             if (collision.collision) return { success: false, reason: `Conflito de horário: o horário ${collision.range} já está ocupado. Sugira outro horário.` };
             const pro = pros.find((p: any) => p.id === args.professional_id);
@@ -147,8 +153,8 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
 
         if (name === 'list_my_appointments' || name === 'get_my_appointments' || name === 'list_appointments') {
             if (!foundClient) return { success: false, reason: "Nenhum cadastro encontrado para este número." };
-            const today = new Date().toISOString().split('T')[0];
-            const { data } = await sp.from('appointments').select('id, appointment_date, appointment_time, status, services(name), professionals(name)').eq('client_id', foundClient.id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today).order('appointment_date');
+            const todayStr = new Date(new Date().getTime() - 3 * 3600 * 1000).toISOString().split('T')[0];
+            const { data } = await sp.from('appointments').select('id, appointment_date, appointment_time, status, services(name), professionals(name)').eq('client_id', foundClient.id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', todayStr).order('appointment_date');
             return { success: true, appointments: data || [], client_name: foundClient.name };
         }
 
@@ -161,10 +167,22 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
         }
 
         if (name === 'confirm_appointment') {
+            const { data: appt } = await sp.from('appointments').select('*, services(duration_minutes)').eq('id', args.appointment_id).eq('user_id', st.user_id).single();
+            if (!appt) return { success: false, reason: "ID de agendamento não encontrado. O UUID deve estar perfeitamente correto." };
+
+            const now = new Date();
+            const appTimeStr = appt.appointment_time.length === 5 ? appt.appointment_time + ":00" : appt.appointment_time;
+            const apptUTC = new Date(`${appt.appointment_date}T${appTimeStr}-03:00`);
+
+            if (apptUTC < now) {
+                await sp.from('appointments').update({ status: 'Expirado' }).eq('id', args.appointment_id);
+                return { success: false, reason: "O horário deste agendamento já passou. Informe ao cliente que o agendamento expirou e pergunte se ele deseja realizar um NOVO agendamento para outra data." };
+            }
+
             const { data, error } = await sp.from('appointments').update({ status: 'Confirmado' })
                 .eq('id', args.appointment_id).eq('user_id', st.user_id).select();
             if (error) return { success: false, reason: error.message };
-            if (!data || data.length === 0) return { success: false, reason: "ID de agendamento não encontrado. O UUID deve estar perfeitamente correto." };
+            
             return { success: true, message: "Agendamento confirmado com sucesso." };
         }
 
@@ -205,8 +223,8 @@ async function handleToolCall(sp: any, st: any, tc: any, cleanPhone: string, ser
 
         if (name === 'cancel_all_my_appointments') {
             if (!foundClient) return { success: false, reason: "Cadastro não encontrado." };
-            const today = new Date().toISOString().split('T')[0];
-            const { error, count } = await sp.from('appointments').update({ status: 'Cancelado' }).eq('client_id', foundClient.id).eq('user_id', st.user_id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', today);
+            const todayStr = new Date(new Date().getTime() - 3 * 3600 * 1000).toISOString().split('T')[0];
+            const { error, count } = await sp.from('appointments').update({ status: 'Cancelado' }).eq('client_id', foundClient.id).eq('user_id', st.user_id).in('status', ['Confirmado', 'Pendente']).gte('appointment_date', todayStr);
             return error ? { success: false, reason: error.message } : { success: true, message: `Todos os agendamentos foram cancelados.` };
         }
     } catch (e: any) {
@@ -401,7 +419,10 @@ Deno.serve(async (req) => {
 10. SOBRE O ENDEREÇO DA CLÍNICA:
    - Se houver APENAS 1 (um) endereço cadastrado na clínica, VOCÊ NÃO PRECISA PERGUNTAR ao cliente qual o endereço. Apenas INFORME o endereço completo (incluindo número, bairro e cidade) NO FINAL, junto com a mensagem de confirmação do agendamento concluído (preferencialmente enviando um link do Google Maps pesquisando "Rua tal, numero tal, cidade tal" se aplicável).
    - Se houver 2 (DOIS) ou mais endereços cadastrados, VOCÊ DEVE, em algum momento durante a conversa de agendamento (antes de finalizar), PERGUNTAR ao cliente em qual unidade/endereço ele deseja ser atendido, listando sutilmente as opções de endereços e bairros/cidades. Use este dado para informar o profissional correto e confirmar o agendamento no local certo.
-11. CONFIRMAÇÃO DE PRESENÇA (LEMBRETES): Ao o cliente confirmar uma presença para hoje ou uma data futura baseada no recebimento de um lembrete automático, OBRIGATORIAMENTE obtenha o ID do agendamento (usando list_my_appointments). IMPORTANTE: Verifique atentamente se existem múltiplos agendamentos pendentes retornados! Cruze os dados do serviço informado ou o horário informado no lembrete recebido há pouco a fim de identificar qual dos múltiplos UUIDs usar na tool 'confirm_appointment' para garantir a vaga certa. Após isso, avise-o amigavelmente que aquele agendamento em questão foi confirmado.
+11. CONFIRMAÇÃO DE PRESENÇA (⚠️ EXTREMAMENTE IMPORTANTE): Se o cliente enviar QUALQUER mensagem confirmando presença (ex: "sim", "confirmo", "isso mesmo"), VOCÊ É OBRIGADO a executar a tool 'confirm_appointment'. NUNCA responda dizendo que o agendamento foi confirmado sem antes usar a tool 'confirm_appointment' e obter sucesso. Passos OBRIGATÓRIOS:
+    - 1º: Chame 'list_my_appointments' para obter o ID (UUID) do agendamento Pendente.
+    - 2º: Chame 'confirm_appointment' passando este ID exato.
+    - 3º: SOMENTE DEPOIS de receber o retorno de sucesso da tool, avise o cliente que está confirmado!
 
 
 ENDEREÇOS DA CLÍNICA:

@@ -48,6 +48,46 @@ Deno.serve(async (req) => {
     const sp = createClient(supabaseUrl, supabaseServiceKey);
 
     try {
+        const now = new Date();
+        const todayStr = new Date(now.getTime() - 3 * 3600 * 1000).toISOString().split('T')[0];
+
+        // --- STATUS SWEEP (Roda pra todas as clínicas) ---
+        try {
+            const { data: activeAppts } = await sp
+                .from('appointments')
+                .select('id, status, appointment_date, appointment_time, services(duration_minutes)')
+                .in('status', ['Pendente', 'Confirmado'])
+                .lte('appointment_date', todayStr);
+
+            if (activeAppts && activeAppts.length > 0) {
+                const expiredIds = [];
+                const finishedIds = [];
+                for (const app of activeAppts) {
+                    const appTimeStr = app.appointment_time.length === 5 ? app.appointment_time + ":00" : app.appointment_time;
+                    const apptUTC = new Date(`${app.appointment_date}T${appTimeStr}-03:00`);
+                    
+                    const duration = (app.services as any)?.duration_minutes || 60;
+                    const apptEndUTC = new Date(apptUTC.getTime());
+                    apptEndUTC.setMinutes(apptEndUTC.getMinutes() + duration);
+                    
+                    if (app.status === 'Pendente' && apptUTC < now) {
+                        expiredIds.push(app.id);
+                    } else if (app.status === 'Confirmado' && apptEndUTC < now) {
+                        finishedIds.push(app.id);
+                    }
+                }
+                if (expiredIds.length > 0) {
+                    await sp.from('appointments').update({ status: 'Expirado' }).in('id', expiredIds);
+                }
+                if (finishedIds.length > 0) {
+                    await sp.from('appointments').update({ status: 'Finalizado' }).in('id', finishedIds);
+                }
+            }
+        } catch (sweepError: any) {
+            await logDb(sp, 'ERROR', "Erro Sweep", { err: sweepError.message });
+        }
+        // --- END STATUS SWEEP ---
+
         // Buscar todas as configurações onde o lembrete automático está ativado
         const { data: settingsList, error: settingsError } = await sp
             .from('settings')
@@ -55,10 +95,9 @@ Deno.serve(async (req) => {
             .eq('reminder_active', true);
             
         if (settingsError || !settingsList || settingsList.length === 0) {
-            return new Response(JSON.stringify({ message: "Nenhum lembrete automático ativo encontrado." }), { headers: corsHeaders, status: 200 });
+            return new Response(JSON.stringify({ message: "Sweep concluído. Nenhum lembrete automático ativo encontrado." }), { headers: corsHeaders, status: 200 });
         }
 
-        const now = new Date();
         const results = [];
 
         // Para cada configuração ativa (geralmente 1 por usuário/clínica)
@@ -82,9 +121,7 @@ Deno.serve(async (req) => {
             // No banco de dados, 'appointment_date' está salvo como string 'YYYY-MM-DD'
             // 'appointment_time' é string 'HH:mm'
 
-            // Para que o supabase compare a data certa:
-            // Pegamos o NOW (UTC real)
-            const todayStr = new Date(now.getTime() - 3 * 3600 * 1000).toISOString().split('T')[0];
+            // Pegamos o NOW (UTC real) já pego lá em cima
 
             const { data: appointments, error: apptError } = await sp
                 .from('appointments')
@@ -130,9 +167,20 @@ Deno.serve(async (req) => {
                     const serviceName = app.services?.name || 'Serviço';
                     const proName = app.professionals?.name || 'Profissional';
                     const timeShort = app.appointment_time.slice(0, 5);
+                    const dateParts = app.appointment_date.split('-');
+                    const dateShort = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
 
                     // Mensagem a ser enviada
-                    const msg = `Olá *${clientName}*! Tudo bem?\n\nEsse é um lembrete automático do seu agendamento de *${serviceName}* hoje às *${timeShort}* com *${proName}*.\n\nPor favor, *confirme* ou *reagende* respondendo a esta mensagem. Esperamos por você!`;
+                    let msg = `Olá *${clientName}*! Tudo bem?\n\nEsse é um lembrete automático do seu agendamento de *${serviceName}* hoje às *${timeShort}* com *${proName}*.\n\nPor favor, *confirme* ou *reagende* respondendo a esta mensagem. Esperamos por você!`;
+                    
+                    if (st.reminder_message && st.reminder_message.trim() !== '') {
+                        msg = st.reminder_message
+                            .replace(/\{\{nome\}\}/g, clientName)
+                            .replace(/\{\{servico\}\}/g, serviceName)
+                            .replace(/\{\{data\}\}/g, dateShort)
+                            .replace(/\{\{hora\}\}/g, timeShort)
+                            .replace(/\{\{profissional\}\}/g, proName);
+                    }
 
                     // Tratar número de WhatsApp
                     let jid = client.phone.replace(/\D/g, '');

@@ -40,6 +40,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
         favicon_url: '',
         favicon_url_dark: '',
         chat_cleanup_days: 30,
+        reminder_message: '',
     });
 
     const [addresses, setAddresses] = useState<any[]>([]);
@@ -245,6 +246,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         whatsapp_provider_token: settings.whatsapp_provider_token,
                         reminder_active: settings.reminder_active,
                         reminder_minutes: settings.reminder_minutes,
+                        reminder_message: settings.reminder_message,
                         seo_title: settings.seo_title,
                         seo_description: settings.seo_description,
                         seo_keywords: settings.seo_keywords,
@@ -273,6 +275,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         whatsapp_provider_token: settings.whatsapp_provider_token,
                         reminder_active: settings.reminder_active,
                         reminder_minutes: settings.reminder_minutes,
+                        reminder_message: settings.reminder_message,
                         seo_title: settings.seo_title,
                         seo_description: settings.seo_description,
                         seo_keywords: settings.seo_keywords,

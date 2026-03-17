@@ -31,6 +31,10 @@ export const Servicos = () => {
         isOpen: false,
         id: null
     });
+    const [confirmDeleteCategory, setConfirmDeleteCategory] = useState<{ isOpen: boolean; name: string | null }>({
+        isOpen: false,
+        name: null
+    });
 
     useEffect(() => {
         fetchServices();
@@ -166,6 +170,30 @@ export const Servicos = () => {
             toast.success('Serviço removido com sucesso!');
         } catch (error: any) {
             toast.error('Erro ao excluir: ' + error.message);
+        }
+    };
+
+    const handleDeleteCategoryConf = async () => {
+        if (!confirmDeleteCategory.name) return;
+
+        try {
+            const { error } = await supabase
+                .from('service_categories')
+                .delete()
+                .eq('name', confirmDeleteCategory.name);
+            if (error) throw error;
+
+            setConfirmDeleteCategory({ isOpen: false, name: null });
+            
+            const remaining = categories.filter(c => c.name !== confirmDeleteCategory.name);
+            setCategories(remaining);
+            if (category === confirmDeleteCategory.name) {
+                setCategory(remaining.length > 0 ? remaining[0].name : '');
+            }
+            
+            toast.success('Classificação removida com sucesso!');
+        } catch (error: any) {
+            toast.error('Erro ao excluir a classificação: ' + error.message);
         }
     };
 
@@ -338,19 +366,31 @@ export const Servicos = () => {
                                 autoFocus
                             />
                         ) : (
-                            <select
-                                className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none cursor-pointer"
-                                value={category}
-                                onChange={(e) => setCategory(e.target.value)}
-                            >
-                                {categories.length === 0 ? (
-                                    <option value="">Sem classificações disponíveis</option>
-                                ) : (
-                                    categories.map(cat => (
-                                        <option key={cat.id} value={cat.name}>{cat.name}</option>
-                                    ))
+                            <div className="flex items-center gap-2">
+                                <select
+                                    className="w-full bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-950 dark:text-white outline-none cursor-pointer"
+                                    value={category}
+                                    onChange={(e) => setCategory(e.target.value)}
+                                >
+                                    {categories.length === 0 ? (
+                                        <option value="">Sem classificações disponíveis</option>
+                                    ) : (
+                                        categories.map(cat => (
+                                            <option key={cat.id} value={cat.name}>{cat.name}</option>
+                                        ))
+                                    )}
+                                </select>
+                                {category && categories.length > 0 && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setConfirmDeleteCategory({ isOpen: true, name: category })}
+                                        className="text-slate-400 hover:text-red-500 transition-colors p-1"
+                                        title="Excluir classificação"
+                                    >
+                                        <Trash2 className="w-4 h-4" />
+                                    </button>
                                 )}
-                            </select>
+                            </div>
                         )}
                     </div>
 
@@ -395,6 +435,16 @@ export const Servicos = () => {
                 onConfirm={handleDelete}
                 title="Excluir Serviço"
                 message="Tem certeza que deseja excluir este serviço? Esta ação não poderá ser desfeita."
+                confirmLabel="Sim, Excluir"
+                cancelLabel="Não, Cancelar"
+            />
+            
+            <ConfirmModal
+                isOpen={confirmDeleteCategory.isOpen}
+                onClose={() => setConfirmDeleteCategory({ isOpen: false, name: null })}
+                onConfirm={handleDeleteCategoryConf}
+                title="Excluir Classificação"
+                message={`Tem certeza que deseja excluir a classificação "${confirmDeleteCategory.name}"? Isso não apagará os serviços, mas eles ficarão sem essa categoria.`}
                 confirmLabel="Sim, Excluir"
                 cancelLabel="Não, Cancelar"
             />

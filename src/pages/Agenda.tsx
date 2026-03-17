@@ -208,7 +208,48 @@ export const Agenda = () => {
                 .lte('appointment_date', formatToISODate(end));
 
             if (error) throw error;
-            setAppointments(data || []);
+            
+            const now = new Date();
+            const processedData = (data || []).map(app => {
+                let computedStatus = app.status;
+                const dateStr = app.appointment_date;
+                const timeStr = app.appointment_time?.substring(0, 5);
+                
+                if (dateStr && timeStr) {
+                    const appDate = new Date(`${dateStr}T${timeStr}:00`);
+                    if (app.services?.duration_minutes) {
+                        const appEndDate = new Date(appDate.getTime());
+                        appEndDate.setMinutes(appEndDate.getMinutes() + app.services.duration_minutes);
+                        
+                        // Atualiza para Expirado se passar do INÍCIO e estiver Pendente
+                        if (appDate < now && app.status === 'Pendente') {
+                            computedStatus = 'Expirado';
+                        } 
+                        // Atualiza para Finalizado se passar do FIM e estiver Confirmado
+                        else if (appEndDate < now && app.status === 'Confirmado') {
+                            computedStatus = 'Finalizado';
+                        }
+                    } else if (appDate < now) {
+                        if (app.status === 'Confirmado') computedStatus = 'Finalizado';
+                        else if (app.status === 'Pendente') computedStatus = 'Expirado';
+                    }
+                }
+                
+                // Se o status calculado ficou diferente do banco original, fazemos o sync silencioso
+                if (computedStatus !== app.status) {
+                    supabase.from('appointments')
+                        .update({ status: computedStatus })
+                        .eq('id', app.id)
+                        .then((res) => {
+                            if (res.error) console.error('Failed to auto-sync status', res.error);
+                            else console.log(`Auto-synchronized status for ${app.id} to ${computedStatus}`);
+                        });
+                }
+
+                return { ...app, original_status: app.status, status: computedStatus };
+            });
+            
+            setAppointments(processedData);
         } catch (error: any) {
             console.error('Erro ao buscar agendamentos:', error.message);
         } finally {
@@ -603,6 +644,10 @@ export const Agenda = () => {
                 return isMonthView
                     ? "bg-red-50 dark:bg-red-500/10 text-red-900 dark:text-red-400 border border-red-200/50 dark:border-red-500/20 opacity-60"
                     : "bg-red-50 dark:bg-slate-950 border-l-[6px] border-red-500 text-red-900 dark:text-red-100 opacity-60 grayscale";
+            case 'Expirado':
+                return isMonthView
+                    ? "bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 opacity-60"
+                    : "bg-slate-50 dark:bg-slate-950 border-l-[6px] border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400 opacity-60 grayscale shadow-none";
             default:
                 return isMonthView
                     ? "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 shadow-sm"
@@ -1021,7 +1066,8 @@ export const Agenda = () => {
                                             ${selectedAppointment.status === 'Pendente' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-500/30 dark:text-amber-400' :
                                                     selectedAppointment.status === 'Confirmado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400' :
                                                         (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-900/20 dark:border-sky-500/30 dark:text-sky-400' :
-                                                            'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400'}`}
+                                                            selectedAppointment.status === 'Expirado' ? 'bg-slate-100 border-slate-300 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 grayscale' :
+                                                                'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400'}`}
                                             value={selectedAppointment.status}
                                             onChange={(e) => handleStatusUpdate(selectedAppointment.id, e.target.value)}
                                             disabled={isSaving}
@@ -1030,6 +1076,7 @@ export const Agenda = () => {
                                             <option value="Confirmado">Confirmado</option>
                                             <option value="Finalizado">Finalizado</option>
                                             <option value="Cancelado">Cancelado</option>
+                                            <option value="Expirado">Expirado</option>
                                         </select>
                                     </div>
                                 </div>
@@ -1114,7 +1161,7 @@ export const Agenda = () => {
                                 >
                                     <div className="flex justify-between items-start mb-1">
                                         <p className="font-bold text-sm text-slate-900 dark:text-white group-hover:text-primary">{appt.services?.name}</p>
-                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tight ${appt.status === 'Pendente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : appt.status === 'Confirmado' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : (appt.status === 'Concluído' || appt.status === 'Finalizado') ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
+                                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-tight ${appt.status === 'Pendente' ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400' : appt.status === 'Confirmado' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : (appt.status === 'Concluído' || appt.status === 'Finalizado') ? 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-400' : appt.status === 'Expirado' ? 'bg-slate-200 text-slate-600 dark:bg-slate-800 dark:text-slate-400' : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'}`}>
                                             {appt.status}
                                         </span>
                                     </div>
@@ -1151,7 +1198,7 @@ export const Agenda = () => {
                             <div className="space-y-4">
                                 <label className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Status do Fluxo</label>
                                 <div className="grid grid-cols-2 gap-3">
-                                    {['Pendente', 'Confirmado', 'Finalizado', 'Cancelado'].map(s => {
+                                    {['Pendente', 'Confirmado', 'Finalizado', 'Cancelado', 'Expirado'].map(s => {
                                         const isSelected = filters.status.includes(s);
                                         return (
                                             <button

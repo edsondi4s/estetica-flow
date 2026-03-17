@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Bot, Plus, Trash2, Loader2, Zap, Clock, Key, Link as LinkIcon, Info, ChevronRight, ChevronLeft, Save, Code, X, FileText, Phone } from 'lucide-react';
+import { Bot, Plus, Trash2, Loader2, Zap, Clock, Key, Link as LinkIcon, Info, ChevronRight, ChevronLeft, Save, Code, X, FileText, Phone, MessageSquare } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { InputField } from '../components/ui/InputField';
 import { Card } from '../components/ui/Card';
@@ -132,6 +132,7 @@ export const AgentesIA = () => {
                     whatsapp_provider_token: settings.whatsapp_provider_token,
                     reminder_active: settings.reminder_active,
                     reminder_minutes: settings.reminder_minutes,
+                    reminder_message: settings.reminder_message,
                 })
                 .eq('id', settings.id);
 
@@ -448,18 +449,39 @@ export const AgentesIA = () => {
                     </div>
 
                     <div className={`mt-10 pt-10 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-10 transition-all duration-500 ${!settings.reminder_active ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Intervalo de Transmissão</label>
+                        <div className="space-y-4">
+                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Intervalo de Transmissão (Tempo de Antecedência)</label>
                             <select
-                                className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
-                                value={settings.reminder_minutes}
-                                onChange={(e) => setSettings({ ...settings, reminder_minutes: parseInt(e.target.value) })}
+                                className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer mb-2"
+                                value={[30, 60, 120, 1440].includes(settings.reminder_minutes) ? settings.reminder_minutes : 'custom'}
+                                onChange={(e) => {
+                                    const val = e.target.value;
+                                    setSettings({ ...settings, reminder_minutes: val === 'custom' ? 45 : parseInt(val) })
+                                }}
                             >
-                                <option value={30}>T-30 Minutos (Rapid Response)</option>
-                                <option value={60}>T-60 Minutos (Standard)</option>
-                                <option value={120}>T-120 Minutos (Extended)</option>
-                                <option value={1440}>T-24 Hours (Long Term)</option>
+                                <option value={30}>30 Minutos antes (Resposta Rápida)</option>
+                                <option value={60}>1 Hora antes (Padrão)</option>
+                                <option value={120}>2 Horas antes (Moderado)</option>
+                                <option value={1440}>1 Dia antes / 24 Horas (Longo Prazo)</option>
+                                <option value="custom">
+                                    {![30, 60, 120, 1440].includes(settings.reminder_minutes) && settings.reminder_minutes > 0 
+                                        ? `Personalizado (${settings.reminder_minutes} minutos antes)` 
+                                        : 'Personalizado (Digitar minutos)'}
+                                </option>
                             </select>
+                            
+                            {![30, 60, 120, 1440].includes(settings.reminder_minutes) && (
+                                <div className="flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                                    <input 
+                                        type="number" 
+                                        min="1"
+                                        className="w-24 px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                        value={settings.reminder_minutes || ''}
+                                        onChange={(e) => setSettings({ ...settings, reminder_minutes: parseInt(e.target.value) || 0 })}
+                                    />
+                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Minutos antes do horário marcado</span>
+                                </div>
+                            )}
                         </div>
                         <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20">
                             <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
@@ -467,6 +489,58 @@ export const AgentesIA = () => {
                                 <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Como funciona:</span>
                                 O sistema entende as respostas dos clientes e confirma ou cancela o agendamento sozinho, poupando seu tempo.
                             </p>
+                        </div>
+
+                        <div className="col-span-1 sm:col-span-2 space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <div>
+                                <h5 className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                    <MessageSquare className="w-4 h-4 text-primary" />
+                                    Mensagem Personalizada do Lembrete
+                                </h5>
+                                <p className="text-[10px] text-slate-500 font-medium mt-1">
+                                    Escreva como o robô deve abordar o seu cliente. Clique nos botões abaixo para inserir os dados automáticos do agendamento onde o cursor estiver posicionado. Se deixar em branco, usaremos nossa mensagem padrão.
+                                </p>
+                            </div>
+                            
+                            <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 dark:bg-slate-900/50 p-3 border border-slate-100 dark:border-slate-800 rounded-sm">
+                                {['{{nome}}', '{{servico}}', '{{data}}', '{{hora}}', '{{profissional}}'].map(variable => (
+                                    <button
+                                        key={variable}
+                                        type="button"
+                                        className="text-[10px] font-black bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-full hover:border-primary hover:text-primary transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                                        onClick={() => {
+                                            const textarea = document.getElementById('reminder-message') as HTMLTextAreaElement;
+                                            if (textarea) {
+                                                const start = textarea.selectionStart;
+                                                const end = textarea.selectionEnd;
+                                                const text = settings.reminder_message || '';
+                                                const newMessage = text.substring(0, start) + variable + text.substring(end);
+                                                setSettings({ ...settings, reminder_message: newMessage });
+                                                setTimeout(() => {
+                                                    textarea.focus();
+                                                    textarea.setSelectionRange(start + variable.length, start + variable.length);
+                                                }, 0);
+                                            }
+                                        }}
+                                    >
+                                        <Plus className="w-3 h-3" /> {variable.replace(/[{}]/g, '')}
+                                    </button>
+                                ))}
+                            </div>
+                            
+                            <div className="relative">
+                                <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg z-10">
+                                    <Phone className="w-4 h-4 text-white" />
+                                </div>
+                                <textarea
+                                    id="reminder-message"
+                                    rows={5}
+                                    className="w-full pl-16 pr-6 py-5 bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-100 dark:border-emerald-900/30 rounded-2xl rounded-tl-sm text-[13px] font-medium outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-emerald-950 dark:text-emerald-50 resize-y leading-relaxed"
+                                    placeholder="Ex: Olá {{nome}}, seu agendamento de {{servico}} está marcado para as {{hora}} com o(a) {{profissional}}. Responda com 'SIM' para confirmar."
+                                    value={settings.reminder_message || ''}
+                                    onChange={(e) => setSettings({ ...settings, reminder_message: e.target.value })}
+                                />
+                            </div>
                         </div>
                     </div>
                     <div className="flex justify-end mt-6 relative z-10">
