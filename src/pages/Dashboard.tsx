@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Calendar, Users, DollarSign, ArrowRight, Droplets, Scissors,
     MoreHorizontal, CalendarPlus, UserPlus, Loader2, Trophy,
-    Medal, TrendingUp, ChevronDown, Filter, ChevronLeft, ChevronRight
+    Medal, TrendingUp, ChevronDown, Filter, ChevronLeft, ChevronRight, Sparkles
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -18,20 +18,20 @@ import { supabase } from '../lib/supabase';
 const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-slate-950 p-4 border border-slate-100 dark:border-slate-900 shadow-2xl relative overflow-hidden group">
+            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md p-4 border border-slate-100 dark:border-slate-800 rounded-luxury shadow-xl relative overflow-hidden group">
                 <div className="absolute top-0 left-0 w-1 h-full bg-primary opacity-50"></div>
-                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Dados: {label}</p>
-                <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 bg-primary animate-pulse"></div>
-                    <p className="text-sm font-black text-slate-900 dark:text-white">
-                        {payload[0].value} <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">unidades</span>
+                <p className="text-xs font-medium text-slate-500 mb-1">Período: {label}</p>
+                <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-primary animate-pulse rounded-full"></div>
+                    <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                        {payload[0].value} <span className="text-xs font-normal text-slate-400">agendamentos</span>
                     </p>
                 </div>
             </div>
         );
     }
     return null;
-};
+}
 
 interface DashboardProps {
     onPageChange?: (page: string) => void;
@@ -54,7 +54,6 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const [chartData, setChartData] = useState<any[]>([]);
     const [heatmapData, setHeatmapData] = useState<any[]>([]);
 
-    // Pagination state for Recent Activity
     const [currentPage, setCurrentPage] = useState(1);
     const [itemsPerPage, setItemsPerPage] = useState(5);
 
@@ -96,48 +95,19 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
             yesterday.setDate(today.getDate() - 1);
             const yesterdayStr = yesterday.toISOString().split('T')[0];
 
-            // 1. Core Stats
-            const { count: appCountToday } = await supabase
-                .from('appointments')
-                .select('*', { count: 'exact', head: true })
-                .eq('appointment_date', todayStr);
-
-            const { count: appCountYesterday } = await supabase
-                .from('appointments')
-                .select('*', { count: 'exact', head: true })
-                .eq('appointment_date', yesterdayStr);
-
-            const { count: totalClients } = await supabase
-                .from('clients')
-                .select('*', { count: 'exact', head: true });
+            const { count: appCountToday } = await supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('appointment_date', todayStr);
+            const { count: appCountYesterday } = await supabase.from('appointments').select('*', { count: 'exact', head: true }).eq('appointment_date', yesterdayStr);
+            const { count: totalClients } = await supabase.from('clients').select('*', { count: 'exact', head: true });
 
             const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
             const firstDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
             const lastDayOfPrevMonth = new Date(today.getFullYear(), today.getMonth(), 0);
 
-            const { count: clientsThisMonth } = await supabase
-                .from('clients')
-                .select('*', { count: 'exact', head: true })
-                .gte('created_at', firstDayOfMonth.toISOString().split('T')[0]);
+            const { count: clientsThisMonth } = await supabase.from('clients').select('*', { count: 'exact', head: true }).gte('created_at', firstDayOfMonth.toISOString().split('T')[0]);
+            const { count: clientsLastMonth } = await supabase.from('clients').select('*', { count: 'exact', head: true }).gte('created_at', firstDayOfPrevMonth.toISOString().split('T')[0]).lte('created_at', lastDayOfPrevMonth.toISOString().split('T')[0] + 'T23:59:59');
 
-            const { count: clientsLastMonth } = await supabase
-                .from('clients')
-                .select('*', { count: 'exact', head: true })
-                .gte('created_at', firstDayOfPrevMonth.toISOString().split('T')[0])
-                .lte('created_at', lastDayOfPrevMonth.toISOString().split('T')[0] + 'T23:59:59');
-
-            const { data: revenueDataThisMonth } = await supabase
-                .from('appointments')
-                .select('services(price)')
-                .gte('appointment_date', firstDayOfMonth.toISOString().split('T')[0])
-                .not('status', 'eq', 'Cancelado');
-
-            const { data: revenueDataLastMonth } = await supabase
-                .from('appointments')
-                .select('services(price)')
-                .gte('appointment_date', firstDayOfPrevMonth.toISOString().split('T')[0])
-                .lte('appointment_date', lastDayOfPrevMonth.toISOString().split('T')[0])
-                .not('status', 'eq', 'Cancelado');
+            const { data: revenueDataThisMonth } = await supabase.from('appointments').select('services(price)').gte('appointment_date', firstDayOfMonth.toISOString().split('T')[0]).not('status', 'eq', 'Cancelado');
+            const { data: revenueDataLastMonth } = await supabase.from('appointments').select('services(price)').gte('appointment_date', firstDayOfPrevMonth.toISOString().split('T')[0]).lte('appointment_date', lastDayOfPrevMonth.toISOString().split('T')[0]).not('status', 'eq', 'Cancelado');
 
             const revenueThisMonth = revenueDataThisMonth?.reduce((acc, curr: any) => acc + (curr.services?.price || 0), 0) || 0;
             const revenueLastMonth = revenueDataLastMonth?.reduce((acc, curr: any) => acc + (curr.services?.price || 0), 0) || 0;
@@ -158,115 +128,64 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 revenueTrend: calculateTrend(revenueThisMonth, revenueLastMonth)
             });
 
-            // 2. Recent activity
             const { data: recentData } = await supabase
                 .from('appointments')
-                .select(`
-                    id, appointment_date, appointment_time, status, 
-                    professionals(name), clients(name), services(name)
-                `)
+                .select(`id, appointment_date, appointment_time, status, professionals(name), clients(name), services(name)`)
                 .order('created_at', { ascending: false })
-                .limit(50); // Fetch more for pagination
-
+                .limit(50);
             setRecentAppointments(recentData || []);
 
-            // 3. Popular services
-            const { data: servicesStats } = await supabase
-                .from('appointments')
-                .select('services!inner(name)')
-                .eq('services.is_active', true);
-
+            const { data: servicesStats } = await supabase.from('appointments').select('services!inner(name)').eq('services.is_active', true);
             const sCounts: { [key: string]: number } = {};
             servicesStats?.forEach((s: any) => {
                 const name = s.services?.name;
                 if (name) sCounts[name] = (sCounts[name] || 0) + 1;
             });
-
-            const sortedServices = Object.entries(sCounts)
-                .map(([name, count]) => ({ name, count }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 3);
-
+            const sortedServices = Object.entries(sCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 3);
             const totalApps = servicesStats?.length || 1;
             setPopularServices(sortedServices.map(s => {
                 const isBotox = s.name.toLowerCase().includes('botox');
                 return {
-                    name: s.name,
-                    count: s.count,
-                    percent: Math.round((s.count / totalApps) * 100),
-                    icon: isBotox ? Scissors : Droplets,
-                    color: isBotox ? 'text-purple-600 dark:text-purple-400' : 'text-blue-600 dark:text-blue-400',
-                    bg: isBotox ? 'bg-purple-50 dark:bg-purple-500/10' : 'bg-blue-50 dark:bg-blue-500/10'
+                    name: s.name, count: s.count, percent: Math.round((s.count / totalApps) * 100),
+                    icon: isBotox ? Sparkles : Droplets,
+                    color: isBotox ? 'text-primary' : 'text-[var(--color-secondary)]',
+                    bg: isBotox ? 'bg-primary/10' : 'bg-[var(--color-secondary)]/10'
                 };
             }));
 
-            // 4. Professional Ranking
-            const { data: proStats } = await supabase
-                .from('appointments')
-                .select('professionals(id, name, photo_url)')
-                .not('status', 'eq', 'Cancelado');
-
+            const { data: proStats } = await supabase.from('appointments').select('professionals(id, name, photo_url)').not('status', 'eq', 'Cancelado');
             const pCounts: { [key: string]: { count: number, name: string, photo?: string } } = {};
             proStats?.forEach((p: any) => {
                 if (!p.professionals) return;
                 const id = p.professionals.id;
-                if (!pCounts[id]) {
-                    pCounts[id] = { count: 0, name: p.professionals.name, photo: p.professionals.photo_url };
-                }
+                if (!pCounts[id]) pCounts[id] = { count: 0, name: p.professionals.name, photo: p.professionals.photo_url };
                 pCounts[id].count++;
             });
-
-            const sortedPros = Object.entries(pCounts)
-                .map(([id, data]) => ({ id, ...data }))
-                .sort((a, b) => b.count - a.count)
-                .slice(0, 5);
-
+            const sortedPros = Object.entries(pCounts).map(([id, data]) => ({ id, ...data })).sort((a, b) => b.count - a.count).slice(0, 5);
             setProRanking(sortedPros);
 
-            // 5. Chart Data (Week/Month/Year)
             await fetchChartData();
 
-            // 6. Weekly Frequency (Heatmap 2.0 - Hours x Days)
             const ninetyDaysAgo = new Date();
             ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-
-            const { data: hData } = await supabase
-                .from('appointments')
-                .select('appointment_date, appointment_time')
-                .gte('appointment_date', ninetyDaysAgo.toISOString().split('T')[0])
-                .not('status', 'eq', 'Cancelado');
-
-            // Grid: Rows (Hours 08-19) x Cols (Days 0-6)
-            const hours = Array.from({ length: 12 }, (_, i) => i + 8); // 8, 9, ..., 19
+            const { data: hData } = await supabase.from('appointments').select('appointment_date, appointment_time').gte('appointment_date', ninetyDaysAgo.toISOString().split('T')[0]).not('status', 'eq', 'Cancelado');
+            
+            const hours = Array.from({ length: 12 }, (_, i) => i + 8);
             const days = [0, 1, 2, 3, 4, 5, 6];
-
-            const grid: any[] = hours.map(hour => ({
-                hour: `${hour.toString().padStart(2, '0')}:00`,
-                days: days.map(day => ({ day, count: 0 }))
-            }));
-
+            const grid: any[] = hours.map(hour => ({ hour: `${hour.toString().padStart(2, '0')}:00`, days: days.map(day => ({ day, count: 0 })) }));
+            
             hData?.forEach(item => {
                 const date = new Date(item.appointment_date + 'T12:00:00');
                 const day = date.getDay();
                 const hour = parseInt(item.appointment_time?.split(':')[0] || '0');
-
-                if (hour >= 8 && hour <= 19) {
-                    grid[hour - 8].days[day].count++;
-                }
+                if (hour >= 8 && hour <= 19) grid[hour - 8].days[day].count++;
             });
 
-            // Calculate global max for intensity
             let globalMax = 0;
-            grid.forEach(row => row.days.forEach((d: any) => {
-                if (d.count > globalMax) globalMax = d.count;
-            }));
-
+            grid.forEach(row => row.days.forEach((d: any) => { if (d.count > globalMax) globalMax = d.count; }));
             setHeatmapData(grid.map(row => ({
                 ...row,
-                days: row.days.map((d: any) => ({
-                    ...d,
-                    intensity: globalMax > 0 ? d.count / globalMax : 0
-                }))
+                days: row.days.map((d: any) => ({ ...d, intensity: globalMax > 0 ? d.count / globalMax : 0 }))
             })));
 
         } catch (error) {
@@ -278,34 +197,19 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
     const fetchChartData = async () => {
         let startDate = new Date();
-        if (chartView === 'week') {
-            startDate.setDate(startDate.getDate() - 6);
-        } else if (chartView === 'month') {
-            startDate.setDate(startDate.getDate() - 29);
-        } else {
-            startDate.setMonth(0);
-            startDate.setDate(1);
-        }
+        if (chartView === 'week') startDate.setDate(startDate.getDate() - 6);
+        else if (chartView === 'month') startDate.setDate(startDate.getDate() - 29);
+        else { startDate.setMonth(0); startDate.setDate(1); }
 
-        const { data } = await supabase
-            .from('appointments')
-            .select('appointment_date')
-            .gte('appointment_date', startDate.toISOString().split('T')[0])
-            .not('status', 'eq', 'Cancelado');
-
+        const { data } = await supabase.from('appointments').select('appointment_date').gte('appointment_date', startDate.toISOString().split('T')[0]).not('status', 'eq', 'Cancelado');
         const groupedData: { [key: string]: number } = {};
 
         if (chartView === 'year') {
-            // Group by month
             const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
             months.forEach(m => groupedData[m] = 0);
-            data?.forEach(d => {
-                const month = new Date(d.appointment_date + 'T00:00:00').getMonth();
-                groupedData[months[month]]++;
-            });
+            data?.forEach(d => { const month = new Date(d.appointment_date + 'T00:00:00').getMonth(); groupedData[months[month]]++; });
             setChartData(Object.entries(groupedData).map(([name, total]) => ({ name, total })));
         } else {
-            // Group by day
             const daysToFetch = chartView === 'week' ? 7 : 30;
             for (let i = 0; i < daysToFetch; i++) {
                 const d = new Date(startDate);
@@ -323,9 +227,9 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
     const getMedalColor = (index: number) => {
         switch (index) {
-            case 0: return 'text-amber-400'; // Gold
+            case 0: return 'text-amber-500'; // Gold
             case 1: return 'text-slate-400'; // Silver
-            case 2: return 'text-amber-700'; // Bronze
+            case 2: return 'text-orange-700'; // Bronze
             default: return 'text-slate-300';
         }
     };
@@ -339,28 +243,23 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     }
 
     return (
-        <div className="flex flex-col gap-8 md:gap-12 pb-12">
-            {/* Header / Hero Section - Title Removed as per user request */}
-            <div className="reveal-content flex flex-col md:flex-row md:items-end justify-between gap-6">
-            </div>
-
+        <div className="flex flex-col gap-8 pb-12">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 reveal-content delay-100">
-                <div className="md:col-span-12 lg:col-span-5">
+                <div className="md:col-span-12 lg:col-span-4">
                     <StatCard
                         onClick={() => onPageChange?.('financeiro')}
                         label="Receita do Mês"
                         value={`R$ ${stats.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                         icon={DollarSign}
                         trend={stats.revenueTrend}
-                        color="rose"
+                        color="amber"
                     />
                 </div>
-                <div className="md:col-span-6 lg:col-span-3">
+                <div className="md:col-span-6 lg:col-span-4">
                     <StatCard
                         onClick={() => onPageChange?.('agenda')}
-                        label="Agendamentos"
+                        label="Agendamentos Hoje"
                         value={stats.appointmentsCount.toString()}
-                        subtitle="Hoje"
                         icon={Calendar}
                         trend={stats.appointmentsTrend}
                         color="indigo"
@@ -369,7 +268,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 <div className="md:col-span-6 lg:col-span-4">
                     <StatCard
                         onClick={() => onPageChange?.('clientes')}
-                        label="Clientes Totais"
+                        label="Total de Clientes"
                         value={stats.clientsCount.toLocaleString()}
                         icon={Users}
                         trend={stats.clientsTrend}
@@ -382,16 +281,16 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 {/* Agendamentos Chart */}
                 <div className="lg:col-span-8">
                     <Card
-                        title="Fluxo de Agendamentos"
+                        title="Fluxo de Atendimentos"
                         extra={
-                            <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 p-1 rounded-sm">
+                            <div className="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-800/50 p-1 rounded-full border border-slate-200 dark:border-slate-700/50">
                                 {(['week', 'month', 'year'] as const).map((v) => (
                                     <button
                                         key={v}
                                         onClick={() => setChartView(v)}
-                                        className={`px-4 py-1.5 text-[10px] font-black uppercase tracking-widest rounded-sm transition-all ${chartView === v
-                                            ? 'bg-slate-900 text-primary shadow-xl shadow-black/20'
-                                            : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                                        className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${chartView === v
+                                            ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm'
+                                            : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-200'}`}
                                     >
                                         {v === 'week' ? 'Semana' : v === 'month' ? 'Mês' : 'Ano'}
                                     </button>
@@ -399,7 +298,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                             </div>
                         }
                     >
-                        <div className="h-[350px] w-full pt-8 px-4">
+                        <div className="h-[350px] w-full pt-8 px-2">
                             <ResponsiveContainer width="100%" height="100%">
                                 <AreaChart data={chartData}>
                                     <defs>
@@ -407,30 +306,26 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                             <stop offset="5%" stopColor="var(--primary)" stopOpacity={0.4} />
                                             <stop offset="95%" stopColor="var(--primary)" stopOpacity={0} />
                                         </linearGradient>
-                                        <linearGradient id="strokeGradient" x1="0" y1="0" x2="1" y2="0">
-                                            <stop offset="0%" stopColor="var(--primary)" />
-                                            <stop offset="100%" stopColor="#ff4d4d" />
-                                        </linearGradient>
                                     </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.1)" />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(148, 163, 184, 0.2)" />
                                     <XAxis
                                         dataKey="name"
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 9, fill: '#64748B', fontWeight: 900 }}
+                                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 400 }}
                                         dy={10}
                                     />
                                     <YAxis
                                         axisLine={false}
                                         tickLine={false}
-                                        tick={{ fontSize: 9, fill: '#64748B', fontWeight: 900 }}
+                                        tick={{ fontSize: 11, fill: '#64748B', fontWeight: 400 }}
                                     />
                                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--primary)', strokeWidth: 1, strokeDasharray: '4 4' }} />
                                     <Area
                                         type="monotone"
                                         dataKey="total"
-                                        stroke="url(#strokeGradient)"
-                                        strokeWidth={4}
+                                        stroke="var(--primary)"
+                                        strokeWidth={3}
                                         fillOpacity={1}
                                         fill="url(#colorTotal)"
                                         animationDuration={1500}
@@ -443,68 +338,42 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
                 {/* Professional Ranking */}
                 <div className="lg:col-span-4 flex flex-col gap-6">
-                    <Card title="⚡ Ranking de Profissionais">
-                        <div className="space-y-3 min-h-[300px] flex flex-col">
+                    <Card title="Destaques da Equipe">
+                        <div className="space-y-4 min-h-[300px] flex flex-col pt-2">
                             {proRanking.length > 0 ? (
                                 proRanking.map((pro, index) => (
                                     <div
                                         key={pro.id}
-                                        className="relative flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-800 hover:border-primary/40 transition-all cursor-pointer group overflow-hidden"
+                                        className="relative flex items-center justify-between p-4 bg-slate-50/50 dark:bg-slate-800/30 border border-slate-100 dark:border-slate-800/50 rounded-luxury hover:border-primary/30 transition-all cursor-default group"
                                     >
-                                        <div className="absolute top-0 right-0 w-16 h-16 bg-primary/5 rounded-full blur-2xl group-hover:bg-primary/10 transition-all opacity-0 group-hover:opacity-100"></div>
-                                        <div className="flex items-center gap-4 relative z-10">
-                                            <div className="flex flex-col items-center justify-center">
-                                                <div className={`text-xl font-black mb-1 ${getMedalColor(index)}`}>
+                                        <div className="flex items-center gap-4 relative z-10 w-full">
+                                            <div className="flex flex-col items-center justify-center w-6">
+                                                <div className={`text-lg font-serif mb-0.5 ${getMedalColor(index)}`}>
                                                     0{index + 1}
                                                 </div>
-                                                <div className="w-4 h-[2px] bg-slate-200 dark:bg-slate-800"></div>
                                             </div>
-                                            <div className="relative">
-                                                <Avatar name={pro.name} src={pro.photo} size="md" className="ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all" />
-                                                {index < 3 && <div className="absolute -top-1 -right-1 flex items-center justify-center bg-slate-900 border border-slate-800 rounded-full w-5 h-5 shadow-xl"><Medal className={`w-3 h-3 ${getMedalColor(index)}`} /></div>}
+                                            <div className="relativeshrink-0">
+                                                <Avatar name={pro.name} src={pro.photo} size="md" className="ring-2 ring-transparent group-hover:ring-primary/20 transition-all shadow-sm" />
                                             </div>
-                                            <div>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none mb-1 group-hover:text-primary transition-colors">{pro.name}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-1 h-1 rounded-full bg-emerald-500 animate-pulse"></div>
-                                                    <p className="text-[10px] md:text-[9px] uppercase font-bold tracking-[0.2em] text-slate-400">{pro.count} Atendimentos</p>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{pro.name}</p>
+                                                <div className="flex items-center gap-2 mt-0.5">
+                                                    <p className="text-xs text-slate-500 font-light">{pro.count} procedimentos</p>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
                                 ))
                             ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center py-12 text-center opacity-50">
-                                    <Medal className="w-8 h-8 text-slate-300 dark:text-slate-800 mb-4" />
-                                    <p className="text-xs font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum profissional com <br />atendimentos efetuados</p>
+                                <div className="flex-1 flex flex-col items-center justify-center py-12 text-center">
+                                    <Medal className="w-8 h-8 text-slate-300 dark:text-slate-700 mb-4" />
+                                    <p className="text-sm font-light text-slate-500">Nenhum dado disponível ainda.</p>
                                 </div>
                             )}
                         </div>
                     </Card>
 
-                    <div className="bg-white dark:bg-slate-950 rounded-sm shadow-2xl p-6 text-slate-950 dark:text-white relative overflow-hidden flex-1 flex flex-col justify-center min-h-[180px] group border-2 border-slate-100 dark:border-slate-900">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl group-hover:bg-primary/40 transition-all duration-700"></div>
-                        <div className="relative z-10">
-                            <h3 className="text-xs font-black uppercase tracking-[0.2em] text-primary mb-2">Ações Rápidas</h3>
-                            <p className="text-2xl font-black mb-6 leading-tight uppercase tracking-tight text-slate-900 dark:text-white">Alta <br />Performance</p>
-                            <div className="grid grid-cols-1 gap-3">
-                                <button
-                                    onClick={() => onPageChange?.('agenda')}
-                                    className="bg-slate-50 dark:bg-white/5 hover:bg-primary text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-sm p-4 text-left transition-all duration-300 flex items-center justify-between group/btn"
-                                >
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover/btn:text-slate-950 transition-colors">Novo Agendamento</span>
-                                    <CalendarPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-                                </button>
-                                <button
-                                    onClick={() => onPageChange?.('clientes')}
-                                    className="bg-slate-50 dark:bg-white/5 hover:bg-primary text-slate-900 dark:text-white border border-slate-200 dark:border-white/10 rounded-sm p-4 text-left transition-all duration-300 flex items-center justify-between group/btn"
-                                >
-                                    <span className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white group-hover/btn:text-slate-950 transition-colors">Cadastrar Cliente</span>
-                                    <UserPlus className="w-5 h-5 group-hover/btn:scale-110 transition-transform" />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
             </div>
 
@@ -515,60 +384,59 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     extra={
                         <button
                             onClick={() => onPageChange?.('agenda')}
-                            className="text-xs font-black text-primary uppercase tracking-[0.2em] hover:opacity-70 transition-all flex items-center gap-2"
+                            className="text-sm font-medium text-primary hover:text-primary/80 transition-colors flex items-center gap-1"
                         >
-                            Ver Tudo <ArrowRight className="w-4 h-4" />
+                            Ver agenda completa <ArrowRight className="w-4 h-4" />
                         </button>
                     }
                 >
                     <div className="overflow-x-auto">
                         <table className="w-full text-left border-collapse">
                             <thead>
-                                <tr className="bg-slate-50/50 dark:bg-slate-950/50 text-slate-500 dark:text-slate-400 text-xs md:text-[10px] uppercase tracking-[0.2em] font-black border-b border-slate-100 dark:border-slate-900">
-                                    <th className="px-8 py-6 font-black">Cliente</th>
-                                    <th className="px-8 py-6 font-black">Serviço</th>
-                                    <th className="px-8 py-6 font-black">Profissional</th>
-                                    <th className="px-8 py-6 font-black">Data</th>
-                                    <th className="px-8 py-6 font-black">Horário</th>
-                                    <th className="px-8 py-6 font-black text-center">Status</th>
+                                <tr className="bg-slate-50/50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wide font-medium border-b border-slate-100 dark:border-slate-800">
+                                    <th className="px-6 py-4">Cliente</th>
+                                    <th className="px-6 py-4">Procedimento</th>
+                                    <th className="px-6 py-4">Especialista</th>
+                                    <th className="px-6 py-4">Data e Hora</th>
+                                    <th className="px-6 py-4 text-center">Status</th>
                                 </tr>
                             </thead>
-                            <tbody className="divide-y divide-slate-100 dark:divide-slate-900 text-sm bg-white dark:bg-slate-950">
+                            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50 text-sm bg-white dark:bg-slate-900">
                                 {recentAppointments.length > 0 ? (
                                     recentAppointments
                                         .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
                                         .map((row, i) => (
-                                            <tr key={i} className="hover:bg-primary/5 dark:hover:bg-primary/5 transition-all duration-300 group">
-                                                <td className="px-8 py-5">
-                                                    <div className="flex items-center gap-4">
+                                            <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                                                <td className="px-6 py-4">
+                                                    <div className="flex items-center gap-3">
                                                         <Avatar
                                                             name={row.clients?.name || 'Cliente'}
-                                                            className="w-10 h-10 ring-2 ring-primary/10 group-hover:ring-primary/40 transition-all rounded-sm"
+                                                            className="w-9 h-9 ring-1 ring-slate-100 dark:ring-slate-800 group-hover:ring-primary/20 transition-all rounded-full"
                                                             initials={row.clients?.name?.split(' ')?.map((n: any) => n[0]).join('').toUpperCase() || 'C'}
                                                         />
-                                                        <span className="font-black text-slate-900 dark:text-white uppercase tracking-tighter text-xs">{row.clients?.name || 'Cliente'}</span>
+                                                        <span className="font-medium text-slate-900 dark:text-white text-sm">{row.clients?.name || 'Cliente'}</span>
                                                     </div>
                                                 </td>
-                                                <td className="px-8 py-5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">{row.services?.name}</td>
-                                                <td className="px-8 py-5 text-[11px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tight">
-                                                    {row.professionals?.name || 'Profissional'}
+                                                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 font-light">{row.services?.name}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-600 dark:text-slate-300 font-light">{row.professionals?.name || 'Profissional'}</td>
+                                                <td className="px-6 py-4">
+                                                    <div className="flex flex-col">
+                                                       <span className="text-sm text-slate-700 dark:text-slate-200">
+                                                            {row.appointment_date ? new Date(row.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR') : '--/--/----'}
+                                                        </span>
+                                                        <span className="text-xs text-slate-500 font-medium">
+                                                            {row.appointment_time?.substring(0, 5) || '--:--'}
+                                                        </span>
+                                                    </div>
                                                 </td>
-                                                <td className="px-8 py-5">
-                                                    <span className="text-xs font-black text-slate-400 uppercase tracking-widest px-2 py-1 bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700/50 rounded-sm">
-                                                        {row.appointment_date ? new Date(row.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR') : '--/--/----'}
-                                                    </span>
-                                                </td>
-                                                <td className="px-8 py-5 text-[10px] font-black text-primary font-mono bg-primary/5 dark:bg-primary/10 text-center">
-                                                    {row.appointment_time?.substring(0, 5) || '--:--'}
-                                                </td>
-                                                <td className="px-8 py-5 text-center">
+                                                <td className="px-6 py-4 text-center">
                                                     <StatusBadge status={row.status} />
                                                 </td>
                                             </tr>
                                         ))
                                 ) : (
                                     <tr>
-                                        <td colSpan={6} className="px-8 py-16 text-center text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">
+                                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500 font-light">
                                             Aguardando entrada de dados...
                                         </td>
                                     </tr>
@@ -578,41 +446,41 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     </div>
 
                     {recentAppointments.length > 0 && (
-                        <div className="px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-6 border-t border-slate-100 dark:border-slate-900 bg-slate-50/30 dark:bg-slate-950/50">
-                            <div className="flex items-center gap-4">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Registros por Bloco:</span>
+                        <div className="px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900">
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs text-slate-500">Registros:</span>
                                 <select
                                     value={itemsPerPage}
                                     onChange={(e) => {
                                         setItemsPerPage(Number(e.target.value));
                                         setCurrentPage(1);
                                     }}
-                                    className="bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 rounded-sm text-[10px] font-black text-slate-700 dark:text-slate-200 py-1.5 px-4 outline-none focus:border-primary transition-all cursor-pointer uppercase"
+                                    className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-md text-xs text-slate-700 dark:text-slate-200 py-1.5 px-3 outline-none focus:border-primary transition-all cursor-pointer"
                                 >
                                     {[5, 10, 20, 50].map(val => (
-                                        <option key={val} value={val}>{val} Unid.</option>
+                                        <option key={val} value={val}>{val} por vez</option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div className="flex items-center gap-3">
-                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-4">
+                            <div className="flex items-center gap-4">
+                                <span className="text-xs text-slate-500 font-medium">
                                     Página {currentPage} de {Math.ceil(recentAppointments.length / itemsPerPage)}
                                 </span>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-1">
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="p-2 bg-slate-950 text-white border border-slate-900 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xl"
+                                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"
                                     >
-                                        <ChevronLeft className="w-5 h-5 text-primary" />
+                                        <ChevronLeft className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentAppointments.length / itemsPerPage)))}
                                         disabled={currentPage === Math.ceil(recentAppointments.length / itemsPerPage)}
-                                        className="p-2 bg-slate-950 text-white border border-slate-900 hover:border-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all shadow-xl"
+                                        className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"
                                     >
-                                        <ChevronRight className="w-5 h-5 text-primary" />
+                                        <ChevronRight className="w-5 h-5" />
                                     </button>
                                 </div>
                             </div>
@@ -621,38 +489,39 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-8 reveal-content delay-300">
-                <Card title="📈 Horários mais Procurados">
-                    <div className="flex flex-col gap-6 py-4">
-                        <p className="text-[10px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Análise de movimentação por horário (últimos 90 dias)</p>
-                        <div className="flex gap-6">
-                            <div className="flex flex-col justify-between py-2 text-[10px] font-black text-slate-500 w-8 text-right pr-2 border-r border-slate-100 dark:border-slate-900">
-                                <span>08H</span>
-                                <span>12H</span>
-                                <span>16H</span>
-                                <span>19H</span>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 reveal-content delay-300">
+                <Card title="Mapa de Calor (90 dias)">
+                    <div className="flex flex-col gap-6 py-2">
+                        <div className="flex gap-4">
+                            <div className="flex flex-col justify-between py-2 text-xs font-medium text-slate-400 w-8 text-right pr-2">
+                                <span>08h</span>
+                                <span>12h</span>
+                                <span>16h</span>
+                                <span>19h</span>
                             </div>
 
                             <div className="flex-1">
-                                <div className="grid grid-cols-7 gap-1.5">
-                                    {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SAB'].map((d, i) => (
-                                        <div key={i} className="text-[9px] font-black text-slate-400 text-center mb-2 uppercase tracking-tighter">{d}</div>
+                                <div className="grid grid-cols-7 gap-2">
+                                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d, i) => (
+                                        <div key={i} className="text-xs font-medium text-slate-400 text-center mb-2">{d}</div>
                                     ))}
 
                                     {heatmapData.map((row, hIdx) => (
                                         row.days.map((day: any, dIdx: number) => (
                                             <div
                                                 key={`${hIdx}-${dIdx}`}
-                                                className="w-full h-4.5 rounded-sm cursor-crosshair transition-all hover:scale-125 hover:z-50 relative group border border-transparent hover:border-white/20"
+                                                className="w-full h-5 rounded hover:scale-110 transition-all relative group"
                                                 style={{
-                                                    backgroundColor: `var(--primary)`,
-                                                    boxShadow: day.count > 0 ? `0 0 10px var(--primary)` : 'none',
-                                                    opacity: day.count === 0 ? 0.03 : Math.max(day.intensity, 0.2)
+                                                    backgroundColor: day.count > 0 ? 'var(--color-primary)' : 'transparent',
+                                                    opacity: day.count === 0 ? 0.05 : Math.max(day.intensity, 0.15),
+                                                    border: day.count === 0 ? '1px solid rgba(148, 163, 184, 0.2)' : 'none'
                                                 }}
                                             >
-                                                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 bg-slate-950 text-white text-[10px] font-black py-2 px-3 border border-primary/50 opacity-0 group-hover:opacity-100 transition-all pointer-events-none whitespace-nowrap z-30 shadow-2xl backdrop-blur-xl uppercase tracking-widest">
-                                                    <span className="text-primary">{day.count} Agendamentos</span> Realizados às {row.hour}
-                                                </div>
+                                                {day.count > 0 && (
+                                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 bg-slate-900 text-white text-xs py-1.5 px-3 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-30 shadow-lg">
+                                                        <span className="font-semibold">{day.count} agendamentos</span> às {row.hour}
+                                                    </div>
+                                                )}
                                             </div>
                                         ))
                                     ))}
@@ -660,52 +529,45 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                             </div>
                         </div>
 
-                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-900/50">
-                            <span className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Densidade de Atendimentos</span>
+                        <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-100 dark:border-slate-800">
+                            <span className="text-xs text-slate-500">Volume de atendimentos</span>
                             <div className="flex items-center gap-2">
-                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Baixo</span>
+                                <span className="text-xs text-slate-400">Menos</span>
                                 {[0.1, 0.3, 0.5, 0.7, 1].map((op, i) => (
-                                    <div key={i} className="w-3 h-3 rounded-sm bg-primary border border-white/10" style={{ opacity: op }}></div>
+                                    <div key={i} className="w-4 h-4 rounded bg-primary" style={{ opacity: op }}></div>
                                 ))}
-                                <span className="text-[9px] text-slate-500 font-black uppercase tracking-widest">Alto</span>
+                                <span className="text-xs text-slate-400">Mais</span>
                             </div>
                         </div>
                     </div>
                 </Card>
 
-                <Card title="📈 Meus Serviços" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
-                    <div className="space-y-6 py-2 min-h-[300px] flex flex-col justify-center">
+                <Card title="Procedimentos Populares" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
+                    <div className="space-y-6 pt-2">
                         {popularServices.length > 0 ? (
                             popularServices.map((service, i) => (
-                                <div key={i} className="group cursor-default">
+                                <div key={i} className="group">
                                     <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-5">
-                                            <div className={`w-14 h-14 bg-slate-50 dark:bg-slate-950 border border-slate-100 dark:border-slate-900 group-hover:border-primary/50 transition-all flex items-center justify-center ${service.color} shrink-0 shadow-2xl relative overflow-hidden`}>
-                                                <div className="absolute inset-0 bg-primary/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                                <service.icon className="w-8 h-8 relative z-10" />
+                                        <div className="flex items-center gap-4">
+                                            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${service.color} ${service.bg} transition-colors`}>
+                                                <service.icon className="w-6 h-6" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white group-hover:text-primary transition-colors tracking-tighter uppercase">{service.name}</p>
-                                                <div className="flex items-center gap-2">
-                                                    <div className="w-3 h-[1px] bg-slate-300 dark:bg-slate-700"></div>
-                                                    <p className="text-[9px] font-bold text-slate-500 uppercase tracking-[0.2em]">{service.count} Execuções</p>
-                                                </div>
+                                                <p className="text-sm font-medium text-slate-900 dark:text-white group-hover:text-primary transition-colors">{service.name}</p>
+                                                <p className="text-xs text-slate-500 font-light mt-0.5">{service.count} sessões realizadas</p>
                                             </div>
                                         </div>
-                                        <span className="text-xs font-black text-slate-950 dark:text-white tracking-tighter">{service.percent}.0%</span>
+                                        <span className="text-sm font-semibold text-slate-900 dark:text-white">{service.percent}%</span>
                                     </div>
-                                    <div className="w-full bg-slate-100 dark:bg-slate-900 h-1.5 overflow-hidden rounded-sm relative">
-                                        <div className="absolute inset-0 bg-primary/5 translate-x-[-100%] animate-[shimmer_2s_infinite]"></div>
-                                        <div className="bg-primary h-full relative" style={{ width: `${service.percent}%` }}>
-                                            <div className="absolute top-0 right-0 w-2 h-full bg-white opacity-20 blur-sm"></div>
-                                        </div>
+                                    <div className="w-full bg-slate-100 dark:bg-slate-800 h-2 rounded-full overflow-hidden">
+                                        <div className="bg-primary h-full rounded-full transition-all duration-1000" style={{ width: `${service.percent}%` }}></div>
                                     </div>
                                 </div>
                             ))
                         ) : (
-                            <div className="text-center opacity-50 py-12">
-                                <Scissors className="w-8 h-8 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
-                                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-relaxed">Nenhum serviço <br />popular detectado</p>
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                                <Scissors className="w-8 h-8 text-slate-300 dark:text-slate-700 mx-auto mb-3" />
+                                <p className="text-sm font-light text-slate-500">Nenhum serviço analisado ainda.</p>
                             </div>
                         )}
                     </div>

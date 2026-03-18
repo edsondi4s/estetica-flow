@@ -85,125 +85,110 @@ export const BotFlows = () => {
     return (
         <div className="max-w-6xl mx-auto w-full space-y-8 animate-in fade-in duration-700">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                 <div className="relative">
-                    <div className="absolute -left-4 top-1/2 -translate-y-1/2 w-1 h-12 bg-primary/20 blur-sm"></div>
-                    <h2 className="text-4xl font-black text-slate-950 dark:text-white uppercase tracking-tighter flex items-center gap-3">
-                        Fluxos <span className="text-primary">Automatizados</span>
-                        <div className="bg-primary/10 border border-primary/20 p-1 rounded-sm">
-                            <Zap className="w-4 h-4 text-primary fill-primary/20" />
-                        </div>
+                    <h2 className="text-3xl font-serif text-slate-900 dark:text-white flex items-center gap-3">
+                        Fluxos <span className="text-primary italic">Automatizados</span>
                     </h2>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Gestão de Automações Estilo Typebot</p>
+                    <p className="text-sm text-slate-500 mt-2 font-medium">Gestão de automações e jornadas interativas</p>
                 </div>
 
                 <div className="flex items-center gap-3">
                     <Button
                         onClick={handleCreateFlow}
-                        className="bg-primary hover:bg-primary/90 text-slate-950 px-8 h-12 rounded-none font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 group relative overflow-hidden"
+                        className="bg-primary hover:bg-primary/90 text-white px-6 h-11 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)] transition-all flex items-center gap-2"
                     >
-                        <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                        <Plus className="w-4 h-4 mr-2 relative z-10" />
-                        <span className="relative z-10">Novo Fluxo Visual</span>
+                        <Plus className="w-4 h-4" />
+                        <span>Novo Fluxo Visual</span>
                     </Button>
                 </div>
             </div>
 
-            {/* Stats Cards - Optional for future expansion */}
-
             {/* Main Content Area */}
             <div className="space-y-6">
                 {/* Search & Filter Bar */}
-                <Card className="p-4 bg-slate-50/50 dark:bg-slate-900/50 border-dashed">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="relative flex-1 group">
-                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                            <input
-                                type="text"
-                                placeholder="BUSCAR POR NOME OU GATILHO..."
-                                className="w-full pl-12 pr-4 py-3 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800 rounded-none text-[10px] font-black uppercase tracking-widest outline-none focus:border-primary/50 transition-all placeholder:text-slate-300"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <Button variant="outline" className="h-12 border-slate-200 dark:border-slate-800 rounded-none px-6">
-                            <Filter className="w-4 h-4 mr-2 text-slate-400" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Filtros Avançados</span>
-                        </Button>
+                <div className="bg-white dark:bg-slate-950 p-2 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] border border-slate-100 dark:border-slate-800/60 flex flex-col md:flex-row gap-2 transition-all">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 transition-colors" />
+                        <input
+                            type="text"
+                            placeholder="Buscar por nome ou gatilho..."
+                            className="w-full pl-11 pr-4 py-3 bg-transparent text-sm font-medium outline-none text-slate-900 dark:text-white placeholder:text-slate-400"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                </Card>
+                    <Button variant="ghost" className="h-11 rounded-xl px-5 text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-slate-800">
+                        <Filter className="w-4 h-4 mr-2" />
+                        <span className="text-sm font-medium">Filtros Avançados</span>
+                    </Button>
+                </div>
 
                 {/* Flows Grid */}
                 {isLoading ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {[1, 2, 3].map(i => (
-                            <div key={i}>
-                                <Card className="h-64 animate-pulse bg-slate-50 dark:bg-slate-900/50">
-                                    <div className="flex-1" />
-                                </Card>
-                            </div>
+                            <div key={i} className="h-64 animate-pulse bg-white/50 dark:bg-slate-800/30 rounded-3xl border border-slate-100 dark:border-slate-800/50" />
                         ))}
                     </div>
                 ) : filteredFlows.length === 0 ? (
-                    <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 bg-slate-50/30 dark:bg-slate-900/10 border-2 border-dashed border-slate-100 dark:border-slate-900 rounded-sm">
-                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-900 flex items-center justify-center rounded-sm">
-                            <Zap className="w-8 h-8 text-slate-300" />
+                    <div className="py-24 flex flex-col items-center justify-center text-center space-y-6 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 shadow-sm rounded-[32px]">
+                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center rounded-2xl">
+                            <Zap className="w-8 h-8 text-slate-300 dark:text-slate-600" />
                         </div>
                         <div>
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Nenhum fluxo automatizado encontrado</p>
-                            <p className="text-[9px] font-bold text-slate-400/50 uppercase tracking-widest mt-2">Inicie sua primeira jornada de conversão visual</p>
+                            <p className="text-lg font-serif text-slate-700 dark:text-slate-300">Nenhum fluxo encontrado</p>
+                            <p className="text-sm text-slate-500 mt-2">Inicie sua primeira jornada de conversão visual</p>
                         </div>
-                        <Button onClick={handleCreateFlow} variant="outline" className="rounded-none border-primary/20 text-primary hover:bg-primary/5 px-8">
+                        <Button onClick={handleCreateFlow} variant="outline" className="rounded-xl border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 px-8 py-2.5">
                             Começar Agora
                         </Button>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {filteredFlows.map((flow) => (
-                            <div key={flow.id} className="group relative bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 p-6 rounded-sm hover:border-primary/30 transition-all duration-500 shadow-sm hover:shadow-2xl hover:shadow-primary/5">
+                            <div key={flow.id} className="group relative bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60 p-6 rounded-[24px] hover:border-primary/30 transition-all duration-500 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.01)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)]">
                                 {/* Status Indicator */}
-                                <div className={`absolute top-0 right-0 px-3 py-1 text-[8px] font-black uppercase tracking-widest ${flow.is_active ? 'bg-emerald-500/10 text-emerald-500' : 'bg-slate-500/10 text-slate-500'}`}>
-                                    {flow.is_active ? 'Ativo' : 'Pausado'}
+                                <div className="absolute top-6 right-6 flex items-center gap-2">
+                                    <span className={`w-2 h-2 rounded-full ${flow.is_active ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-slate-300 dark:bg-slate-600'}`}></span>
+                                    <span className="text-xs font-medium text-slate-500">{flow.is_active ? 'Ativo' : 'Pausado'}</span>
                                 </div>
 
                                 <div className="space-y-6">
                                     <div className="flex items-start justify-between">
-                                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex items-center justify-center rounded-sm group-hover:scale-110 transition-transform duration-500 shadow-sm">
-                                            <Zap className={`w-8 h-8 ${flow.is_active ? 'text-primary' : 'text-slate-300'}`} />
+                                        <div className="w-14 h-14 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-100 dark:border-emerald-800/30 flex items-center justify-center rounded-2xl group-hover:scale-105 transition-transform duration-500">
+                                            <Zap className={`w-6 h-6 ${flow.is_active ? 'text-emerald-500' : 'text-slate-400'}`} />
                                         </div>
-                                        <button className="p-2 text-slate-400 hover:text-primary transition-colors">
-                                            <MoreVertical className="w-5 h-5" />
-                                        </button>
                                     </div>
 
                                     <div className="min-h-[80px]">
-                                        <h4 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter leading-tight group-hover:text-primary transition-colors">{flow.name}</h4>
+                                        <h4 className="text-xl font-serif text-slate-900 dark:text-white leading-tight group-hover:text-primary transition-colors">{flow.name}</h4>
                                         <div className="flex flex-wrap gap-2 mt-4">
                                             {flow.trigger_keywords?.map((keyword: string, idx: number) => (
-                                                <span key={idx} className="px-3 py-1 bg-slate-100 dark:bg-slate-900 text-[10px] font-black text-slate-500 uppercase tracking-widest border border-slate-200 dark:border-slate-800">
+                                                <span key={idx} className="px-3 py-1 bg-slate-50 dark:bg-slate-800/50 text-xs font-medium text-slate-600 dark:text-slate-300 rounded-lg border border-slate-100 dark:border-slate-700/50">
                                                     #{keyword}
                                                 </span>
                                             ))}
                                             {(!flow.trigger_keywords || flow.trigger_keywords.length === 0) && (
-                                                <span className="text-[10px] font-bold text-slate-400 uppercase italic">Sem gatilhos configurados</span>
+                                                <span className="text-xs text-slate-400 italic">Sem gatilhos</span>
                                             )}
                                         </div>
                                     </div>
 
-                                    <div className="pt-6 border-t border-slate-50 dark:border-slate-900 flex items-center justify-between gap-3">
-                                        <div className="flex items-center gap-3">
+                                    <div className="pt-5 flex items-center justify-between gap-3 border-t border-slate-50 dark:border-slate-800/50">
+                                        <div className="flex items-center gap-2">
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-10 h-10 p-0 rounded-none border-slate-100 dark:border-slate-800"
+                                                className={`w-9 h-9 p-0 rounded-xl border-slate-200 dark:border-slate-700 ${flow.is_active ? 'hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200' : 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'}`}
                                                 onClick={() => toggleFlowStatus(flow)}
                                             >
-                                                {flow.is_active ? <Pause className="w-4 h-4 text-amber-500" /> : <Play className="w-4 h-4 text-emerald-500 fill-emerald-500/20" />}
+                                                {flow.is_active ? <Pause className="w-4 h-4 text-amber-500" /> : <Play className="w-4 h-4 text-emerald-500" />}
                                             </Button>
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="w-10 h-10 p-0 rounded-none border-slate-100 dark:border-slate-800 hover:text-primary"
+                                                className="w-9 h-9 p-0 rounded-xl border-slate-200 dark:border-slate-700 hover:text-primary hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:border-emerald-200"
                                                 onClick={() => handleEditFlow(flow)}
                                             >
                                                 <Edit2 className="w-4 h-4" />
@@ -211,8 +196,8 @@ export const BotFlows = () => {
                                         </div>
                                         <Button
                                             size="sm"
-                                            variant="outline"
-                                            className="w-10 h-10 p-0 rounded-none border-slate-100 dark:border-slate-800 hover:text-rose-500 hover:border-rose-500/20"
+                                            variant="ghost"
+                                            className="w-9 h-9 p-0 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10"
                                             onClick={() => handleDeleteFlow(flow.id)}
                                         >
                                             <Trash2 className="w-4 h-4" />

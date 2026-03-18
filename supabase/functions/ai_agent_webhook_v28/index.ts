@@ -408,7 +408,7 @@ Deno.serve(async (req) => {
 
 ### REGRAS CRÍTICAS INEGOCIÁVEIS:
 1. NUNCA REAPROVEITE DADOS: Se o cliente pedir um NOVO agendamento, OBRIGATORIAMENTE PERGUNTE qual o Serviço, Profissional, Data e Horário. NÃO USE dados de agendamentos citados no histórico.
-2. NUNCA INVENTE OU CHUTE NADA: Se faltar UM ÚNICO DOS 4 DADOS acima para o agendamento, NÃO CHAME a tool 'book_appointment'. Envie uma mensagem perguntando o que falta.
+2. NUNCA INVENTE OU CHUTE NADA: Se faltar UM ÚNICO DOS 4 DADOS acima para o agendamento, NÃO CHAME a tool 'book_appointment'. Envie uma mensagem perguntando o que falta. (NUNCA presuma que o usuário quer agendar para "hoje" ou "agora", sempre pergunte a data e horário).
 3. RESPEITE O HORÁRIO DE FUNCIONAMENTO. Nunca agende fora do horário ou em dias fechados.
 4. CLIENTE SEM NOME: Use 'create_client' IMEDIATAMENTE antes de responder.
 5. DÚVIDAS E MANIPULAÇÕES: Sempre use 'list_my_appointments' antes de cancelar ou reagendar para obter o UUID exato do agendamento.
@@ -439,11 +439,11 @@ ${bizSummary}`;
         const ai = new OpenAI({ apiKey: st.ai_api_key, baseURL: st.ai_provider === 'openrouter' ? 'https://openrouter.ai/api/v1' : undefined });
         const tools: any = [
             { type: "function", function: { name: "create_client", description: "Cadastra nome do cliente", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"] } } },
-            { type: "function", function: { name: "book_appointment", description: "Novo agendamento", parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, service_id: { type: "string" }, professional_id: { type: "string" } } } } },
+            { type: "function", function: { name: "book_appointment", description: "Novo agendamento. Use SOMENTE quando tiver a data e horário REPASSADOS pelo usuário.", parameters: { type: "object", properties: { date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" }, service_id: { type: "string" }, professional_id: { type: "string" } }, required: ["date", "time", "service_id", "professional_id"] } } },
             { type: "function", function: { name: "list_my_appointments", description: "Ver agendamentos futuros do cliente para obter seus respectivos IDs." } },
             { type: "function", function: { name: "confirm_appointment", description: "Confirma a presença em um agendamento", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento" } } } } },
             { type: "function", function: { name: "cancel_appointment", description: "Cancela um agendamento", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento" } } } } },
-            { type: "function", function: { name: "reschedule_appointment", description: "Altera apenas data/hora de agendamento existente sem mudar o serviço ou profissional. Exige o UUID exato", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento vindo de list_my_appointments" }, date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" } } } } },
+            { type: "function", function: { name: "reschedule_appointment", description: "Altera apenas data/hora de agendamento existente sem mudar o serviço ou profissional. Exige o UUID exato", parameters: { type: "object", properties: { appointment_id: { type: "string", description: "UUID do agendamento vindo de list_my_appointments" }, date: { type: "string", description: "YYYY-MM-DD" }, time: { type: "string", description: "HH:mm" } }, required: ["appointment_id", "date", "time"] } } },
             { type: "function", function: { name: "cancel_all_my_appointments", description: "Cancela TODOS os agendamentos futuros do cliente" } }
         ];
 

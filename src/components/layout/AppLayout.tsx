@@ -17,7 +17,7 @@ export const AppLayout = ({ children, currentPage, onPageChange, user, onLogout 
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     return (
-        <div className="flex h-screen bg-slate-50 dark:bg-slate-950 transition-colors overflow-hidden relative">
+        <div className="flex h-screen bg-background-light dark:bg-slate-900 transition-colors overflow-hidden relative">
             <Sidebar
                 currentPage={currentPage}
                 onPageChange={(id) => {
@@ -42,10 +42,10 @@ export const AppLayout = ({ children, currentPage, onPageChange, user, onLogout 
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={currentPage}
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            transition={{ duration: 0.2 }}
+                            initial={{ opacity: 0, y: 15, scale: 0.995 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -15, scale: 0.995 }}
+                            transition={{ type: "spring", stiffness: 260, damping: 25 }}
                             className="max-w-7xl mx-auto w-full"
                         >
                             {children}

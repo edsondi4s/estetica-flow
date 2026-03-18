@@ -21,29 +21,29 @@ export const StatCard = ({
 }: StatCardProps) => {
     const colors = {
         indigo: {
-            bg: 'bg-indigo-50 dark:bg-slate-900',
-            icon: 'text-indigo-600 dark:text-indigo-500',
-            border: 'border-indigo-100 dark:border-slate-800',
+            bg: 'bg-primary/5 dark:bg-primary/10',
+            icon: 'text-primary dark:text-primary',
+            border: 'border-primary/20 dark:border-primary/30',
         },
         emerald: {
-            bg: 'bg-emerald-50 dark:bg-slate-900',
-            icon: 'text-emerald-600 dark:text-emerald-500',
-            border: 'border-emerald-100 dark:border-slate-800',
+            bg: 'bg-[var(--color-secondary)]/5 dark:bg-[var(--color-secondary)]/10',
+            icon: 'text-[var(--color-secondary)] dark:text-[var(--color-secondary)]',
+            border: 'border-[var(--color-secondary)]/20 dark:border-[var(--color-secondary)]/30',
         },
         amber: {
-            bg: 'bg-amber-50 dark:bg-slate-900',
+            bg: 'bg-amber-50 dark:bg-amber-900/20',
             icon: 'text-amber-600 dark:text-amber-500',
-            border: 'border-amber-100 dark:border-slate-800',
+            border: 'border-amber-100 dark:border-amber-800',
         },
         blue: {
-            bg: 'bg-blue-50 dark:bg-slate-900',
-            icon: 'text-sky-600 dark:text-sky-500',
-            border: 'border-blue-100 dark:border-slate-800',
+            bg: 'bg-blue-50 dark:bg-blue-900/20',
+            icon: 'text-blue-600 dark:text-blue-500',
+            border: 'border-blue-100 dark:border-blue-800',
         },
         rose: {
-            bg: 'bg-rose-50 dark:bg-slate-900',
+            bg: 'bg-rose-50 dark:bg-rose-900/20',
             icon: 'text-rose-600 dark:text-rose-500',
-            border: 'border-rose-100 dark:border-slate-800',
+            border: 'border-rose-100 dark:border-rose-800',
         },
     };
 
@@ -52,32 +52,30 @@ export const StatCard = ({
     return (
         <div
             onClick={onClick}
-            className={`group relative p-6 bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-900 transition-all duration-500 ${onClick ? 'cursor-pointer hover:border-primary/50' : ''}`}
+            className={`group relative p-6 bg-white dark:bg-slate-900 rounded-luxury border border-slate-100 dark:border-slate-800/50 transition-all duration-300 shadow-sm ${onClick ? 'cursor-pointer hover:shadow-md hover:border-primary/30 dark:hover:border-primary/30' : ''}`}
         >
-            <div className="flex justify-between items-start mb-8 relative z-10">
-                <div className={`w-14 h-14 ${colors[color].bg} border ${colors[color].border} flex items-center justify-center rounded-sm group-hover:scale-110 transition-transform duration-500 shadow-sm`}>
-                    <Icon className={`${colors[color].icon} w-8 h-8`} />
+            <div className="flex justify-between items-start mb-6 relative z-10">
+                <div className={`w-12 h-12 ${colors[color].bg} border ${colors[color].border} flex items-center justify-center rounded-2xl group-hover:scale-110 transition-transform duration-500`}>
+                    <Icon className={`${colors[color].icon} w-6 h-6`} />
                 </div>
 
                 {trend && (
                     <div className="flex flex-col items-end">
-                        <span className={`text-[10px] font-black uppercase tracking-tighter flex items-center gap-1 ${isNegativeTrend ? 'text-red-500' : 'text-emerald-500'}`}>
+                        <span className={`text-xs font-semibold flex items-center gap-1 ${isNegativeTrend ? 'text-red-500' : 'text-emerald-500'}`}>
                             {isNegativeTrend ? <TrendingDown className="w-3 h-3" /> : <TrendingUp className="w-3 h-3" />}
                             {trend}
                         </span>
-                        <div className="h-[1px] w-8 bg-slate-100 dark:bg-slate-900 mt-1"></div>
                     </div>
                 )}
             </div>
 
             <div className="relative z-10">
                 <div className="flex items-center gap-2 mb-1">
-                    <div className="w-1 h-3 bg-primary/20"></div>
-                    <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</p>
+                    <p className="text-slate-500 dark:text-slate-400 text-xs font-medium tracking-wide">{label}</p>
                 </div>
-                <h3 className="text-slate-950 dark:text-white text-3xl font-black tracking-tighter flex items-baseline gap-2 uppercase">
+                <h3 className="text-slate-900 dark:text-white pb-1 text-3xl font-serif tracking-tight flex items-baseline gap-2">
                     {value}
-                    {subtitle && <span className="text-[10px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-widest">{subtitle}</span>}
+                    {subtitle && <span className="text-xs font-light text-slate-400 dark:text-slate-500">{subtitle}</span>}
                 </h3>
             </div>
         </div>

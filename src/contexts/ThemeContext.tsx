@@ -28,7 +28,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         business_name: 'EstéticaFlow',
         logo_url: '',
         logo_url_dark: '',
-        primary_color: '#db2777',
+        primary_color: '#10b981',
     });
 
     const [isSettingsLoaded, setIsSettingsLoaded] = useState(false);
@@ -54,7 +54,7 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
                         business_name: data.business_name || 'EstéticaFlow',
                         logo_url: data.logo_url || '',
                         logo_url_dark: data.logo_url_dark || '',
-                        primary_color: data.primary_color || '#db2777',
+                        primary_color: data.primary_color || '#10b981',
                     });
                 }
             } catch (err) {

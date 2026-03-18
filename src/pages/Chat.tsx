@@ -361,10 +361,10 @@ export function Chat() {
     const totalUnread = contacts.reduce((sum, c) => sum + c.unread_count, 0);
 
     return (
-        <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-slate-900 rounded-2xl overflow-hidden shadow-xl border border-slate-200 dark:border-slate-800">
+        <div className="flex h-[calc(100vh-4rem)] bg-white dark:bg-slate-950 rounded-[32px] overflow-hidden shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] border border-slate-100 dark:border-slate-800/60 transition-all duration-300">
             {/* LEFT: Contact List */}
             <div className={`
-                flex flex-col w-full md:w-80 lg:w-96 border-r border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex-shrink-0
+                flex flex-col w-full md:w-80 lg:w-96 border-r border-slate-100 dark:border-slate-800/60 bg-white dark:bg-slate-950 flex-shrink-0
                 ${showMobileChat ? 'hidden md:flex' : 'flex'}
             `}>
                 {/* Header */}
@@ -472,7 +472,7 @@ export function Chat() {
                                 )}
 
                                 {/* Avatar */}
-                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm relative">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm relative">
                                     {(contact.client_name || contact.sender_number).charAt(0).toUpperCase()}
                                     {contact.unread_count > 0 && !isSelectionMode && (
                                         <span className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 border-2 border-white dark:border-slate-900 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
@@ -521,7 +521,7 @@ export function Chat() {
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-sm">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-bold shrink-0 shadow-[0_4px_12px_rgba(16,185,129,0.3)]">
                                 {displayName(selectedContact).charAt(0).toUpperCase()}
                             </div>
                             <div className="flex-1 min-w-0">
@@ -587,8 +587,8 @@ export function Chat() {
                                             <div className={`flex items-end gap-2 ${isUser ? 'flex-row' : 'flex-row-reverse'}`}>
                                                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 shadow-sm mb-1
                                                     ${isUser
-                                                        ? 'bg-gradient-to-br from-green-400 to-emerald-600 text-white'
-                                                        : 'bg-gradient-to-br from-violet-500 to-purple-700 text-white'
+                                                        ? 'bg-gradient-to-br from-emerald-400 to-emerald-600 text-white'
+                                                        : 'bg-gradient-to-br from-[#D4AF37] to-[#AA8222] text-white'
                                                     }`}>
                                                     {isUser ? <User className="w-3.5 h-3.5" /> : <Bot className="w-3.5 h-3.5" />}
                                                 </div>
@@ -596,7 +596,7 @@ export function Chat() {
                                                     <div className={`px-4 py-2.5 rounded-2xl shadow-sm text-sm leading-relaxed whitespace-pre-wrap break-words
                                                         ${isUser
                                                             ? 'bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-tl-sm border border-slate-100 dark:border-slate-700'
-                                                            : 'bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-tr-sm'
+                                                            : 'bg-gradient-to-br from-[#D4AF37] to-[#AA8222] text-white rounded-tr-sm'
                                                         }`}>
                                                         {msg.content}
                                                     </div>
@@ -613,10 +613,10 @@ export function Chat() {
                             {/* AI Typing Indicator */}
                             {isAiTyping && (
                                 <div className="flex items-end gap-2 flex-row-reverse">
-                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-violet-500 to-purple-700 flex items-center justify-center shrink-0 shadow-sm mb-1">
+                                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#AA8222] flex items-center justify-center shrink-0 shadow-sm mb-1">
                                         <Bot className="w-3.5 h-3.5 text-white" />
                                     </div>
-                                    <div className="bg-gradient-to-br from-violet-500 to-purple-600 px-4 py-3 rounded-2xl rounded-tr-sm shadow-sm">
+                                    <div className="bg-gradient-to-br from-[#D4AF37] to-[#AA8222] px-4 py-3 rounded-2xl rounded-tr-sm shadow-sm">
                                         <div className="flex gap-1 items-center h-4">
                                             <span className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce [animation-delay:-0.3s]" />
                                             <span className="w-1.5 h-1.5 bg-white/70 rounded-full animate-bounce [animation-delay:-0.15s]" />

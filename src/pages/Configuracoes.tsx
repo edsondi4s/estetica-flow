@@ -341,39 +341,37 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
 
     return (
         <div className="max-w-6xl mx-auto w-full space-y-10">
-            <div className="bg-white dark:bg-slate-950 p-2 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl flex flex-wrap gap-2 overflow-x-auto no-scrollbar">
+            {/* Navegação via Abas */}
+            <div className="flex overflow-x-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60 rounded-[32px] p-1.5 gap-2 mb-8">
                 {[
-                    { id: 'info', label: 'Informações da Empresa', icon: Building2 },
+                    { id: 'info', label: 'Empresa', icon: Building2 },
                     { id: 'enderecos', label: 'Endereços', icon: MapIcon },
                     { id: 'branding', label: 'Aparência', icon: Palette },
-                    { id: 'seo', label: 'Site e Busca (SEO)', icon: Globe },
-                    { id: 'hours', label: 'Horário de Funcionamento', icon: Clock }
+                    { id: 'seo', label: 'SEO & Site', icon: Globe },
+                    { id: 'hours', label: 'Horários', icon: Clock }
                 ].map((tab) => (
                     <button
                         key={tab.id}
+                        type="button"
                         onClick={() => setActiveTab(tab.id as any)}
-                        className={`flex items-center justify-center gap-3 h-12 rounded-none text-[10px] font-black uppercase tracking-[0.2em] transition-all duration-300 ease-in-out
-                            ${activeTab === tab.id
-                                ? 'bg-primary text-slate-950 px-8 flex-1 sm:flex-none'
-                                : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-900 px-5 w-14'}`}
-                        title={tab.label}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold transition-all rounded-[28px] whitespace-nowrap ${
+                            activeTab === tab.id
+                                ? 'bg-white dark:bg-slate-950 text-primary shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-200/50 dark:border-slate-800/60'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-white/50 dark:hover:bg-slate-800/50 border border-transparent'
+                        }`}
                     >
-                        <tab.icon className={`w-5 h-5 transition-transform duration-300 ${activeTab === tab.id ? 'scale-110' : 'scale-100'}`} />
-                        {activeTab === tab.id && (
-                            <span className="whitespace-nowrap animate-in fade-in slide-in-from-left-2 duration-300">
-                                {tab.label}
-                            </span>
-                        )}
+                        <tab.icon className={`w-4 h-4 transition-transform ${activeTab === tab.id ? 'scale-110 text-primary' : 'text-slate-400'}`} />
+                        {tab.label}
                     </button>
                 ))}
             </div>
 
             <Card noPadding>
                 {activeTab === 'info' && (
-                    <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-8 md:p-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div>
-                            <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Informações da <span className="text-primary">Empresa</span></h3>
-                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Dados básicos da sua unidade</p>
+                            <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Informações da <span className="text-primary italic">Empresa</span></h3>
+                            <p className="text-sm font-medium text-slate-500">Dados básicos da sua unidade</p>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -406,66 +404,67 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 )}
 
                 {activeTab === 'enderecos' && (
-                    <div className="p-10 space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-8 md:p-10 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Nossos <span className="text-primary">Endereços</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Locais onde você atende</p>
+                                <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Nossos <span className="text-primary italic">Endereços</span></h3>
+                                <p className="text-sm font-medium text-slate-500">Locais onde você atende</p>
                             </div>
                             <Button
                                 onClick={() => {
                                     setAddressForm({ id: '', zip_code: '', street: '', number: '', complement: '', neighborhood: '', city: '', state: '', is_main: addresses.length === 0 });
                                     setIsAddressModalOpen(true);
                                 }}
-                                className="bg-primary text-slate-950 rounded-none h-12 px-8 font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20"
+                                className="h-11 px-6 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)]"
                             >
                                 <Plus className="w-4 h-4 mr-2" /> Adicionar Endereço
                             </Button>
                         </div>
 
                         {addresses.length === 0 ? (
-                            <div className="text-center py-24 bg-slate-50 dark:bg-slate-900/50 rounded-sm border-2 border-dashed border-slate-200 dark:border-slate-800">
-                                <MapPin className="w-12 h-12 text-slate-300 mx-auto mb-4 opacity-20" />
-                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">Zero pontos ativos detectados</p>
+                            <div className="text-center py-20 bg-slate-50 dark:bg-slate-900/40 rounded-3xl border border-dashed border-slate-200 dark:border-slate-800">
+                                <MapPin className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4 opacity-70" />
+                                <p className="text-sm font-medium text-slate-500">Nenhum endereço cadastrado</p>
                             </div>
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {addresses.map((addr) => (
-                                    <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-8 rounded-sm border border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/5 hover:border-primary/30 transition-all overflow-hidden">
+                                    <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all overflow-hidden flex flex-col h-full">
                                         {addr.is_main && (
-                                            <div className="absolute top-0 right-0 bg-primary text-slate-950 text-[9px] font-black px-4 py-1 tracking-widest uppercase">
+                                            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
                                                 Principal
                                             </div>
                                         )}
-                                        <div className="flex gap-4 mb-6">
-                                            <div className="w-12 h-12 bg-slate-100 dark:bg-slate-900 rounded-none flex items-center justify-center shrink-0 border border-slate-200 dark:border-slate-800">
-                                                <MapPin className="w-5 h-5 text-slate-500" />
+                                        <div className="flex gap-4 mb-6 flex-1">
+                                            <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
+                                                <MapPin className="w-5 h-5 text-primary" />
                                             </div>
                                             <div>
-                                                <h5 className="font-black text-slate-950 dark:text-white text-md uppercase tracking-tight">{addr.street}, {addr.number}</h5>
-                                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+                                                <h5 className="font-semibold text-slate-900 dark:text-white text-lg">{addr.street}, {addr.number}</h5>
+                                                <p className="text-sm text-slate-500 mt-1">
                                                     {addr.neighborhood} — {addr.city}/{addr.state}
                                                 </p>
-                                                <div className="mt-2 flex items-center gap-3">
-                                                    <span className="text-[9px] font-black text-primary uppercase tracking-widest px-2 py-0.5 border border-primary/20 bg-primary/5">CEP {addr.zip_code}</span>
-                                                    {addr.complement && <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">[{addr.complement}]</span>}
+                                                <div className="mt-3 flex flex-wrap items-center gap-2">
+                                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">CEP {addr.zip_code}</span>
+                                                    {addr.complement && <span className="text-xs font-medium text-slate-500">Compl: {addr.complement}</span>}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2 justify-end pt-6 border-t border-slate-50 dark:border-slate-900">
+                                        <div className="flex gap-3 justify-end pt-5 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
                                             <button
+                                                className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
                                                 onClick={() => {
                                                     setAddressForm(addr);
                                                     setIsAddressModalOpen(true);
                                                 }}
                                             >
-                                                Editar Endereço
+                                                Editar
                                             </button>
                                             <button
-                                                className="px-4 py-2 text-[10px] font-black uppercase tracking-widest text-rose-500 hover:text-rose-600 transition-colors"
+                                                className="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors"
                                                 onClick={() => handleDeleteAddress(addr.id)}
                                             >
-                                                Desativar
+                                                Remover
                                             </button>
                                         </div>
                                     </div>
@@ -476,18 +475,18 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 )}
 
                 {activeTab === 'seo' && (
-                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-8 md:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
-                                <Globe className="w-8 h-8 text-primary" />
+                            <div className="w-14 h-14 bg-primary/5 flex items-center justify-center rounded-2xl border border-primary/10">
+                                <Globe className="w-6 h-6 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Aparecer no <span className="text-primary">Google</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Configurações para seu site ser encontrado</p>
+                                <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Aparecer no <span className="text-primary italic">Google</span></h3>
+                                <p className="text-sm font-medium text-slate-500">Configurações para seu site ser encontrado</p>
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 gap-10">
+                        <div className="grid grid-cols-1 gap-8">
                             <InputField
                                 label="Título do Site (Title Tag)"
                                 placeholder="Ex: EstéticaFlow — Biotecnologia Avançada"
@@ -495,22 +494,22 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 onChange={(e) => setSettings({ ...settings, seo_title: e.target.value })}
                             />
 
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Descrição do Site (Meta Description)</label>
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">Descrição do Site (Meta Description)</label>
                                 <textarea
                                     rows={3}
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-none text-sm outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none font-medium leading-relaxed"
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white resize-none transition-all placeholder:text-slate-400"
                                     placeholder="Breve resumo da expertise técnica da unidade..."
                                     value={settings.seo_description || ''}
                                     onChange={(e) => setSettings({ ...settings, seo_description: e.target.value })}
                                 />
                             </div>
 
-                            <div className="space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Palavras-chave Técnicas (SEO Tags)</label>
+                            <div className="space-y-3">
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block">Palavras-chave (SEO Tags)</label>
                                 <textarea
                                     rows={2}
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-none text-sm outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none font-mono"
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white resize-none transition-all placeholder:text-slate-400"
                                     placeholder="estetica, botox, preenchimento..."
                                     value={settings.seo_keywords || ''}
                                     onChange={(e) => setSettings({ ...settings, seo_keywords: e.target.value })}
@@ -518,28 +517,28 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             </div>
                         </div>
 
-                        <div className="pt-10 border-t border-slate-100 dark:border-slate-900">
+                        <div className="pt-10 border-t border-slate-100 dark:border-slate-800/60">
                             <div className="mb-8">
-                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-2">Códigos de <span className="text-primary">Rastreamento</span></h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Para Google Analytics, Facebook Pixel e outros</p>
+                                <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-2">Códigos de <span className="text-primary italic">Rastreamento</span></h4>
+                                <p className="text-sm text-slate-500 font-medium">Para Google Analytics, Facebook Pixel e outros</p>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Head Injection &lt;head&gt;</label>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Head Injection &lt;head&gt;</label>
                                     <textarea
-                                        rows={8}
-                                        className="w-full px-6 py-4 bg-slate-900 border border-slate-800 rounded-none text-[12px] font-mono outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-emerald-500 resize-none opacity-80"
+                                        rows={6}
+                                        className="w-full px-5 py-3.5 bg-slate-900 dark:bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-emerald-400 resize-none opacity-90 transition-all font-medium leading-relaxed"
                                         placeholder="<!-- Scripts: GTM, Search Console -->"
                                         value={settings.tracking_code || ''}
                                         onChange={(e) => setSettings({ ...settings, tracking_code: e.target.value })}
                                     />
                                 </div>
-                                <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Body Injection &lt;body&gt;</label>
+                                <div className="space-y-3">
+                                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Body Injection &lt;body&gt;</label>
                                     <textarea
-                                        rows={8}
-                                        className="w-full px-6 py-4 bg-slate-900 border border-slate-800 rounded-none text-[12px] font-mono outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-emerald-500 resize-none opacity-80"
+                                        rows={6}
+                                        className="w-full px-5 py-3.5 bg-slate-900 dark:bg-slate-950 border border-slate-800 rounded-xl text-xs font-mono outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-emerald-400 resize-none opacity-90 transition-all font-medium leading-relaxed"
                                         placeholder="<!-- Scripts: FB Pixel NoScript -->"
                                         value={settings.tracking_code_body || ''}
                                         onChange={(e) => setSettings({ ...settings, tracking_code_body: e.target.value })}
@@ -551,131 +550,131 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                 )}
 
                 {activeTab === 'branding' && (
-                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-8 md:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
-                                <Palette className="w-8 h-8 text-primary" />
+                            <div className="w-14 h-14 bg-primary/5 flex items-center justify-center rounded-2xl border border-primary/10">
+                                <Palette className="w-6 h-6 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Cores e <span className="text-primary">Logotipo</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Personalização visual do sistema</p>
+                                <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Cores e <span className="text-primary italic">Logotipo</span></h3>
+                                <p className="text-sm font-medium text-slate-500">Personalização visual do sistema</p>
                             </div>
                         </div>
 
                         <div className="space-y-12">
                             <div>
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6 block">Cor Principal da Interface</label>
+                                <label className="text-sm font-semibold text-slate-700 dark:text-slate-300 block mb-4">Cor Principal da Interface</label>
                                 <div className="flex flex-wrap gap-4">
                                     {[
-                                        '#ebfe62', // Neon Lime (Silk & Steel Default)
+                                        '#10b981', // Emerald (Silk & Steel Default)
                                         '#db2777', // Rosa
                                         '#7c3aed', // Roxo
                                         '#2563eb', // Azul
-                                        '#059669', // Verde
-                                        '#1e293b', // Slate
+                                        '#f59e0b', // Amber
+                                        '#64748b', // Slate
                                     ].map((color) => (
                                         <button
                                             key={color}
                                             onClick={() => setSettings({ ...settings, primary_color: color })}
-                                            className={`w-14 h-14 rounded-none border-2 transition-all relative ${settings.primary_color === color ? 'border-primary ring-4 ring-primary/10' : 'border-slate-200 dark:border-slate-800'}`}
+                                            className={`w-12 h-12 rounded-full border-2 transition-all relative ${settings.primary_color === color ? 'border-primary ring-4 ring-primary/20' : 'border-transparent hover:scale-110 shadow-sm'}`}
                                             style={{ backgroundColor: color }}
                                             title={color}
                                         >
-                                            {settings.primary_color === color && <Check className="w-5 h-5 absolute inset-0 m-auto text-slate-950" />}
+                                            {settings.primary_color === color && <Check className="w-5 h-5 absolute inset-0 m-auto text-white dark:text-slate-950" />}
                                         </button>
                                     ))}
-                                    <div className="flex items-center gap-4 ml-6 pl-6 border-l border-slate-100 dark:border-slate-800">
+                                    <div className="flex items-center gap-4 ml-4 pl-4 border-l border-slate-100 dark:border-slate-800/60">
                                         <div className="relative group">
                                             <input
                                                 type="color"
                                                 value={settings.primary_color}
                                                 onChange={(e) => setSettings({ ...settings, primary_color: e.target.value })}
-                                                className="w-14 h-14 rounded-none border-none cursor-pointer bg-transparent"
+                                                className="w-12 h-12 rounded-full border-none cursor-pointer bg-transparent overflow-hidden shadow-[0_2px_10px_rgb(0,0,0,0.05)]"
                                             />
-                                            <div className="absolute inset-0 border-2 border-slate-200 dark:border-slate-800 pointer-events-none group-hover:border-primary/50 transition-colors"></div>
+                                            <div className="absolute inset-0 rounded-full border-2 border-slate-200 dark:border-slate-800 pointer-events-none group-hover:border-primary/50 transition-colors"></div>
                                         </div>
                                         <div className="flex flex-col">
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Manual RGB</span>
-                                            <span className="text-[14px] font-mono font-black text-slate-950 dark:text-white uppercase tracking-tighter">{settings.primary_color}</span>
+                                            <span className="text-xs font-semibold text-slate-500">Hexadecimal</span>
+                                            <span className="text-sm font-mono font-semibold text-slate-900 dark:text-white uppercase">{settings.primary_color}</span>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="pt-10 border-t border-slate-100 dark:border-slate-900">
-                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-8 flex items-center gap-3">
-                                    <ImageIcon className="w-5 h-5 text-primary" /> Ativos de <span className="text-primary">Marca</span>
+                                <h4 className="text-lg font-semibold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
+                                    <ImageIcon className="w-5 h-5 text-primary" /> Ativos de <span className="text-primary italic">Marca</span>
                                 </h4>
 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                     {/* Light Logo */}
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projeção Padrão (Modo Claro)</label>
-                                        <div className="relative group aspect-video rounded-none bg-slate-50 flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Projeção Padrão (Modo Claro)</label>
+                                        <div className="relative group aspect-video rounded-3xl bg-slate-50 dark:bg-slate-900/40 flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 overflow-hidden">
                                             {settings.logo_url ? (
-                                                <img src={settings.logo_url} className="max-w-[70%] max-h-[70%] object-contain grayscale hover:grayscale-0 transition-all duration-700" alt="Logo Light" />
+                                                <img src={settings.logo_url} className="max-w-[70%] max-h-[70%] object-contain shadow-sm transition-all duration-700 group-hover:scale-105" alt="Logo Light" />
                                             ) : (
-                                                <div className="text-center opacity-20">
+                                                <div className="text-center opacity-50">
                                                     <ImageIcon className="w-10 h-10 text-slate-400 mx-auto mb-2" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest">Offline Asset</span>
+                                                    <span className="text-xs font-medium text-slate-500">Sem Logo</span>
                                                 </div>
                                             )}
                                             <input type="file" id="logo-light-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'light')} disabled={isUploadingLogo} />
-                                            <label htmlFor="logo-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-950/90 opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
-                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
-                                                Remapear Entidade
+                                            <label htmlFor="logo-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-semibold text-sm gap-2">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                                Alterar Logo
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* Dark Logo */}
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Projeção Escura (Alto Contraste)</label>
-                                        <div className="relative group aspect-video rounded-none bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-900 overflow-hidden">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Projeção Escura (Alto Contraste)</label>
+                                        <div className="relative group aspect-video rounded-3xl bg-slate-900 dark:bg-slate-950 flex items-center justify-center border border-dashed border-slate-800 dark:border-slate-800 overflow-hidden">
                                             {settings.logo_url_dark ? (
-                                                <img src={settings.logo_url_dark} className="max-w-[70%] max-h-[70%] object-contain" alt="Logo Dark" />
+                                                <img src={settings.logo_url_dark} className="max-w-[70%] max-h-[70%] object-contain transition-all duration-700 group-hover:scale-105" alt="Logo Dark" />
                                             ) : (
-                                                <div className="text-center opacity-10">
+                                                <div className="text-center opacity-50">
                                                     <ImageIcon className="w-10 h-10 text-slate-600 mx-auto mb-2" />
-                                                    <span className="text-[9px] font-black uppercase tracking-widest">Pending Asset</span>
+                                                    <span className="text-xs font-medium text-slate-500">Sem Logo</span>
                                                 </div>
                                             )}
                                             <input type="file" id="logo-dark-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'dark')} disabled={isUploadingLogo} />
-                                            <label htmlFor="logo-dark-upload" className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
-                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5 text-primary" /> : <Plus className="w-5 h-5 text-primary" />}
-                                                Remapear Entidade
+                                            <label htmlFor="logo-dark-upload" className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-semibold text-sm gap-2">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
+                                                Alterar Logo
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* Favicon Light */}
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ícone do Navegador (Modo Claro)</label>
-                                        <div className="relative group w-24 h-24 rounded-none bg-slate-50 flex items-center justify-center border-2 border-dashed border-slate-200 overflow-hidden">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Ícone do Navegador (Claro)</label>
+                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-50 dark:bg-slate-900/40 flex items-center justify-center border border-dashed border-slate-200 dark:border-slate-800 overflow-hidden">
                                             {settings.favicon_url ? (
-                                                <img src={settings.favicon_url} className="w-12 h-12 object-contain grayscale hover:grayscale-0 transition-all duration-700" alt="Favicon" />
+                                                <img src={settings.favicon_url} className="w-12 h-12 object-contain shadow-sm group-hover:scale-110 transition-all duration-500" alt="Favicon" />
                                             ) : (
-                                                <ImageIcon className="w-6 h-6 text-slate-300 mx-auto opacity-20" />
+                                                <ImageIcon className="w-6 h-6 text-slate-300 mx-auto opacity-50" />
                                             )}
                                             <input type="file" id="favicon-light-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'favicon-light')} disabled={isUploadingLogo} />
-                                            <label htmlFor="favicon-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-950/90 opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
-                                                {isUploadingLogo ? <Loader2 className="animate-spin w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
+                                            <label htmlFor="favicon-light-upload" className="absolute inset-0 flex items-center justify-center bg-slate-900/30 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
                                             </label>
                                         </div>
                                     </div>
 
                                     {/* Favicon Dark */}
-                                    <div className="space-y-4">
-                                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Ícone do Navegador (Modo Escuro)</label>
-                                        <div className="relative group w-24 h-24 rounded-none bg-slate-950 flex items-center justify-center border-2 border-dashed border-slate-900 overflow-hidden">
+                                    <div className="space-y-3">
+                                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-widest block">Ícone do Navegador (Escuro)</label>
+                                        <div className="relative group w-24 h-24 rounded-2xl bg-slate-900 dark:bg-slate-950 flex items-center justify-center border border-dashed border-slate-800 overflow-hidden">
                                             {settings.favicon_url_dark ? (
-                                                <img src={settings.favicon_url_dark} className="w-12 h-12 object-contain" alt="Favicon" />
+                                                <img src={settings.favicon_url_dark} className="w-12 h-12 object-contain shadow-sm group-hover:scale-110 transition-all duration-500" alt="Favicon" />
                                             ) : (
-                                                <ImageIcon className="w-6 h-6 text-slate-600 mx-auto opacity-10" />
+                                                <ImageIcon className="w-6 h-6 text-slate-600 mx-auto opacity-50" />
                                             )}
                                             <input type="file" id="favicon-dark-upload" className="hidden" accept="image/*" onChange={(e) => handleLogoUpload(e, 'favicon-dark')} disabled={isUploadingLogo} />
-                                            <label htmlFor="favicon-dark-upload" className="absolute inset-0 flex items-center justify-center bg-white/5 backdrop-blur-md opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white font-black text-[10px] tracking-[0.2em] uppercase gap-3">
-                                                {isUploadingLogo ? <Loader2 className="animate-spin w-4 h-4 text-primary" /> : <Plus className="w-4 h-4 text-primary" />}
+                                            <label htmlFor="favicon-dark-upload" className="absolute inset-0 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all cursor-pointer text-white">
+                                                {isUploadingLogo ? <Loader2 className="animate-spin w-5 h-5" /> : <Plus className="w-5 h-5" />}
                                             </label>
                                         </div>
                                     </div>
@@ -683,57 +682,58 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                             </div>
                         </div>
 
-                        <div className="p-10 bg-slate-950 border border-slate-900 relative overflow-hidden group">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/10 transition-colors"></div>
-                            <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-4 flex items-center gap-2">
-                                <Zap className="w-3 h-3" /> Dica Visual
+                        <div className="p-8 bg-primary/5 border border-primary/10 relative overflow-hidden group rounded-3xl">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-3xl rounded-full -mr-16 -mt-16 group-hover:bg-primary/20 transition-colors"></div>
+                            <h5 className="text-sm font-semibold text-primary mb-2 flex items-center gap-2">
+                                <Zap className="w-4 h-4" /> Dica Visual
                             </h5>
-                            <p className="text-xs text-slate-400 font-medium leading-relaxed max-w-2xl">
-                                <span className="text-white uppercase font-black">Design do Sistema:</span> Usamos cores modernas e alto contraste para garantir que o sistema seja fácil de ler e usar em qualquer tela.
+                            <p className="text-sm text-slate-600 dark:text-slate-400 font-medium leading-relaxed max-w-2xl relative z-10">
+                                O Design System usa bordas arredondadas e suavizadas. Cores escuras aumentam o conforto visual dos usuários e combinam perfeitamente com a tipografia moderna que implantamos.
                             </p>
                         </div>
                     </div>
                 )}
 
                 {activeTab === 'hours' && (
-                    <div className="p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <div className="p-8 md:p-10 space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
                         <div className="flex items-center gap-6">
-                            <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
-                                <Clock className="w-8 h-8 text-primary" />
+                            <div className="w-14 h-14 bg-primary/5 flex items-center justify-center rounded-2xl border border-primary/10">
+                                <Clock className="w-6 h-6 text-primary" />
                             </div>
                             <div>
-                                <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Horário de <span className="text-primary">Atendimento</span></h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Defina quando sua empresa está aberta</p>
+                                <h3 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Horário de <span className="text-primary italic">Atendimento</span></h3>
+                                <p className="text-sm font-medium text-slate-500">Defina quando sua empresa está aberta</p>
                             </div>
                         </div>
 
                         {isLoading ? (
                             <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
                         ) : (
-                            <div className="space-y-4">
+                            <div className="space-y-3">
                                 {businessHours.map((bh, index) => (
-                                    <div key={bh.id} className="flex flex-col sm:flex-row sm:items-center gap-6 p-6 rounded-none border border-slate-100 dark:border-slate-900 bg-white dark:bg-slate-950 hover:border-primary/30 transition-colors group">
-                                        <div className="flex items-center gap-6 w-56 shrink-0">
+                                    <div key={bh.id} className="flex flex-col sm:flex-row sm:items-center gap-6 p-5 md:p-6 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-[0_4px_20px_rgb(0,0,0,0.02)] bg-white dark:bg-slate-950 hover:border-primary/30 transition-colors group">
+                                        <div className="flex items-center gap-5 w-48 shrink-0">
                                             <button
                                                 onClick={() => {
                                                     const newBh = [...businessHours];
                                                     newBh[index].is_working_day = !newBh[index].is_working_day;
                                                     setBusinessHours(newBh);
                                                 }}
-                                                className={`w-12 h-6 rounded-none relative transition-all border ${bh.is_working_day ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'}`}
+                                                className={`w-11 h-6 rounded-full relative transition-all border ${bh.is_working_day ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}
                                             >
-                                                <div className={`absolute top-0.5 w-4.5 h-4.5 bg-slate-950 rounded-none transition-all ${bh.is_working_day ? 'left-6 bg-white' : 'left-1'}`} />
+                                                <div className={`absolute top-0.5 w-4.5 h-4.5 rounded-full transition-all bg-white shadow-sm ${bh.is_working_day ? 'left-[22px]' : 'left-0.5'}`} />
                                             </button>
-                                            <span className={`text-[12px] font-black uppercase tracking-widest ${bh.is_working_day ? 'text-slate-950 dark:text-white' : 'text-slate-400 opacity-50'}`}>
-                                                {DAYS_OF_WEEK[bh.day_of_week]}
+                                            <span className={`text-sm font-semibold capitalize ${bh.is_working_day ? 'text-slate-900 dark:text-white' : 'text-slate-500'}`}>
+                                                {DAYS_OF_WEEK[bh.day_of_week].toLowerCase()}
                                             </span>
                                         </div>
 
-                                        <div className={`flex items-center gap-4 flex-1 transition-all duration-300 ${!bh.is_working_day ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
-                                            <div className="flex-1 relative">
+                                        <div className={`flex items-center gap-4 flex-1 transition-all duration-300 ${!bh.is_working_day ? 'opacity-30 grayscale pointer-events-none' : 'opacity-100'}`}>
+                                            <div className="flex-1">
+                                                <label className="text-xs font-semibold text-slate-500 block mb-1.5 ml-1">Início</label>
                                                 <input
                                                     type="time"
-                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white"
                                                     value={bh.start_time?.substring(0, 5) || '08:00'}
                                                     onChange={(e) => {
                                                         const newBh = [...businessHours];
@@ -741,13 +741,13 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                                         setBusinessHours(newBh);
                                                     }}
                                                 />
-                                                <label className="absolute -top-2 left-3 px-1 bg-white dark:bg-slate-950 text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Início</label>
                                             </div>
-                                            <span className="text-[10px] font-black text-slate-300 uppercase">até</span>
-                                            <div className="flex-1 relative">
+                                            <span className="text-xs font-semibold text-slate-400 mt-6 hidden sm:block">até</span>
+                                            <div className="flex-1">
+                                                <label className="text-xs font-semibold text-slate-500 block mb-1.5 ml-1">Fim</label>
                                                 <input
                                                     type="time"
-                                                    className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                                    className="w-full px-4 py-2.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white"
                                                     value={bh.end_time?.substring(0, 5) || '18:00'}
                                                     onChange={(e) => {
                                                         const newBh = [...businessHours];
@@ -755,38 +755,37 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                                         setBusinessHours(newBh);
                                                     }}
                                                 />
-                                                <label className="absolute -top-2 left-3 px-1 bg-white dark:bg-slate-950 text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Fim</label>
                                             </div>
                                         </div>
                                         {!bh.is_working_day && (
-                                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] hidden sm:block opacity-30">Fechado</span>
+                                            <span className="text-xs font-semibold text-slate-400 hidden sm:block opacity-50 ml-auto">Fechado</span>
                                         )}
                                     </div>
                                 ))}
                             </div>
                         )}
 
-                        <div className="p-8 bg-primary/5 border-l-4 border-primary rounded-none">
-                            <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em] mb-2 flex items-center gap-2">
-                                <Info className="w-3 h-3" /> Importante
+                        <div className="p-6 bg-amber-50 dark:bg-amber-900/10 border-l-4 border-amber-500 rounded-r-2xl">
+                            <h5 className="text-sm font-semibold text-amber-700 dark:text-amber-500 mb-1.5 flex items-center gap-2">
+                                <Info className="w-4 h-4" /> Importante
                             </h5>
-                            <p className="text-xs text-slate-500 font-medium leading-relaxed">
-                                Alterações no <span className="text-slate-900 dark:text-white">horário</span> afetam imediatamente quando os clientes podem agendar pelo site e o atendimento do robô.
+                            <p className="text-sm text-amber-600/80 dark:text-amber-500/80 font-medium leading-relaxed">
+                                Alterações no horário de atendimento afetam imediatamente quando os clientes podem agendar pelo site e como o robô de IA vai se comportar.
                             </p>
                         </div>
                     </div>
                 )}
 
-                <div className="p-10 bg-slate-50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-900 flex flex-col sm:flex-row justify-between items-center gap-8">
+                <div className="p-8 md:p-10 bg-slate-50 dark:bg-slate-900/40 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row justify-between items-center gap-6 rounded-b-3xl">
                     {onLogout && (
-                        <Button variant="danger" className="rounded-none uppercase font-black tracking-[0.2em] text-[10px] h-12 px-8 opacity-50 hover:opacity-100 transition-opacity" onClick={onLogout}>
+                        <Button variant="danger" className="rounded-xl font-medium text-sm h-11 px-6 opacity-70 hover:opacity-100 transition-opacity" onClick={onLogout}>
                             Encerrar Sessão
                         </Button>
                     )}
-                    <div className="flex gap-6 w-full sm:w-auto">
-                        <Button variant="ghost" className="flex-1 sm:flex-none uppercase font-black tracking-widest text-[10px] transition-all hover:bg-slate-100 dark:hover:bg-slate-900" disabled={isSaving} onClick={() => fetchSettings()}>Resetar Interface</Button>
-                        <Button className="flex-1 sm:flex-none h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] shadow-xl shadow-primary/20" onClick={handleSave} disabled={isSaving || isLoading} isLoading={isSaving}>
-                            <Save className="w-5 h-5 mr-3" /> Salvar Configurações
+                    <div className="flex gap-4 w-full sm:w-auto">
+                        <Button variant="ghost" className="flex-1 sm:flex-none font-medium text-sm h-11 px-6 rounded-xl transition-all hover:bg-slate-100 dark:hover:bg-slate-800" disabled={isSaving} onClick={() => fetchSettings()}>Cancelar</Button>
+                        <Button className="flex-1 sm:flex-none h-11 px-8 rounded-xl font-medium text-sm shadow-[0_8px_30px_rgba(16,185,129,0.2)]" onClick={handleSave} disabled={isSaving || isLoading} isLoading={isSaving}>
+                            <Save className="w-4 h-4 mr-2" /> Salvar Configurações
                         </Button>
                     </div>
                 </div>
@@ -797,14 +796,14 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
             <Modal
                 isOpen={isAddressModalOpen}
                 onClose={() => setIsAddressModalOpen(false)}
-                title={addressForm.id ? 'VÍNCULO_GEO: EDITAR' : 'VÍNCULO_GEO: NOVO'}
-                description="Sincronizando coordenadas físicas do nó."
+                title={addressForm.id ? 'Editar Endereço' : 'Novo Endereço'}
+                description="Dados de localização da sua unidade de atendimento."
             >
-                <form onSubmit={handleSaveAddress} className="space-y-8 py-4">
+                <form onSubmit={handleSaveAddress} className="space-y-6 pt-4">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1 relative">
                             <InputField
-                                label="COORDINATE_CODE (CEP)"
+                                label="CEP"
                                 value={addressForm.zip_code}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -822,10 +821,10 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-2">
                             <InputField
-                                label="PRIMARY_AXIS (Street)"
+                                label="Rua / Avenida"
                                 value={addressForm.street}
                                 onChange={(e) => setAddressForm({ ...addressForm, street: e.target.value })}
-                                placeholder="Rua, Avenida..."
+                                placeholder="Ex: Av. Paulista"
                                 required
                             />
                         </div>
@@ -834,7 +833,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1">
                             <InputField
-                                label="NODE_ID (Number)"
+                                label="Número"
                                 value={addressForm.number}
                                 onChange={(e) => setAddressForm({ ...addressForm, number: e.target.value })}
                                 placeholder="123"
@@ -843,7 +842,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-2">
                             <InputField
-                                label="OFFSET_DATA (Complement)"
+                                label="Complemento"
                                 value={addressForm.complement}
                                 onChange={(e) => setAddressForm({ ...addressForm, complement: e.target.value })}
                                 placeholder="Sala, Andar, Bloco..."
@@ -854,7 +853,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="md:col-span-1">
                             <InputField
-                                label="DISTRICT_ZONE"
+                                label="Bairro"
                                 value={addressForm.neighborhood}
                                 onChange={(e) => setAddressForm({ ...addressForm, neighborhood: e.target.value })}
                                 required
@@ -862,7 +861,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-1">
                             <InputField
-                                label="METROPOLIS"
+                                label="Cidade"
                                 value={addressForm.city}
                                 onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })}
                                 required
@@ -870,7 +869,7 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                         <div className="md:col-span-1">
                             <InputField
-                                label="STATE_REF (UF)"
+                                label="UF"
                                 value={addressForm.state}
                                 onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })}
                                 placeholder="SP"
@@ -880,22 +879,22 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-4 p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+                    <div className="flex items-center gap-4 p-5 bg-slate-50 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700/60 mt-2">
                         <button
                             type="button"
                             onClick={() => setAddressForm({ ...addressForm, is_main: !addressForm.is_main })}
                             disabled={addresses.length === 0}
-                            className={`w-12 h-6 rounded-none relative transition-all border ${addressForm.is_main ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-900 border-slate-300 dark:border-slate-800'}`}
+                            className={`w-11 h-6 rounded-full relative transition-all border ${addressForm.is_main ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-800 border-slate-300 dark:border-slate-700'}`}
                         >
-                            <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${addressForm.is_main ? 'left-7 bg-white' : 'left-0.5'}`} />
+                            <div className={`absolute top-0.5 w-4.5 h-4.5 rounded-full transition-all bg-white shadow-sm ${addressForm.is_main ? 'left-[22px]' : 'left-0.5'}`} />
                         </button>
-                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Definir como Nó Principal de Operações</label>
+                        <label className="text-sm font-semibold text-slate-700 dark:text-slate-300">Definir como Endereço Principal</label>
                     </div>
 
-                    <div className="flex justify-end gap-6 pt-8 border-t border-slate-100 dark:border-slate-900">
-                        <Button type="button" variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddressModalOpen(false)}>Abortar Vinculação</Button>
-                        <Button type="submit" className="h-14 px-10 rounded-none uppercase font-black tracking-widest text-[11px]" disabled={isSaving} isLoading={isSaving}>
-                            <Save className="w-5 h-5 mr-3" /> Confirmar Dados Geográficos
+                    <div className="flex justify-end gap-4 pt-6 mt-6 border-t border-slate-100 dark:border-slate-800/60">
+                        <Button type="button" variant="ghost" className="h-11 px-6 rounded-xl font-medium text-sm transition-all" onClick={() => setIsAddressModalOpen(false)}>Cancelar</Button>
+                        <Button type="submit" className="h-11 px-8 rounded-xl font-medium text-sm shadow-[0_8px_30px_rgba(16,185,129,0.2)]" disabled={isSaving} isLoading={isSaving}>
+                            <Save className="w-4 h-4 mr-2" /> Salvar Endereço
                         </Button>
                     </div>
                 </form>

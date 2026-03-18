@@ -9,6 +9,7 @@ import { Modal } from '../components/ui/Modal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 
 export const AgentesIA = () => {
+    const [activeTab, setActiveTab] = useState('whatsapp');
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const [settings, setSettings] = useState<any>({});
@@ -34,7 +35,8 @@ export const AgentesIA = () => {
         api_key_groq: '',
         api_key_openrouter: '',
         system_prompt: 'Você é um assistente virtual gentil e prestativo...',
-        enable_logs: false
+        enable_logs: false,
+        recovery_minutes: 30
     });
 
     // Deletion Modal State
@@ -161,7 +163,8 @@ export const AgentesIA = () => {
                 api_key_groq: agent.api_key_groq || '',
                 api_key_openrouter: agent.api_key_openrouter || '',
                 system_prompt: agent.system_prompt || '',
-                enable_logs: agent.enable_logs ?? false
+                enable_logs: agent.enable_logs ?? false,
+                recovery_minutes: agent.recovery_minutes || 30
             });
         } else {
             setEditingAgent(null);
@@ -178,7 +181,8 @@ export const AgentesIA = () => {
                 api_key_groq: '',
                 api_key_openrouter: '',
                 system_prompt: 'Você é um assistente virtual gentil e prestativo...',
-                enable_logs: false
+                enable_logs: false,
+                recovery_minutes: 30
             });
         }
         setAgentFormStep(1);
@@ -205,6 +209,7 @@ export const AgentesIA = () => {
                 api_key_openrouter: agentForm.api_key_openrouter,
                 system_prompt: agentForm.system_prompt,
                 enable_logs: agentForm.enable_logs,
+                recovery_minutes: agentForm.recovery_minutes,
                 user_id: user.id
             };
 
@@ -331,38 +336,49 @@ export const AgentesIA = () => {
     };
 
     return (
-        <div className="max-w-6xl mx-auto w-full space-y-10">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
-                <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-slate-950 flex items-center justify-center rounded-sm border border-slate-900 shadow-xl">
-                        <Bot className="w-8 h-8 text-primary" />
-                    </div>
-                    <div>
-                        <h2 className="text-2xl font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Agentes de <span className="text-primary">IA</span></h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Gestão de assistentes virtuais e automação de atendimento</p>
-                    </div>
-                </div>
-                <Button onClick={() => handleOpenAgentModal()} className="gap-3 h-14 px-8 rounded-none uppercase font-black tracking-widest text-[11px]">
-                    <Plus className="w-5 h-5" /> Novo Agente
-                </Button>
+        <div className="max-w-6xl mx-auto w-full space-y-10 mt-6">
+
+            {/* Navegação via Abas */}
+            <div className="flex overflow-x-auto custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800/60 rounded-[32px] p-1.5 gap-2 mb-8">
+                {[
+                    { id: 'whatsapp', label: 'Conexão WhatsApp', icon: <LinkIcon className="w-4 h-4" /> },
+                    { id: 'agents', label: 'Operadores IA', icon: <Bot className="w-4 h-4" /> },
+                    { id: 'reminders', label: 'Lembretes', icon: <Clock className="w-4 h-4" /> },
+                    { id: 'knowledge', label: 'Base de Conhecimento', icon: <FileText className="w-4 h-4" /> }
+                ].map((tab) => (
+                    <button
+                        key={tab.id}
+                        type="button"
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`flex-1 flex items-center justify-center gap-2 px-6 py-3.5 text-sm font-semibold transition-all rounded-[28px] whitespace-nowrap ${
+                            activeTab === tab.id
+                                ? 'bg-white dark:bg-slate-950 text-primary shadow-sm border border-slate-200/50 dark:border-slate-800 mx-auto'
+                                : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-slate-800/50 transparent'
+                        }`}
+                    >
+                        {tab.icon}
+                        {tab.label}
+                    </button>
+                ))}
             </div>
 
-            <div className="grid grid-cols-1 gap-12">
+            <div className="bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] min-h-[500px] overflow-hidden relative">
                 {/* 1. Conexão Global do WhatsApp */}
-                <Card className="p-10 space-y-8 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32"></div>
-                    <div className="flex items-center gap-4 mb-4 relative z-10">
-                        <div className="w-10 h-10 bg-slate-100 dark:bg-slate-900 flex items-center justify-center rounded-none border border-slate-200 dark:border-slate-800">
-                            <LinkIcon className="w-5 h-5 text-primary" />
+                {activeTab === 'whatsapp' && (
+                <div className="p-8 relative transition-all duration-300 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none"></div>
+                    <div className="flex items-center gap-4 mb-8 relative z-10">
+                        <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/10 flex items-center justify-center rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                            <LinkIcon className="w-5 h-5 text-emerald-500" />
                         </div>
-                        <h3 className="text-lg font-black text-slate-950 dark:text-white uppercase tracking-tight">Conexão com <span className="text-primary">WhatsApp</span></h3>
+                        <h3 className="text-xl font-serif text-slate-900 dark:text-white">Conexão com <span className="text-primary italic">WhatsApp</span></h3>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 relative z-10">
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Protocolo de Conexão</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Protocolo de Conexão</label>
                             <select
-                                className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white transition-all appearance-none cursor-pointer"
+                                className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all appearance-none cursor-pointer"
                                 value={settings.whatsapp_provider_type}
                                 onChange={(e) => setSettings({ ...settings, whatsapp_provider_type: e.target.value })}
                             >
@@ -372,11 +388,11 @@ export const AgentesIA = () => {
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Endereço do Endpoint (URL)</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Endereço do Endpoint (URL)</label>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                    className="w-full pl-11 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                                     value={settings.whatsapp_provider_url || ''}
                                     placeholder="https://api.instance.sh"
                                     onChange={(e) => setSettings({ ...settings, whatsapp_provider_url: e.target.value })}
@@ -386,11 +402,11 @@ export const AgentesIA = () => {
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ID da Instância / Identificador</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">ID da Instância / Identificador</label>
                             <div className="relative">
                                 <input
                                     type="text"
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                    className="w-full pl-11 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                                     value={settings.whatsapp_provider_instance || ''}
                                     placeholder="ESTETICA_FLOW_CORE"
                                     onChange={(e) => setSettings({ ...settings, whatsapp_provider_instance: e.target.value })}
@@ -400,11 +416,11 @@ export const AgentesIA = () => {
                         </div>
 
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Token de Autenticação</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Token de Autenticação</label>
                             <div className="relative">
                                 <input
                                     type="password"
-                                    className="w-full pl-12 pr-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                    className="w-full pl-11 pr-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder:text-slate-400"
                                     value={settings.whatsapp_provider_token || ''}
                                     placeholder="••••••••••••••••"
                                     onChange={(e) => setSettings({ ...settings, whatsapp_provider_token: e.target.value })}
@@ -414,45 +430,47 @@ export const AgentesIA = () => {
                         </div>
                     </div>
 
-                    <div className="flex justify-end pt-6 relative z-10">
-                        <Button className="h-12 px-10 rounded-none uppercase font-black tracking-widest text-[10px]" onClick={handleSaveGlobalSettings} disabled={isSaving}>
+                    <div className="flex justify-end pt-6 relative z-10 border-t border-slate-100 dark:border-slate-800/50 mt-6">
+                        <Button className="h-11 px-8 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)]" onClick={handleSaveGlobalSettings} disabled={isSaving}>
                             {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                             Salvar Conexão
                         </Button>
                     </div>
-                </Card>
+                </div>
+                )}
 
                 {/* 2. Lembretes Automáticos */}
-                <Card className="p-10 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 relative overflow-hidden group">
+                {activeTab === 'reminders' && (
+                <div className="p-8 relative transition-all duration-300 group animate-in fade-in slide-in-from-bottom-4">
                     <div className="absolute top-0 right-0 w-40 h-40 bg-primary/5 blur-3xl rounded-full -mr-20 -mt-20"></div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 relative z-10">
                         <div className="flex items-center gap-6">
-                            <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
-                                <Clock className="w-7 h-7 text-amber-500" />
+                            <div className="w-12 h-12 bg-emerald-50 dark:bg-emerald-900/10 flex items-center justify-center rounded-2xl border border-emerald-100 dark:border-emerald-800/30">
+                                <Clock className="w-5 h-5 text-primary" />
                             </div>
                             <div>
-                                <h4 className="text-md font-black text-slate-950 dark:text-white uppercase tracking-tighter mb-1">Lembretes <span className="text-amber-500">Automáticos</span></h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Confirmar agendamentos sozinho</p>
+                                <h4 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Lembretes <span className="text-primary italic">Automáticos</span></h4>
+                                <p className="text-xs font-semibold text-slate-500 tracking-wide">Confirmar agendamentos sozinho</p>
                             </div>
                         </div>
                         <div className="flex items-center gap-6">
-                            <span className={`text-[10px] font-black uppercase tracking-widest ${settings.reminder_active ? 'text-primary' : 'text-slate-400'}`}>
+                            <span className={`text-xs font-semibold tracking-wide ${settings.reminder_active ? 'text-primary' : 'text-slate-400'}`}>
                                 {settings.reminder_active ? 'Status: Ativo' : 'Status: Em Espera'}
                             </span>
                             <button
                                 onClick={() => setSettings({ ...settings, reminder_active: !settings.reminder_active })}
-                                className={`w-14 h-7 rounded-none relative transition-all border ${settings.reminder_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
+                                className={`w-14 h-7 rounded-full relative transition-all border ${settings.reminder_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
                             >
-                                <div className={`absolute top-0.5 w-5 h-5 bg-slate-950 rounded-none transition-all ${settings.reminder_active ? 'left-8 bg-white' : 'left-0.5'}`} />
+                                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${settings.reminder_active ? 'left-8' : 'left-0.5 bg-white dark:bg-slate-700'}`} />
                             </button>
                         </div>
                     </div>
 
                     <div className={`mt-10 pt-10 border-t border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 gap-10 transition-all duration-500 ${!settings.reminder_active ? 'opacity-20 grayscale pointer-events-none' : 'opacity-100'}`}>
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Intervalo de Transmissão (Tempo de Antecedência)</label>
+                            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block mb-2">Intervalo de Transmissão (Tempo de Antecedência)</label>
                             <select
-                                className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer mb-2"
+                                className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all appearance-none cursor-pointer mb-2"
                                 value={[30, 60, 120, 1440].includes(settings.reminder_minutes) ? settings.reminder_minutes : 'custom'}
                                 onChange={(e) => {
                                     const val = e.target.value;
@@ -475,39 +493,39 @@ export const AgentesIA = () => {
                                     <input 
                                         type="number" 
                                         min="1"
-                                        className="w-24 px-4 py-3 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                        className="w-24 px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all"
                                         value={settings.reminder_minutes || ''}
                                         onChange={(e) => setSettings({ ...settings, reminder_minutes: parseInt(e.target.value) || 0 })}
                                     />
-                                    <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">Minutos antes do horário marcado</span>
+                                    <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 mt-2 block">Minutos antes do horário marcado</span>
                                 </div>
                             )}
                         </div>
-                        <div className="flex items-start gap-4 p-4 bg-primary/5 border border-primary/20">
+                        <div className="flex items-start gap-4 p-5 bg-primary/5 border border-primary/20 rounded-2xl">
                             <Info className="w-5 h-5 text-primary shrink-0 mt-1" />
-                            <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
-                                <span className="text-slate-900 dark:text-white uppercase font-black block mb-1">Como funciona:</span>
+                            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium leading-relaxed">
+                                <span className="text-slate-900 dark:text-white font-semibold block mb-1">Como funciona:</span>
                                 O sistema entende as respostas dos clientes e confirma ou cancela o agendamento sozinho, poupando seu tempo.
                             </p>
                         </div>
 
                         <div className="col-span-1 sm:col-span-2 space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
                             <div>
-                                <h5 className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-widest flex items-center gap-2">
+                                <h5 className="text-sm font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                                     <MessageSquare className="w-4 h-4 text-primary" />
                                     Mensagem Personalizada do Lembrete
                                 </h5>
-                                <p className="text-[10px] text-slate-500 font-medium mt-1">
+                                <p className="text-xs text-slate-500 font-medium mt-1">
                                     Escreva como o robô deve abordar o seu cliente. Clique nos botões abaixo para inserir os dados automáticos do agendamento onde o cursor estiver posicionado. Se deixar em branco, usaremos nossa mensagem padrão.
                                 </p>
                             </div>
                             
-                            <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 dark:bg-slate-900/50 p-3 border border-slate-100 dark:border-slate-800 rounded-sm">
+                            <div className="flex flex-wrap gap-2 mb-4 bg-slate-50 dark:bg-slate-900/50 p-3 border border-slate-100 dark:border-slate-800 rounded-xl">
                                 {['{{nome}}', '{{servico}}', '{{data}}', '{{hora}}', '{{profissional}}'].map(variable => (
                                     <button
                                         key={variable}
                                         type="button"
-                                        className="text-[10px] font-black bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-full hover:border-primary hover:text-primary transition-all cursor-pointer flex items-center gap-1 shadow-sm"
+                                        className="text-xs font-medium bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-full hover:border-primary hover:text-primary transition-all cursor-pointer flex items-center gap-1 shadow-sm"
                                         onClick={() => {
                                             const textarea = document.getElementById('reminder-message') as HTMLTextAreaElement;
                                             if (textarea) {
@@ -529,13 +547,13 @@ export const AgentesIA = () => {
                             </div>
                             
                             <div className="relative">
-                                <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg z-10">
+                                <div className="absolute top-4 left-4 w-8 h-8 rounded-full bg-primary flex items-center justify-center shadow-md z-10">
                                     <Phone className="w-4 h-4 text-white" />
                                 </div>
                                 <textarea
                                     id="reminder-message"
                                     rows={5}
-                                    className="w-full pl-16 pr-6 py-5 bg-emerald-50/50 dark:bg-emerald-950/20 border-2 border-emerald-100 dark:border-emerald-900/30 rounded-2xl rounded-tl-sm text-[13px] font-medium outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 text-emerald-950 dark:text-emerald-50 resize-y leading-relaxed"
+                                    className="w-full pl-16 pr-5 py-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white resize-y leading-relaxed"
                                     placeholder="Ex: Olá {{nome}}, seu agendamento de {{servico}} está marcado para as {{hora}} com o(a) {{profissional}}. Responda com 'SIM' para confirmar."
                                     value={settings.reminder_message || ''}
                                     onChange={(e) => setSettings({ ...settings, reminder_message: e.target.value })}
@@ -543,98 +561,113 @@ export const AgentesIA = () => {
                             </div>
                         </div>
                     </div>
-                    <div className="flex justify-end mt-6 relative z-10">
-                        <Button className="h-10 px-8 rounded-none uppercase font-black tracking-widest text-[9px] bg-slate-950 hover:bg-slate-900" onClick={handleSaveGlobalSettings}>
+                    <div className="flex justify-end mt-6 pt-6 relative z-10 border-t border-slate-100 dark:border-slate-800/50">
+                        <Button className="h-11 px-8 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)]" onClick={handleSaveGlobalSettings} disabled={isSaving}>
+                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                             Atualizar Lembretes
                         </Button>
                     </div>
-                </Card>
+                </div>
+                )}
 
                 {/* 3. Lista de Agentes IA */}
-                <div className="space-y-10">
-                    <div className="flex items-center gap-4 mb-4">
-                        <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
-                        <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Operadores_Virtuais</span>
-                        <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1"></div>
+                {activeTab === 'agents' && (
+                <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                        <div className="flex items-center gap-4">
+                            <h3 className="text-xl font-serif text-slate-900 dark:text-white">Operadores <span className="text-primary italic">Virtuais</span></h3>
+                            <div className="h-px bg-slate-100 dark:bg-slate-800/60 flex-1 hidden sm:block w-32"></div>
+                        </div>
+                        <Button onClick={() => handleOpenAgentModal()} className="gap-2 h-11 px-6 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)]">
+                            <Plus className="w-4 h-4" /> Novo Agente
+                        </Button>
                     </div>
 
                     {agents.length === 0 ? (
-                        <div className="text-center py-24 bg-white dark:bg-slate-950 border-2 border-dashed border-slate-100 dark:border-slate-900 rounded-none">
-                            <Bot className="w-16 h-16 text-slate-200 dark:text-slate-800 mx-auto mb-6 opacity-50" />
-                            <p className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Nenhum Agente Ativo</p>
-                            <Button variant="ghost" className="text-primary font-black uppercase tracking-widest text-[10px]" onClick={() => handleOpenAgentModal()}>
+                        <div className="text-center py-16 bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)]">
+                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center rounded-2xl mx-auto mb-4">
+                                <Bot className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                            </div>
+                            <p className="text-lg font-serif text-slate-700 dark:text-slate-300 mb-2">Nenhum Agente Ativo</p>
+                            <Button variant="outline" className="border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 mt-4 h-11 px-6 rounded-xl" onClick={() => handleOpenAgentModal()}>
                                 Criar Meu Primeiro Agente
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {agents.map((agent) => (
                                 <div key={agent.id} className="h-full">
-                                    <Card noPadding className="group relative border-2 border-slate-100 dark:border-slate-900 hover:border-primary/40 transition-all flex flex-col h-full">
-                                    <div className="p-8 flex-1">
-                                        <div className="flex items-center gap-6 mb-8">
-                                            <div className={`w-14 h-14 flex items-center justify-center border transition-all ${agent.is_active ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
-                                                <Bot className="w-7 h-7" />
+                                    <div className="bg-white dark:bg-slate-950 rounded-[24px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all flex flex-col h-full overflow-hidden group">
+                                    <div className="p-6 flex-1">
+                                        <div className="flex items-center gap-4 mb-6">
+                                            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all ${agent.is_active ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
+                                                <Bot className="w-6 h-6" />
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest truncate">{agent.name}</h5>
-                                                <span className="text-[9px] uppercase tracking-[0.2em] font-black text-primary/70 bg-primary/5 px-3 py-1 mt-1 inline-block">
-                                                    {agent.agent_role}
+                                                <h5 className="font-serif text-lg text-slate-900 dark:text-white truncate">{agent.name}</h5>
+                                                <span className="text-xs font-medium text-slate-500 mt-1 inline-block">
+                                                    {agent.agent_role === 'vendas' ? 'Vendas & Agendamento' :
+                                                     agent.agent_role === 'recuperacao' ? 'Recuperação de Inativos' :
+                                                     agent.agent_role === 'confirmacao' ? 'Confirmação de Retorno' :
+                                                     'Atendimento Geral'
+                                                    }
                                                 </span>
                                             </div>
                                             <button
                                                 onClick={() => handleToggleAgent(agent)}
-                                                className={`w-12 h-6 rounded-none relative transition-all border ${agent.is_active ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
+                                                className={`w-11 h-6 rounded-full relative transition-all border ${agent.is_active ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
                                             >
-                                                <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agent.is_active ? 'left-7 bg-white' : 'left-0.5'}`} />
+                                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${agent.is_active ? 'left-6' : 'left-0.5'}`} />
                                             </button>
                                         </div>
 
-                                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed mb-8 line-clamp-3 italic opacity-70">
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-4 line-clamp-3 italic">
                                             "{agent.system_prompt}"
                                         </p>
                                     </div>
 
-                                    <div className="p-4 bg-slate-50 dark:bg-slate-900/50 flex gap-4 border-t border-slate-100 dark:border-slate-800">
-                                        <Button variant="outline" className="flex-1 h-10 rounded-none uppercase font-black tracking-widest text-[9px]" onClick={() => handleOpenAgentModal(agent)}>
-                                            Customizar
+                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/20 flex gap-3 border-t border-slate-100 dark:border-slate-800/50">
+                                        <Button variant="outline" className="flex-1 h-11 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700" onClick={() => handleOpenAgentModal(agent)}>
+                                            Personalizar
                                         </Button>
                                         <button
                                             onClick={() => setAgentToDelete(agent)}
-                                            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all"
+                                            className="w-11 h-11 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
-                                    </Card>
+                                    </div>
                                 </div>
                             ))}
                         </div>
                     )}
                 </div>
+                )}
 
                 {/* 4. Base de Conhecimento */}
-                <div className="space-y-10 pt-10 border-t border-slate-100 dark:border-slate-800">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6">
+                {activeTab === 'knowledge' && (
+                <div className="p-8 space-y-8 animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-4">
                         <div className="flex items-center gap-6">
-                            <div className="w-14 h-14 bg-slate-950 flex items-center justify-center border border-slate-800 shadow-xl">
-                                <FileText className="w-7 h-7 text-slate-400" />
+                            <div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/10 flex items-center justify-center rounded-2xl border border-indigo-100 dark:border-indigo-800/30">
+                                <FileText className="w-5 h-5 text-indigo-500" />
                             </div>
                             <div>
-                                <h4 className="text-lg font-black text-slate-950 dark:text-white uppercase tracking-tight">Base de <span className="text-slate-400">Conhecimento</span></h4>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Informações técnicas obrigatórias para os robôs</p>
+                                <h4 className="text-xl font-serif text-slate-900 dark:text-white mb-1">Base de <span className="text-indigo-500 italic">Conhecimento</span></h4>
+                                <p className="text-xs font-medium text-slate-500">Informações técnicas obrigatórias para os robôs</p>
                             </div>
                         </div>
                         {!isAddingKnowledge && (
-                            <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-3 h-12 px-6 rounded-none border-slate-200 dark:border-slate-800 uppercase font-black tracking-widest text-[10px]">
+                            <Button size="sm" variant="outline" onClick={() => setIsAddingKnowledge(true)} className="gap-2 h-11 px-6 rounded-xl font-medium border-slate-200 dark:border-slate-700 hover:text-indigo-600 hover:border-indigo-200 hover:bg-indigo-50 dark:hover:bg-indigo-900/10">
                                 <Plus className="w-4 h-4" /> Ensinar Nova Regra
                             </Button>
                         )}
                     </div>
 
                     {isAddingKnowledge && (
-                        <div className="p-10 bg-slate-50 dark:bg-slate-950 border-2 border-primary/20 rounded-none space-y-8 animate-in fade-in slide-in-from-top-4">
-                            <h5 className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Base de Dados: Adicionar Nova Informação</h5>
+                        <div className="bg-white dark:bg-slate-950 rounded-[32px] p-8 border border-indigo-100 dark:border-indigo-900/30 shadow-[0_8px_30px_rgba(99,102,241,0.06)] space-y-8 animate-in fade-in slide-in-from-top-4">
+                            <h5 className="text-sm font-semibold text-indigo-500 uppercase tracking-widest">Base de Dados: Nova Informação</h5>
                             <div className="space-y-6">
                                 <InputField
                                     label="Título da Regra"
@@ -643,49 +676,52 @@ export const AgentesIA = () => {
                                     onChange={(e) => setNewKnowledge({ ...newKnowledge, title: e.target.value })}
                                 />
                                 <div className="space-y-2">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Conteúdo da Instrução</label>
+                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Conteúdo da Instrução</label>
                                     <textarea
-                                        rows={8}
-                                        className="w-full px-6 py-4 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-y"
+                                        rows={6}
+                                        className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-900 dark:text-white resize-y leading-relaxed"
                                         placeholder="Regra 01: Nunca desmarcar serviços pagos.\nRegra 02: Botox custa R$ 800..."
                                         value={newKnowledge.content}
                                         onChange={(e) => setNewKnowledge({ ...newKnowledge, content: e.target.value })}
                                     />
                                 </div>
                             </div>
-                            <div className="flex justify-end gap-6 pt-6 border-t border-slate-100 dark:border-slate-900">
-                                <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px]" onClick={() => setIsAddingKnowledge(false)}>Cancelar</Button>
-                                <Button className="h-12 px-10 rounded-none uppercase font-black tracking-widest text-[10px]" onClick={handleAddKnowledge}>Salvar Regra</Button>
+                            <div className="flex justify-end gap-4 pt-6 border-t border-slate-100 dark:border-slate-800/50">
+                                <Button variant="ghost" className="h-11 px-6 rounded-xl font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsAddingKnowledge(false)}>Cancelar</Button>
+                                <Button className="h-11 px-8 rounded-xl font-medium bg-indigo-500 hover:bg-indigo-600 text-white shadow-[0_8px_30px_rgba(99,102,241,0.2)]" onClick={handleAddKnowledge}>Salvar Regra</Button>
                             </div>
                         </div>
                     )}
 
                     {knowledgeBase.length === 0 && !isAddingKnowledge ? (
-                        <div className="text-center py-16 bg-slate-50 dark:bg-black/10 border border-slate-100 dark:border-slate-900 border-dashed opacity-50">
-                            <FileText className="w-12 h-12 text-slate-300 dark:text-slate-800 mx-auto mb-4" />
-                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Sua base de conhecimento está vazia. Adicione regras para o atendimento.</p>
+                        <div className="text-center py-16 bg-white dark:bg-slate-950 rounded-[32px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)]">
+                            <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center rounded-2xl mx-auto mb-4">
+                                <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                            </div>
+                            <p className="text-lg font-serif text-slate-700 dark:text-slate-300">Sua base de conhecimento está vazia</p>
+                            <p className="text-sm font-medium text-slate-500 mt-2">Adicione regras essenciais para o atendimento</p>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {knowledgeBase.map((kb) => (
-                                <div key={kb.id} className="p-8 bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-900 relative group overflow-hidden flex flex-col hover:border-slate-200 dark:hover:border-slate-800 transition-all">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <h5 className="font-black text-slate-950 dark:text-white uppercase tracking-widest pr-12">{kb.title}</h5>
+                                <div key={kb.id} className="bg-white dark:bg-slate-950 rounded-[24px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] relative group overflow-hidden flex flex-col hover:shadow-[0_8px_30px_rgba(99,102,241,0.08)] hover:border-indigo-100 dark:hover:border-indigo-900/30 transition-all p-8">
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h5 className="font-serif text-lg text-slate-900 dark:text-white pr-8">{kb.title}</h5>
                                         <button
                                             onClick={() => handleDeleteKnowledge(kb.id)}
-                                            className="absolute top-6 right-6 p-2 text-slate-300 hover:text-red-500 transition-colors"
+                                            className="absolute top-6 right-6 w-8 h-8 flex items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800/50 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-colors opacity-0 group-hover:opacity-100"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
                                     </div>
-                                    <p className="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-6 flex-1 leading-relaxed border-l-2 border-slate-100 dark:border-slate-900 pl-4 py-2 bg-slate-50/30 dark:bg-slate-900/30">
+                                    <p className="text-sm text-slate-500 dark:text-slate-400 line-clamp-4 flex-1 leading-relaxed">
                                         {kb.content}
                                     </p>
-                                    <div className="mt-6 pt-4 flex items-center justify-between">
-                                        <span className="text-[7px] font-black text-slate-300 uppercase tracking-[0.4em]">ID da Regra: {kb.id.substring(0,8)}</span>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 blur-[1px]"></div>
-                                            <span className="text-[8px] font-black text-emerald-500 uppercase tracking-widest">Validado</span>
+                                    <div className="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/50 flex items-center justify-between">
+                                        <span className="text-[10px] font-mono font-medium text-slate-400">ID: {kb.id.substring(0,8)}</span>
+                                        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/10 px-2 py-1 rounded-md">
+                                            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500"></div>
+                                            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Validado</span>
                                         </div>
                                     </div>
                                 </div>
@@ -693,6 +729,7 @@ export const AgentesIA = () => {
                         </div>
                     )}
                 </div>
+                )}
             </div>
 
             {/* Modal de Criação/Edição de Agente (Multi-step) */}
@@ -703,12 +740,12 @@ export const AgentesIA = () => {
                 description={`${agentFormStep === 1 ? 'Identidade' : agentFormStep === 2 ? 'Motor de Inteligência' : 'Instruções de Operação'}`}
             >
                 <div className="space-y-8 py-4">
-                    {/* Stepper Industrial */}
-                    <div className="flex items-center gap-1 mb-8">
+                    {/* Stepper Luxury */}
+                    <div className="flex items-center gap-2 mb-8">
                         {[1, 2, 3].map((step) => (
                             <div key={step} className="flex-1 flex flex-col gap-2">
-                                <div className={`h-1.5 transition-all duration-500 ${agentFormStep >= step ? 'bg-primary' : 'bg-slate-200 dark:bg-slate-900'}`} />
-                                <span className={`text-[8px] font-black uppercase tracking-[0.2em] ${agentFormStep >= step ? 'text-primary' : 'text-slate-400'}`}>Passo 0{step}</span>
+                                <div className={`h-1.5 rounded-full transition-all duration-500 ${agentFormStep >= step ? 'bg-primary' : 'bg-slate-100 dark:bg-slate-800'}`} />
+                                <span className={`text-[10px] font-semibold uppercase tracking-widest ${agentFormStep >= step ? 'text-primary' : 'text-slate-400'}`}>Passo 0{step}</span>
                             </div>
                         ))}
                     </div>
@@ -722,9 +759,9 @@ export const AgentesIA = () => {
                                 onChange={(e) => setAgentForm({ ...agentForm, name: e.target.value })}
                             />
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Função do Agente</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Função do Agente</label>
                                 <select
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all appearance-none cursor-pointer"
                                     value={agentForm.agent_role}
                                     onChange={(e) => setAgentForm({ ...agentForm, agent_role: e.target.value })}
                                 >
@@ -734,15 +771,32 @@ export const AgentesIA = () => {
                                     <option value="confirmacao">COBRANÇA DE PRESENÇA</option>
                                 </select>
                             </div>
+
+                            {agentForm.agent_role === 'recuperacao' && (
+                                <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800/50 animate-in fade-in slide-in-from-top-2">
+                                    <h4 className="text-sm font-semibold text-primary">Configurações de Resgate</h4>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Ociosidade Mínima (Minutos)</label>
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder-slate-400"
+                                            value={agentForm.recovery_minutes}
+                                            onChange={(e) => setAgentForm({ ...agentForm, recovery_minutes: parseInt(e.target.value) || 30 })}
+                                        />
+                                        <p className="text-[11px] text-slate-500 font-medium leading-relaxed mt-1">Tempo que a IA irá aguardar sem resposta do cliente (após negociar o horário) antes de enviar a mensagem empática de resgate.</p>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
 
                     {agentFormStep === 2 && (
                         <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
                             <div className="space-y-2">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Provedor de IA</label>
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Provedor de IA</label>
                                 <select
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white appearance-none cursor-pointer"
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all appearance-none cursor-pointer"
                                     value={agentForm.ai_provider}
                                     onChange={(e) => {
                                         const provider = e.target.value;
@@ -778,11 +832,11 @@ export const AgentesIA = () => {
 
                             {agentForm.ai_provider === 'openrouter' ? (
                                 <div className="space-y-4">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Repositório de Modelos</label>
+                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Repositório de Modelos</label>
 
                                     {!agentForm.ai_api_key && (
-                                        <div className="flex items-start gap-3 p-4 bg-amber-500/5 border border-amber-500/20 text-[10px] text-amber-600 dark:text-amber-400 font-bold uppercase tracking-widest">
-                                            <Info className="w-4 h-4 shrink-0" />
+                                        <div className="flex items-start gap-3 p-4 bg-amber-50 dark:bg-amber-900/10 border border-amber-200 dark:border-amber-800/30 text-sm text-amber-600 dark:text-amber-400 font-medium rounded-xl">
+                                            <Info className="w-5 h-5 shrink-0" />
                                             Token necessário para requisição de modelos.
                                         </div>
                                     )}
@@ -790,8 +844,8 @@ export const AgentesIA = () => {
                                     <div className="relative">
                                         <input
                                             type="text"
-                                            placeholder={isFetchingModels ? 'SYNCING_DATA...' : 'QUERY_MODEL_REPOSITORY...'}
-                                            className="w-full pl-6 pr-12 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white placeholder-slate-400"
+                                            placeholder={isFetchingModels ? 'Sincronizando...' : 'Pesquisar modelos'}
+                                            className="w-full pl-5 pr-12 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder-slate-400"
                                             value={modelSearch}
                                             onChange={(e) => setModelSearch(e.target.value)}
                                             disabled={isFetchingModels}
@@ -802,17 +856,17 @@ export const AgentesIA = () => {
                                     </div>
 
                                     {agentForm.ai_model && (
-                                        <div className="flex items-center gap-4 p-4 bg-primary/5 border border-primary/20">
-                                            <div className="w-2 h-2 bg-primary animate-pulse" />
-                                            <span className="text-[11px] font-mono text-primary font-black truncate uppercase tracking-widest">{agentForm.ai_model}</span>
-                                            <button className="ml-auto text-slate-400 hover:text-red-500" onClick={() => setAgentForm({ ...agentForm, ai_model: '' })}>
+                                        <div className="flex items-center gap-4 p-4 bg-emerald-50 dark:bg-emerald-900/10 border border-emerald-200 dark:border-emerald-800/30 rounded-xl">
+                                            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                                            <span className="text-sm text-emerald-700 dark:text-emerald-400 font-semibold truncate">{agentForm.ai_model}</span>
+                                            <button className="ml-auto text-slate-400 hover:text-rose-500 transition-colors" onClick={() => setAgentForm({ ...agentForm, ai_model: '' })}>
                                                 <X className="w-4 h-4" />
                                             </button>
                                         </div>
                                     )}
 
                                     {openrouterModels.length > 0 && modelSearch.trim().length > 0 && (
-                                        <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 divide-y divide-slate-100 dark:divide-slate-800 shadow-2xl z-50 relative">
+                                        <div className="max-h-60 overflow-y-auto border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] z-50 relative">
                                             {openrouterModels
                                                 .filter(m =>
                                                     m.id.toLowerCase().includes(modelSearch.toLowerCase()) ||
@@ -827,13 +881,11 @@ export const AgentesIA = () => {
                                                             setAgentForm({ ...agentForm, ai_model: model.id });
                                                             setModelSearch('');
                                                         }}
-                                                        className="w-full text-left px-6 py-4 hover:bg-primary/5 transition-all group flex flex-col gap-1"
+                                                        className="w-full text-left px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all group flex flex-col gap-1 border-b border-slate-100 dark:border-slate-800/50 last:border-0"
                                                     >
-                                                        <span className="text-[12px] font-black text-slate-950 dark:text-white uppercase tracking-widest truncate group-hover:text-primary transition-colors">{model.name || model.id}</span>
-                                                        <div className="flex items-center gap-4">
-                                                            <span className="text-[9px] font-mono text-slate-400 uppercase">{model.id}</span>
-                                                            <span className="h-3 w-px bg-slate-200 dark:bg-slate-700"></span>
-                                                            <span className="text-[9px] font-black text-emerald-500 uppercase tracking-tighter">Verified_Hash</span>
+                                                        <span className="text-sm font-semibold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{model.name || model.id}</span>
+                                                        <div className="flex items-center gap-2">
+                                                            <span className="text-xs text-slate-400">{model.id}</span>
                                                         </div>
                                                     </button>
                                                 ))
@@ -842,11 +894,11 @@ export const AgentesIA = () => {
                                     )}
                                 </div>
                             ) : (
-                                <div className="space-y-3">
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">ID do Modelo</label>
+                                <div className="space-y-2">
+                                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">ID do Modelo</label>
                                     <input
                                         type="text"
-                                        className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-black outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white"
+                                        className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white transition-all placeholder-slate-400"
                                         placeholder="ex. gpt-4o-mini"
                                     value={agentForm.ai_model}
                                         onChange={(e) => setAgentForm({ ...agentForm, ai_model: e.target.value })}
@@ -882,64 +934,64 @@ export const AgentesIA = () => {
                     )}
 
                     {agentFormStep === 3 && (
-                        <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500">
-                            <div className="space-y-3">
-                                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest block">Instruções do Sistema (Prompt)</label>
+                        <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">Instruções do Sistema (Prompt)</label>
                                 <textarea
                                     rows={10}
-                                    className="w-full px-6 py-4 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-none text-[13px] font-mono font-medium outline-none focus:ring-1 focus:ring-primary/30 focus:border-primary text-slate-950 dark:text-white resize-none leading-relaxed"
-                                    placeholder="# INSTRUÇÕES_MÁTRICE\n- Responda como um humano...\n- Seja direto..."
+                                    className="w-full px-5 py-3.5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl text-sm font-medium outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-900 dark:text-white resize-y leading-relaxed"
+                                    placeholder="Ex: Você é um assistente da clínica..."
                                     value={agentForm.system_prompt}
                                     onChange={(e) => setAgentForm({ ...agentForm, system_prompt: e.target.value })}
                                 />
                             </div>
 
-                            <div className="p-6 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between group">
+                            <div className="p-5 bg-slate-50 dark:bg-slate-800/30 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between group">
                                 <div className="flex items-center gap-4">
-                                    <div className={`w-10 h-10 flex items-center justify-center border shadow-sm ${agentForm.enable_logs ? 'bg-primary/5 border-primary text-primary' : 'bg-slate-100 dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-400'}`}>
+                                    <div className={`w-10 h-10 flex items-center justify-center rounded-xl transition-colors ${agentForm.enable_logs ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'}`}>
                                         <Code className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h4 className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-widest mb-1">Diagnóstico e Histórico</h4>
-                                        <p className="text-[9px] font-bold text-slate-400 uppercase tracking-[0.1em]">Salvar detalhes das conversas para conferência</p>
+                                        <h4 className="text-sm font-semibold text-slate-900 dark:text-white mb-0.5">Diagnóstico e Histórico</h4>
+                                        <p className="text-xs font-medium text-slate-500">Salvar detalhes das conversas para conferência</p>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setAgentForm({ ...agentForm, enable_logs: !agentForm.enable_logs })}
-                                    className={`w-12 h-6 rounded-none relative transition-all border ${agentForm.enable_logs ? 'bg-primary border-primary' : 'bg-slate-200 dark:bg-slate-950 border-slate-300 dark:border-slate-800'}`}
+                                    className={`w-11 h-6 rounded-full relative transition-all border ${agentForm.enable_logs ? 'bg-indigo-500 border-indigo-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
                                 >
-                                    <div className={`absolute top-0.5 w-4 h-4 bg-slate-950 rounded-none transition-all ${agentForm.enable_logs ? 'left-7 bg-white' : 'left-0.5'}`} />
+                                    <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${agentForm.enable_logs ? 'left-6' : 'left-0.5'}`} />
                                 </button>
                             </div>
 
                             <Button 
-                                variant="ghost" 
-                                className="w-full h-12 border border-red-500/20 text-red-500 hover:bg-red-500 hover:text-white transition-all uppercase font-black tracking-widest text-[9px]"
+                                variant="outline" 
+                                className="w-full h-11 rounded-xl text-sm font-medium border-rose-200 dark:border-rose-900/30 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all font-semibold"
                                 onClick={handleClearLogs}
                                 disabled={isClearingLogs}
                             >
-                                {isClearingLogs ? <Loader2 className="w-4 h-4 animate-spin mr-3" /> : <Trash2 className="w-4 h-4 mr-3" />}
-                                Limpar Histórico de Diagnóstico (Logs)
+                                {isClearingLogs ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                                Limpar Histórico de Diagnóstico
                             </Button>
                         </div>
                     )}
 
-                    <div className="flex justify-between pt-8 gap-6 border-t border-slate-100 dark:border-slate-900">
+                    <div className="flex justify-between pt-6 gap-4 border-t border-slate-100 dark:border-slate-800/50 mt-6">
                         {agentFormStep > 1 ? (
-                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setAgentFormStep(v => v - 1)}>
-                                <ChevronLeft className="w-5 h-5 mr-3" /> Back
+                            <Button variant="ghost" className="h-11 px-6 rounded-xl font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setAgentFormStep(v => v - 1)}>
+                                <ChevronLeft className="w-5 h-5 mr-2" /> Voltar
                             </Button>
                         ) : (
-                            <Button variant="ghost" className="uppercase font-black tracking-widest text-[10px] h-12 px-8" onClick={() => setIsAgentModalOpen(false)}>Cancelar</Button>
+                            <Button variant="ghost" className="h-11 px-6 rounded-xl font-medium text-slate-500 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800" onClick={() => setIsAgentModalOpen(false)}>Cancelar</Button>
                         )}
 
                         {agentFormStep < 3 ? (
-                            <Button onClick={() => setAgentFormStep(v => v + 1)} className="h-12 px-10 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto group">
-                                Próxima Fase <ChevronRight className="w-5 h-5 ml-3 group-hover:translate-x-1 transition-transform" />
+                            <Button onClick={() => setAgentFormStep(v => v + 1)} className="h-11 px-8 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)] ml-auto">
+                                Próxima Fase <ChevronRight className="w-5 h-5 ml-2" />
                             </Button>
                         ) : (
-                            <Button onClick={handleSaveAgent} disabled={isSaving} className="h-14 px-12 rounded-none uppercase font-black tracking-widest text-[11px] ml-auto shadow-xl shadow-primary/20" isLoading={isSaving}>
-                                <Save className="w-5 h-5 mr-3" /> Efetivar Agente
+                            <Button onClick={handleSaveAgent} disabled={isSaving} className="h-11 px-8 rounded-xl font-medium shadow-[0_8px_30px_rgba(16,185,129,0.2)] ml-auto" isLoading={isSaving}>
+                                <Save className="w-4 h-4 mr-2" /> Concluir Agente
                             </Button>
                         )}
                     </div>

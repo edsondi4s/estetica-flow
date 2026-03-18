@@ -10,7 +10,7 @@ import toast from 'react-hot-toast';
 const CustomTooltip = ({ active, payload, label, formatCurrency }: any) => {
     if (active && payload && payload.length) {
         return (
-            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-slate-100 dark:border-slate-700">
+            <div className="bg-white dark:bg-slate-800 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-700">
                 <p className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">{label}</p>
                 <div className="space-y-1.5">
                     {payload.map((entry: any, index: number) => (
@@ -169,31 +169,31 @@ export const Financeiro = () => {
         <div className="flex flex-col gap-10 reveal-content pb-10">
             <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
                 <div className="flex items-center gap-4">
-                    <div className="p-4 bg-slate-950 rounded-sm shadow-xl shadow-black/10">
+                    <div className="p-4 bg-primary/10 dark:bg-primary/20 rounded-2xl">
                         <Wallet className="w-6 h-6 text-primary" />
                     </div>
                     <div>
-                        <h2 className="text-4xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                            Meu <span className="text-primary">Financeiro</span>
+                        <h2 className="text-3xl font-serif text-slate-900 dark:text-white tracking-tight">
+                            Meu Financeiro
                         </h2>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.3em] mt-1">Resumo de Ganhos e Previsões</p>
+                        <p className="text-sm font-medium text-slate-500 mt-1">Resumo de ganhos e previsões</p>
                     </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
-                    <div className="flex items-center gap-3 bg-white dark:bg-slate-950 border-2 border-slate-100 dark:border-slate-800 rounded-sm p-4 shadow-xl shadow-black/5 w-full sm:w-auto focus-within:border-primary transition-all">
+                    <div className="flex items-center gap-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 shadow-sm w-full sm:w-auto focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all">
                         <CalendarIcon className="w-4 h-4 text-primary" />
                         <div className="flex items-center gap-3">
                             <input
                                 type="date"
-                                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white outline-none cursor-pointer"
+                                className="bg-transparent text-sm font-medium text-slate-900 dark:text-white outline-none cursor-pointer"
                                 value={startDate}
                                 onChange={(e) => setStartDate(e.target.value)}
                             />
-                            <span className="text-[8px] font-black text-slate-300 uppercase">ATÉ</span>
+                            <span className="text-xs font-semibold text-slate-400">até</span>
                             <input
                                 type="date"
-                                className="bg-transparent text-[10px] font-black uppercase tracking-widest text-slate-900 dark:text-white outline-none cursor-pointer"
+                                className="bg-transparent text-sm font-medium text-slate-900 dark:text-white outline-none cursor-pointer"
                                 value={endDate}
                                 onChange={(e) => setEndDate(e.target.value)}
                             />
@@ -203,43 +203,43 @@ export const Financeiro = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2">
-                <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-l-4 border-emerald-500 shadow-2xl shadow-black/5 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <CheckCircle2 className="w-24 h-24 text-emerald-500" />
+                <div className="bg-white dark:bg-slate-900 p-10 rounded-luxury border border-slate-100 dark:border-slate-800/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+                        <CheckCircle2 className="w-32 h-32 text-emerald-500" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Total Recebido</p>
-                    <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(totalBalance)}</h3>
+                    <p className="text-sm font-semibold text-slate-500 mb-4 tracking-wide">TOTAL RECEBIDO</p>
+                    <h3 className="text-4xl font-serif text-slate-900 dark:text-white tracking-tight">{formatCurrency(totalBalance)}</h3>
                     <div className="mt-6 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                        <span className="text-[9px] font-black text-emerald-500 uppercase tracking-widest">Dinheiro em Caixa</span>
+                        <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.2)]"></span>
+                        <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">Dinheiro em Caixa</span>
                     </div>
                 </div>
 
-                <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-l-4 border-primary shadow-2xl shadow-black/5 relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <TrendingUp className="w-24 h-24 text-primary" />
+                <div className="bg-white dark:bg-slate-900 p-10 rounded-luxury border border-slate-100 dark:border-slate-800/50 shadow-sm relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-[0.03] group-hover:opacity-[0.05] transition-opacity">
+                        <TrendingUp className="w-32 h-32 text-primary" />
                     </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4">Previsão de Recebimento</p>
-                    <h3 className="text-5xl font-black text-slate-950 dark:text-white tracking-tighter">{formatCurrency(projectedBalance)}</h3>
+                    <p className="text-sm font-semibold text-slate-500 mb-4 tracking-wide">PREVISÃO DE RECEBIMENTO</p>
+                    <h3 className="text-4xl font-serif text-slate-900 dark:text-white tracking-tight">{formatCurrency(projectedBalance)}</h3>
                     <div className="mt-6 flex items-center gap-2">
-                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
-                        <span className="text-[9px] font-black text-primary uppercase tracking-widest">Valor Pendente</span>
+                        <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_rgba(212,175,55,0.2)]"></span>
+                        <span className="text-xs font-semibold text-primary">Valor Pendente</span>
                     </div>
                 </div>
             </div>
 
-            <div className="bg-white dark:bg-slate-950 p-10 rounded-sm border-2 border-slate-100 dark:border-slate-900 shadow-2xl shadow-black/20">
+            <div className="bg-white dark:bg-slate-900 p-8 lg:p-10 rounded-luxury border border-slate-100 dark:border-slate-800/50 shadow-sm relative overflow-hidden">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6 mb-10">
                     <div>
-                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Gráfico de <span className="text-primary">Ganhos</span></h3>
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.3em] mt-1">Variação de Receita no Período</p>
+                        <h3 className="text-xl font-serif text-slate-900 dark:text-white tracking-tight">Gráfico de Ganhos</h3>
+                        <p className="text-sm font-medium text-slate-500 mt-1">Variação de receita no período selecionado</p>
                     </div>
-                    <div className="flex items-center bg-slate-900 p-1 divide-x divide-slate-800 border border-slate-800">
+                    <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded-xl border border-slate-100 dark:border-slate-800">
                         {(['diario', 'semanal', 'mensal'] as const).map(group => (
                             <button
                                 key={group}
                                 onClick={() => setChartGroup(group)}
-                                className={`px-6 py-2 text-[9px] font-black uppercase tracking-widest transition-all ${chartGroup === group ? 'bg-primary text-slate-950' : 'text-slate-400 dark:text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                                className={`px-5 py-2 text-xs font-semibold tracking-wide rounded-lg transition-all ${chartGroup === group ? 'bg-white dark:bg-slate-700 text-primary shadow-sm' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800'}`}
                             >
                                 {group === 'diario' ? 'Diário' : group === 'semanal' ? 'Semanal' : 'Mensal'}
                             </button>
@@ -254,7 +254,7 @@ export const Financeiro = () => {
                 ) : chartData.length === 0 ? (
                     <div className="h-80 flex flex-col items-center justify-center text-slate-600 gap-4">
                         <FileText className="w-12 h-12 opacity-10" />
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-700">Nenhum movimento financeiro</p>
+                        <p className="text-sm font-medium text-slate-500">Nenhum movimento financeiro</p>
                     </div>
                 ) : (
                     <div className="h-96 w-full -ml-4">
@@ -287,27 +287,27 @@ export const Financeiro = () => {
                 )}
             </div>
 
-            <div className="bg-white dark:bg-slate-900 rounded-sm border-2 border-slate-100 dark:border-slate-800 shadow-2xl shadow-black/5 overflow-hidden">
-                <div className="px-10 py-8 border-b border-slate-50 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="bg-white dark:bg-slate-900 rounded-luxury border border-slate-100 dark:border-slate-800/50 shadow-sm overflow-hidden">
+                <div className="px-8 py-6 border-b border-slate-50 dark:border-slate-800/50 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h3 className="text-xl font-black text-slate-950 dark:text-white uppercase tracking-tighter">Lista de <span className="text-primary">Recebimentos</span></h3>
-                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Histórico de Pagamentos Confirmados</p>
+                        <h3 className="text-xl font-serif text-slate-900 dark:text-white tracking-tight">Lista de Recebimentos</h3>
+                        <p className="text-sm font-medium text-slate-500 mt-1">Histórico de pagamentos confirmados</p>
                     </div>
                     <div className="w-full sm:w-auto">
-                        <div className="flex items-center gap-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-none border border-slate-200 dark:border-slate-700">
-                            <span className="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Limitar Visualização</span>
+                        <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800/30 px-4 py-2 rounded-xl border border-slate-100 dark:border-slate-800">
+                            <span className="text-xs font-semibold text-slate-500">Exibir</span>
                             <select
-                                className="bg-transparent text-[10px] font-black text-slate-950 dark:text-white uppercase outline-none cursor-pointer"
+                                className="bg-transparent text-sm font-semibold text-slate-900 dark:text-white outline-none cursor-pointer"
                                 value={itemsPerPage}
                                 onChange={(e) => {
                                     setItemsPerPage(Number(e.target.value));
                                     setCurrentPage(1);
                                 }}
                             >
-                                <option value={5}>05 ITENS</option>
-                                <option value={10}>10 ITENS</option>
-                                <option value={20}>20 ITENS</option>
-                                <option value={50}>50 ITENS</option>
+                                <option value={5}>05 Itens</option>
+                                <option value={10}>10 Itens</option>
+                                <option value={20}>20 Itens</option>
+                                <option value={50}>50 Itens</option>
                             </select>
                         </div>
                     </div>
@@ -319,53 +319,57 @@ export const Financeiro = () => {
                     </div>
                 ) : confirmedTableData.length === 0 ? (
                     <div className="p-20 text-center">
-                        <FileText className="w-12 h-12 text-slate-100 mx-auto mb-4" />
-                        <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Nenhum registro encontrado no intervalo atual</p>
+                        <div className="w-16 h-16 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-center rounded-2xl border border-slate-100 dark:border-slate-800 mx-auto mb-4">
+                            <FileText className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                        </div>
+                        <p className="text-sm font-semibold text-slate-500">Nenhum registro encontrado no intervalo atual</p>
                     </div>
                 ) : (
                     <>
                         <div className="overflow-x-auto">
                             <table className="w-full text-left border-collapse">
                                 <thead>
-                                    <tr className="bg-slate-50 dark:bg-slate-800/50">
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Data</th>
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Cliente</th>
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Profissional</th>
-                                        <th className="px-10 py-5 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] text-right">Valor</th>
+                                    <tr className="bg-slate-50/50 dark:bg-slate-800/30">
+                                        <th className="px-8 py-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Data</th>
+                                        <th className="px-8 py-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Cliente</th>
+                                        <th className="px-8 py-5 text-xs font-semibold text-slate-500 uppercase tracking-wider">Profissional</th>
+                                        <th className="px-8 py-5 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">Valor</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y-2 divide-slate-50 dark:divide-slate-800">
+                                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
                                     {paginatedData.map(t => (
-                                        <tr key={t.id} className="group hover:bg-slate-50 dark:hover:bg-primary/5 transition-all">
-                                            <td className="px-10 py-6">
+                                        <tr key={t.id} className="group hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-all">
+                                            <td className="px-8 py-6">
                                                 <div className="flex items-center gap-3">
-                                                    <div className="w-1 h-8 bg-emerald-500 rounded-none transform scale-y-50 group-hover:scale-y-100 transition-transform"></div>
-                                                    <span className="text-sm font-black text-slate-600 dark:text-slate-400 tracking-tighter">
+                                                    <div className="w-1.5 h-8 bg-emerald-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                                                    <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
                                                         {new Date(t.appointment_date + 'T12:00:00').toLocaleDateString()}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-10 py-6">
-                                                <div className="flex flex-col">
-                                                    <span className="text-base font-black text-slate-950 dark:text-white uppercase tracking-tight group-hover:text-primary transition-colors">
-                                                        {t.clients?.name || 'Cliente indefinido'}
+                                            <td className="px-8 py-6">
+                                                <div className="flex flex-col gap-1">
+                                                    <span className="text-base font-semibold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                                                        {t.clients?.name || 'Cliente comum'}
                                                     </span>
-                                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+                                                    <span className="text-sm font-medium text-slate-500">
                                                         {t.services?.name || 'Serviço padrão'}
                                                     </span>
                                                 </div>
                                             </td>
-                                            <td className="px-10 py-6 whitespace-nowrap">
-                                                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 dark:bg-slate-800 px-3 py-1 border border-slate-200 dark:border-slate-700">
+                                            <td className="px-8 py-6 whitespace-nowrap">
+                                                <span className="text-xs font-medium text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700">
                                                     {t.professionals?.name || 'Sistema'}
                                                 </span>
                                             </td>
-                                            <td className="px-10 py-6 text-right">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tighter">
+                                            <td className="px-8 py-6 text-right">
+                                                <div className="flex flex-col items-end gap-1">
+                                                    <span className="text-base font-semibold text-emerald-600 dark:text-emerald-400">
                                                         {formatCurrency(t.services?.price || 0)}
                                                     </span>
-                                                    <span className="text-[8px] font-black text-emerald-500/50 uppercase tracking-widest">Verificado</span>
+                                                    <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                                                        <CheckCircle2 className="w-3 h-3" /> Concluído
+                                                    </span>
                                                 </div>
                                             </td>
                                         </tr>
@@ -375,37 +379,37 @@ export const Financeiro = () => {
                         </div>
 
                         {/* Pagination Area */}
-                        <div className="px-10 py-8 bg-slate-50 dark:bg-slate-950 shadow-inner flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-100 dark:border-slate-800">
+                        <div className="px-8 py-6 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-100 dark:border-slate-800/50">
                             <div className="flex items-center gap-4">
-                                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                                    Exibindo <span className="text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, confirmedTableData.length)}</span> de <span className="text-slate-900 dark:text-white">{confirmedTableData.length}</span> registros
+                                <p className="text-xs font-medium text-slate-500">
+                                    Exibindo <span className="font-bold text-slate-900 dark:text-white">{(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, confirmedTableData.length)}</span> de <span className="font-bold text-slate-900 dark:text-white">{confirmedTableData.length}</span> registros
                                 </p>
                             </div>
 
                             {totalPages > 1 && (
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-2">
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="p-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all rounded-none"
+                                        className="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary disabled:opacity-50 disabled:hover:border-slate-200 transition-all rounded-lg shadow-sm"
                                     >
                                         <ChevronLeft className="w-4 h-4" />
                                     </button>
 
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-1.5">
                                         {Array.from({ length: totalPages }, (_, i) => i + 1).filter(page => {
                                             return page === 1 || page === totalPages || Math.abs(page - currentPage) <= 1;
                                         }).map((page, index, array) => {
                                             if (index > 0 && page - array[index - 1] > 1) {
-                                                return <span key={`dots-${page}`} className="text-slate-300 font-black">//</span>;
+                                                return <span key={`dots-${page}`} className="text-slate-400 font-semibold px-2">...</span>;
                                             }
                                             return (
                                                 <button
                                                     key={page}
                                                     onClick={() => setCurrentPage(page)}
-                                                    className={`w-10 h-10 text-[10px] font-black transition-all rounded-none border-2 ${currentPage === page ? 'bg-primary border-primary text-slate-950' : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-700 text-slate-400 hover:text-slate-900 dark:hover:text-white hover:border-slate-300 dark:hover:border-slate-600'}`}
+                                                    className={`min-w-[40px] h-10 text-sm font-semibold transition-all rounded-lg border ${currentPage === page ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-primary dark:hover:text-primary'}`}
                                                 >
-                                                    {page.toString().padStart(2, '0')}
+                                                    {page}
                                                 </button>
                                             );
                                         })}
@@ -414,7 +418,7 @@ export const Financeiro = () => {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="p-3 bg-white dark:bg-slate-800 border-2 border-slate-100 dark:border-slate-700 text-slate-400 hover:border-primary hover:text-primary disabled:opacity-30 disabled:hover:border-slate-100 transition-all rounded-none"
+                                        className="p-2.5 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary hover:text-primary disabled:opacity-50 disabled:hover:border-slate-200 transition-all rounded-lg shadow-sm"
                                     >
                                         <ChevronRight className="w-4 h-4" />
                                     </button>

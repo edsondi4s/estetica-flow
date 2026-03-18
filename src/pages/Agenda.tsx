@@ -679,68 +679,72 @@ export const Agenda = () => {
 
     return (
         <div className="flex flex-col h-full overflow-hidden reveal-content">
-            <div className="flex flex-col lg:flex-row items-center justify-between p-6 gap-6 bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 shadow-xl shadow-black/5 z-20">
+            <div className="flex flex-col lg:flex-row items-center justify-between p-4 lg:p-6 gap-4 lg:gap-6 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/60 shadow-sm z-20">
                 <div className="flex items-center justify-between w-full lg:w-auto gap-4">
-                    <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 rounded-sm border border-slate-100 dark:border-slate-800 p-0.5">
-                        <Button variant="ghost" size="icon" onClick={() => navigateDate(-1)} className="hover:bg-white dark:hover:bg-slate-700 rounded-sm"><ChevronLeft className="w-5 h-5" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => navigateDate(1)} className="hover:bg-white dark:hover:bg-slate-700 rounded-sm"><ChevronRight className="w-5 h-5" /></Button>
+                    <div className="flex items-center bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-700/50 p-1">
+                        <Button variant="ghost" size="icon" onClick={() => navigateDate(-1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500"><ChevronLeft className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => navigateDate(1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500"><ChevronRight className="w-4 h-4" /></Button>
                     </div>
-                    <div className="flex flex-col items-center lg:items-start flex-1 px-4">
-                        <h2 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter leading-none">
+                    <div className="flex flex-col items-center lg:items-start flex-1 px-2">
+                        <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white leading-none capitalize">
                             {view === 'day' ? `${currentDate.getDate()} de ${months[currentDate.getMonth()]}` : months[currentDate.getMonth()]}
                         </h2>
-                        <span className="text-[10px] font-bold text-primary uppercase tracking-[0.2em]">{currentDate.getFullYear()}</span>
+                        <span className="text-sm font-medium text-primary mt-1">{currentDate.getFullYear()}</span>
                     </div>
-                    <Button variant="outline" size="sm" className="hidden sm:flex border-primary/20 hover:bg-primary/5 text-primary rounded-sm font-black uppercase text-[10px] tracking-widest" onClick={goToToday}>Hoje</Button>
+                    <Button variant="outline" size="sm" className="hidden sm:flex rounded-xl font-medium h-9 text-primary border-primary/20 hover:bg-primary/5" onClick={goToToday}>Hoje</Button>
                 </div>
 
-                <div className="flex items-center justify-between w-full lg:w-auto gap-4">
-                    <div className="relative flex-1 lg:w-80 group">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
-                        <input
-                            type="text"
-                            placeholder="Buscar na agenda..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/20 rounded-sm text-xs font-bold uppercase tracking-tight focus:bg-white dark:focus:bg-slate-800 transition-all outline-none dark:text-white"
-                        />
+                <div className="flex flex-col sm:flex-row flex-wrap lg:flex-nowrap items-stretch sm:items-center justify-between lg:justify-end w-full lg:w-auto gap-4 mt-2 lg:mt-0">
+                    <div className="flex gap-2 w-full sm:w-auto flex-1">
+                        <div className="relative flex-1 lg:w-72 group min-w-0">
+                            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-primary transition-colors" />
+                            <input
+                                type="text"
+                                placeholder="Buscar na agenda..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm font-medium transition-all outline-none text-slate-900 dark:text-white placeholder:text-slate-400 h-10"
+                            />
+                        </div>
+
+                        <button
+                            onClick={() => setIsFilterPanelOpen(true)}
+                            className={`relative h-10 w-10 flex-shrink-0 rounded-xl border transition-all flex items-center justify-center gap-2 group ${activeFilterCount > 0
+                                ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
+                                : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-700/50 text-slate-500 hover:border-primary/30 hover:text-primary"}`}
+                        >
+                            <Filter className={`w-4 h-4 ${activeFilterCount > 0 ? "scale-110" : "group-hover:scale-110"} transition-transform`} />
+                            {activeFilterCount > 0 && (
+                                <span className="absolute -top-1.5 -right-1.5 bg-rose-500 text-white text-[10px] font-bold w-4 h-4 flex items-center justify-center rounded-full border-2 border-white dark:border-slate-950">
+                                    {activeFilterCount}
+                                </span>
+                            )}
+                        </button>
                     </div>
 
-                    <button
-                        onClick={() => setIsFilterPanelOpen(true)}
-                        className={`relative p-3 rounded-sm border-2 transition-all flex items-center gap-2 group ${activeFilterCount > 0
-                            ? "bg-primary border-primary text-white shadow-lg shadow-primary/20"
-                            : "bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-primary/30"}`}
-                    >
-                        <Filter className={`w-4 h-4 ${activeFilterCount > 0 ? "scale-110" : "group-hover:scale-110"} transition-transform`} />
-                        {activeFilterCount > 0 && (
-                            <span className="absolute -top-2 -right-2 bg-slate-950 text-white text-[10px] font-black w-5 h-5 flex items-center justify-center rounded-full border-2 border-white dark:border-slate-900">
-                                {activeFilterCount}
-                            </span>
-                        )}
-                    </button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <div className="flex flex-1 items-center justify-between bg-slate-50 dark:bg-slate-900 p-1 rounded-xl border border-slate-200/50 dark:border-slate-700/50">
+                            {(['day', 'week', 'month'] as const).map((v) => (
+                                <button
+                                    key={v}
+                                    onClick={() => setView(v)}
+                                    className={`flex-1 px-3 sm:px-4 py-1.5 text-xs font-semibold rounded-lg transition-all capitalize ${view === v
+                                        ? 'bg-white dark:bg-slate-800 text-primary shadow-sm'
+                                        : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'}`}
+                                >
+                                    {v === 'day' ? 'Dia' : v === 'week' ? 'Semana' : 'Mês'}
+                                </button>
+                            ))}
+                        </div>
 
-                    <div className="flex items-center bg-slate-50 dark:bg-slate-800/50 p-1 rounded-sm border border-slate-100 dark:border-slate-800">
-                        {(['day', 'week', 'month'] as const).map((v) => (
-                            <button
-                                key={v}
-                                onClick={() => setView(v)}
-                                className={`px-4 py-2 text-[10px] uppercase font-black tracking-widest rounded-sm transition-all ${view === v
-                                    ? 'bg-white dark:bg-slate-700 text-primary shadow-sm'
-                                    : 'text-slate-400 hover:text-slate-900 dark:hover:text-white'}`}
-                            >
-                                {v === 'day' ? 'Dia' : v === 'week' ? 'Semana' : 'Mês'}
-                            </button>
-                        ))}
+                        <Button
+                            className="bg-primary hover:bg-emerald-600 shadow-[0_8px_30px_rgba(16,185,129,0.2)] text-white rounded-xl h-10 px-4 sm:px-6 transition-all group flex-shrink-0"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            <Plus className="w-4 h-4 sm:mr-2 group-hover:rotate-90 transition-transform duration-300" />
+                            <span className="font-medium text-sm hidden sm:inline-block">Agendar</span>
+                        </Button>
                     </div>
-
-                    <Button
-                        className="gap-2 bg-slate-950 hover:bg-primary border-none shadow-xl shadow-black/10 transition-all hover:-translate-y-0.5 active:translate-y-0 group"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform duration-300" />
-                        <span className="hidden sm:inline font-black uppercase text-xs tracking-widest">Agendar</span>
-                    </Button>
                 </div>
             </div>
             <div className="flex-1 overflow-auto bg-white dark:bg-slate-900 relative">
@@ -753,7 +757,7 @@ export const Agenda = () => {
                 {view === 'month' ? (
                     <div className="min-w-[800px] md:min-w-full grid grid-cols-7 h-full">
                         {['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'].map(d => (
-                            <div key={d} className="py-2 text-center text-xs font-bold text-slate-400 dark:text-slate-500 border-b border-slate-100 dark:border-slate-800">{d}</div>
+                            <div key={d} className="py-3 text-center text-xs font-semibold text-slate-500 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900 capitalize">{d}</div>
                         ))}
                         {getMonthDays().map((dateObj, i) => {
                             const isCurrentMonth = dateObj.getMonth() === currentDate.getMonth();
@@ -764,15 +768,15 @@ export const Agenda = () => {
                             return (
                                 <div
                                     key={i}
-                                    className={`min-h-[120px] border-r border-b border-slate-100 dark:border-slate-800 p-2 transition-colors ${!isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-800/20' : ''} ${dragOverSlot === dayFormatted ? 'bg-primary/10' : ''} ${isPastSlot(dayFormatted) ? 'bg-slate-100/30 dark:bg-slate-800/30 cursor-not-allowed' : ''}`}
+                                    className={`min-h-[120px] border-r border-b border-slate-100 dark:border-slate-800/60 p-2 transition-colors ${!isCurrentMonth ? 'bg-slate-50/50 dark:bg-slate-900/40' : 'bg-white dark:bg-slate-900'} ${dragOverSlot === dayFormatted ? 'bg-primary/5' : ''} ${isPastSlot(dayFormatted) ? 'bg-slate-50/30 dark:bg-slate-900/30 cursor-not-allowed' : ''}`}
                                     onDragOver={(e) => handleDragOver(e, dayFormatted, dayFormatted)}
                                     onDragLeave={handleDragLeave}
                                     onDrop={(e) => handleDrop(e, dayFormatted, '')}
                                 >
-                                    <span className={`text-sm font-semibold ${isToday ? 'bg-primary text-white w-7 h-7 flex items-center justify-center rounded-full' : isCurrentMonth ? 'text-slate-900 dark:text-white' : 'text-slate-300 dark:text-slate-600'}`}>
+                                    <span className={`text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full ${isToday ? 'bg-primary text-white shadow-md shadow-primary/20' : isCurrentMonth ? 'text-slate-700 dark:text-slate-300' : 'text-slate-300 dark:text-slate-600'}`}>
                                         {dateObj.getDate()}
                                     </span>
-                                    <div className="mt-2 space-y-1">
+                                    <div className="mt-2 space-y-1.5 pl-1">
                                         {dayAppointments.slice(0, 3).map(a => (
                                             <div
                                                 key={a.id}
@@ -780,13 +784,13 @@ export const Agenda = () => {
                                                 onDragStart={(e) => handleDragStart(e, a)}
                                                 onDragEnd={handleDragEnd}
                                                 onClick={() => setSelectedAppointment(a)}
-                                                className={`text-[10px] p-1 rounded truncate cursor-pointer transition-all ${getStatusStyles(a.status, true)}`}
+                                                className={`text-[11px] font-medium p-1.5 rounded-md truncate cursor-pointer transition-all ${getStatusStyles(a.status, true)}`}
                                             >
                                                 {a.appointment_time.substring(0, 5)} {a.services?.name}
                                             </div>
                                         ))}
                                         {dayAppointments.length > 3 && (
-                                            <div className="text-[10px] text-slate-400 dark:text-slate-500 pl-1">+{dayAppointments.length - 3} mais</div>
+                                            <div className="text-[10px] font-medium text-slate-400 dark:text-slate-500 pl-1.5">+{dayAppointments.length - 3} mais</div>
                                         )}
                                     </div>
                                 </div>
@@ -795,15 +799,15 @@ export const Agenda = () => {
                     </div>
                 ) : (
                     <div className="min-w-[800px] md:min-w-full flex flex-col h-full">
-                        <div className={`grid ${view === 'week' ? 'grid-cols-8' : 'grid-cols-[60px_1fr]'} border-b border-slate-200 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10`}>
-                            <div className="h-14 border-r border-slate-100 dark:border-slate-800 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 uppercase font-bold tracking-tighter">Hora</div>
+                        <div className={`grid ${view === 'week' ? 'grid-cols-8' : 'grid-cols-[60px_1fr]'} border-b border-slate-100 dark:border-slate-800/60 sticky top-0 bg-white dark:bg-slate-950 z-10 shadow-sm`}>
+                            <div className="h-16 border-r border-slate-100 dark:border-slate-800/60 flex items-center justify-center text-xs text-slate-400 dark:text-slate-500 font-medium capitalize">Hora</div>
                             {(view === 'week' ? weekDays : [currentDate]).map((dateObj, i) => {
-                                const dayNames = ['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'];
+                                const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
                                 const isToday = new Date().toDateString() === dateObj.toDateString();
                                 return (
-                                    <div key={i} className={`flex flex-col items-center justify-center py-2 border-r border-slate-100 dark:border-slate-800 ${isToday ? 'bg-primary/5' : ''}`}>
+                                    <div key={i} className={`flex flex-col items-center justify-center h-16 border-r border-slate-100 dark:border-slate-800/60 transition-colors ${isToday ? 'bg-primary/5' : 'bg-white dark:bg-slate-950'}`}>
                                         <span className={`text-xs font-medium ${isToday ? 'text-primary' : 'text-slate-500 dark:text-slate-400'}`}>{dayNames[dateObj.getDay()]}</span>
-                                        <span className={`text-lg font-bold ${isToday ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{dateObj.getDate()}</span>
+                                        <span className={`text-lg font-semibold ${isToday ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{dateObj.getDate()}</span>
                                     </div>
                                 );
                             })}
@@ -863,30 +867,30 @@ export const Agenda = () => {
                                                             setSelectedAppointment(appt);
                                                         }
                                                     }}
-                                                    className={`absolute p-1 z-10 cursor-pointer transition-all ${draggedAppId === appt.id ? 'z-50' : ''}`}
+                                                    className={`absolute p-0.5 z-10 cursor-pointer transition-all ${draggedAppId === appt.id ? 'z-50' : ''}`}
                                                     style={getAppointmentStyle(appt.appointment_time, appt.services?.duration_minutes)}
                                                 >
                                                     <div className={`
                                                         ${getStatusStyles(appt.status)} 
-                                                        border-l-[6px] p-2.5 rounded-sm h-full flex flex-col justify-between overflow-hidden hover:scale-[1.02] hover:shadow-2xl hover:z-30 transition-all duration-300 group/item
+                                                        border-l-4 p-2.5 rounded-xl shadow-sm h-full flex flex-col justify-between overflow-hidden hover:scale-[1.02] hover:shadow-md hover:z-30 transition-all duration-300 group/item
                                                     `}>
                                                         {hasConflicts && (
-                                                            <div className="absolute top-1 right-1 bg-slate-950 text-white text-[9px] font-black px-1.5 py-0.5 rounded-sm z-20 animate-pulse border border-white/20">
+                                                            <div className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-20 shadow-sm">
                                                                 +{group.length - 1}
                                                             </div>
                                                         )}
                                                         <div className="min-w-0">
-                                                            <p className="font-black text-[11px] text-slate-900 dark:text-white truncate uppercase tracking-tight leading-none mb-1 group-hover/item:text-primary transition-colors">{appt.services?.name}</p>
+                                                            <p className="font-semibold text-[13px] text-slate-900 dark:text-white truncate leading-tight mb-1 group-hover/item:text-primary transition-colors">{appt.services?.name}</p>
                                                             {appt.services?.duration_minutes >= 30 && (
-                                                                <div className="flex flex-col gap-0.5">
-                                                                    <p className="text-[10px] font-bold text-slate-600 dark:text-slate-400 truncate tracking-tight">{appt.clients?.name}</p>
-                                                                    <p className="text-[9px] text-primary font-black truncate uppercase tracking-widest opacity-80">{appt.professionals?.name}</p>
+                                                                <div className="flex flex-col gap-0.5 mt-1">
+                                                                    <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{appt.clients?.name}</p>
+                                                                    <p className="text-[10px] font-medium text-primary/80 truncate">{appt.professionals?.name}</p>
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 mt-1">
+                                                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 mt-2">
                                                             <Clock className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="text-[10px] font-black tracking-widest">{appt.appointment_time.substring(0, 5)}</span>
+                                                            <span className="text-[11px] font-medium">{appt.appointment_time.substring(0, 5)}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -904,33 +908,33 @@ export const Agenda = () => {
             {
                 isModalOpen && createPortal(
                     <div className="fixed inset-0 bg-slate-950/40 backdrop-blur-md z-[100] flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-sm shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-100 dark:border-slate-800 animate-in zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
-                            <div className="p-8 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between shrink-0">
+                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-slate-200/50 dark:border-slate-800/60 animate-in zoom-in-95 duration-300 max-h-[95vh] flex flex-col">
+                            <div className="p-6 md:p-8 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
                                 <div>
-                                    <h3 className="text-2xl font-black text-slate-900 dark:text-white uppercase tracking-tighter text-balance">
+                                    <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white text-balance">
                                         {editingAppointmentId ? 'Ajustar' : 'Novo'} <span className="text-primary">Agendamento</span>
                                     </h3>
-                                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">EstéticaFlow — Alta Performance</p>
+                                    <p className="text-sm font-medium text-slate-500 mt-1">Detalhes da reserva</p>
                                 </div>
-                                <button onClick={() => { setIsModalOpen(false); setEditingAppointmentId(null); }} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-sm transition-colors">
-                                    <X className="w-5 h-5 text-slate-400 dark:text-slate-500" />
+                                <button onClick={() => { setIsModalOpen(false); setEditingAppointmentId(null); }} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-full transition-colors shadow-sm">
+                                    <X className="w-5 h-5 text-slate-500" />
                                 </button>
                             </div>
-                            <form onSubmit={handleSave} className="p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
+                            <form onSubmit={handleSave} className="p-6 md:p-8 space-y-6 overflow-y-auto custom-scrollbar flex-1">
                                 <div className="space-y-2">
                                     <div className="flex justify-between items-center">
-                                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Cliente</label>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Cliente</label>
                                         <button
                                             type="button"
                                             onClick={() => setIsAddingClient(!isAddingClient)}
-                                            className="text-[10px] font-black text-primary uppercase tracking-widest transition-all"
+                                            className="text-xs font-medium text-primary hover:text-emerald-600 transition-colors"
                                         >
-                                            {isAddingClient ? '[ Selecionar ]' : '[ + Novo ]'}
+                                            {isAddingClient ? 'Selecionar Existente' : '+ Cadastrar Novo'}
                                         </button>
                                     </div>
                                     {isAddingClient ? (
                                         <input
-                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border-2 border-primary/20 rounded-sm text-sm font-bold tracking-tight outline-none focus:border-primary transition-all text-slate-900 dark:text-white placeholder:text-slate-300 dark:placeholder:text-slate-700"
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm transition-all text-slate-900 dark:text-white placeholder:text-slate-400 outline-none"
                                             placeholder="Nome completo do cliente"
                                             value={newClientName}
                                             onChange={(e) => setNewClientName(e.target.value)}
@@ -938,7 +942,7 @@ export const Agenda = () => {
                                         />
                                     ) : (
                                         <select
-                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/20 rounded-sm text-sm font-bold text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
                                             value={selectedClientId}
                                             onChange={(e) => setSelectedClientId(e.target.value)}
                                             required
@@ -948,60 +952,69 @@ export const Agenda = () => {
                                         </select>
                                     )}
                                 </div>
-                                <div className="grid grid-cols-2 gap-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Serviço</label>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Serviço</label>
                                         <select
-                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/20 rounded-sm text-sm font-bold text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
                                             value={selectedServiceId}
                                             onChange={(e) => setSelectedServiceId(e.target.value)}
                                             required
                                         >
-                                            <option value="">Selecione...</option>
+                                            <option value="">Selecione o Serviço...</option>
                                             {filteredServices.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                                         </select>
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Profissional</label>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Profissional</label>
                                         <select
-                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border-2 border-transparent focus:border-primary/20 rounded-sm text-sm font-bold text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
                                             value={selectedProId}
                                             onChange={(e) => setSelectedProId(e.target.value)}
                                             required
                                         >
-                                            <option value="">Selecione...</option>
+                                            <option value="">Selecione o Profissional...</option>
                                             {filteredProfessionals.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                                         </select>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <InputField label="DATA" type="date" value={date} onChange={(e) => setDate(e.target.value)} required />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-black text-slate-900 dark:text-white uppercase tracking-widest">Horário</label>
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Data</label>
+                                        <input 
+                                            type="date" 
+                                            value={date} 
+                                            onChange={(e) => setDate(e.target.value)} 
+                                            required 
+                                            className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/50 dark:border-slate-700/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl text-sm text-slate-900 dark:text-white outline-none transition-all cursor-pointer"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Horário</label>
                                         <select
-                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-800 rounded-sm text-sm font-bold text-slate-900 dark:text-white outline-none focus:border-primary/20 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 rounded-xl text-sm text-slate-900 dark:text-white outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                                             value={time}
                                             onChange={(e) => setTime(e.target.value)}
                                             required
                                             disabled={availableTimes.length === 0 || !selectedServiceId || !selectedProId}
                                         >
                                             {!selectedServiceId || !selectedProId ? (
-                                                <option value="">Aguardando...</option>
+                                                <option value="">Aguardando seleção...</option>
                                             ) : availableTimes.length === 0 ? (
-                                                <option value="">Lotado</option>
+                                                <option value="">Agenda lotada para este dia</option>
                                             ) : (
                                                 <>
-                                                    <option value="" disabled>Escolha...</option>
+                                                    <option value="" disabled>Escolha um horário...</option>
                                                     {availableTimes.map(t => <option key={t} value={t}>{t}</option>)}
                                                 </>
                                             )}
                                         </select>
                                     </div>
                                 </div>
-                                <div className="space-y-6 pt-2">
-                                    <Button type="submit" className="w-full py-8 bg-slate-950 hover:bg-primary text-white font-black uppercase tracking-[0.3em] rounded-sm shadow-xl shadow-black/20 transition-all group flex items-center justify-center gap-3" disabled={isSaving}>
-                                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 group-hover:scale-110 transition-transform" />}
-                                        {editingAppointmentId ? 'Confirmar Ajuste' : 'Protocolar Agendamento'}
+                                <div className="space-y-6 pt-4">
+                                    <Button type="submit" className="w-full py-6 sm:py-7 bg-primary hover:bg-emerald-600 text-white font-medium text-base rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2" disabled={isSaving}>
+                                        {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                                        {editingAppointmentId ? 'Confirmar Ajuste' : 'Confirmar Agendamento'}
                                     </Button>
                                     <div className="flex items-center justify-center gap-4 text-slate-300 dark:text-slate-800">
                                         <div className="h-px bg-current flex-1"></div>
@@ -1062,7 +1075,7 @@ export const Agenda = () => {
                                     <div>
                                         <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Status</p>
                                         <select
-                                            className={`w-full mt-1 px-3 py-2 rounded-sm text-[11px] font-black uppercase tracking-widest border-2 transition-all outline-none cursor-pointer
+                                            className={`w-full mt-1 px-3 py-2 rounded-lg text-xs font-semibold border transition-all outline-none cursor-pointer
                                             ${selectedAppointment.status === 'Pendente' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-500/30 dark:text-amber-400' :
                                                     selectedAppointment.status === 'Confirmado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400' :
                                                         (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-900/20 dark:border-sky-500/30 dark:text-sky-400' :
@@ -1090,10 +1103,10 @@ export const Agenda = () => {
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-3 py-4 px-6 bg-slate-950 hover:bg-primary text-white font-black rounded-sm transition-all shadow-xl shadow-black/10 active:scale-[0.98] group uppercase tracking-widest text-[11px]"
+                                            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-slate-900 hover:bg-emerald-600 text-white font-medium rounded-xl transition-all shadow-md active:scale-95 text-sm"
                                         >
-                                            <MessageCircle className="w-4 h-4 group-hover:rotate-12 transition-transform" />
-                                            Enviar Lembrete Amigável
+                                            <MessageCircle className="w-4 h-4" />
+                                            Enviar Lembrete por WhatsApp
                                         </a>
                                     </div>
                                 )}
@@ -1181,22 +1194,22 @@ export const Agenda = () => {
                     <div className="relative w-full max-w-sm bg-white dark:bg-slate-900 h-full shadow-2xl flex flex-col p-10 animate-in slide-in-from-right duration-500 overflow-hidden">
                         <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32"></div>
 
-                        <div className="flex items-center justify-between mb-12 relative z-10">
+                        <div className="flex items-center justify-between mb-8 relative z-10">
                             <div>
-                                <h3 className="text-3xl font-black text-slate-900 dark:text-white uppercase tracking-tighter">
-                                    Filtros <span className="text-primary">Pro</span>
+                                <h3 className="text-3xl font-serif font-bold text-slate-900 dark:text-white capitalize">
+                                    Filtros <span className="text-primary italic">Avançados</span>
                                 </h3>
-                                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mt-1">Refine sua gestão</p>
+                                <p className="text-sm font-medium text-slate-500 mt-1">Refine as visões na sua agenda</p>
                             </div>
-                            <button onClick={() => setIsFilterPanelOpen(false)} className="p-3 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-sm transition-all">
-                                <X className="w-6 h-6 text-slate-400" />
+                            <button onClick={() => setIsFilterPanelOpen(false)} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-all">
+                                <X className="w-5 h-5 text-slate-400" />
                             </button>
                         </div>
 
-                        <div className="flex-1 overflow-y-auto space-y-12 pr-2 relative z-10 scrollbar-hide">
+                        <div className="flex-1 overflow-y-auto space-y-8 pr-2 relative z-10 scrollbar-hide">
                             {/* Status */}
-                            <div className="space-y-4">
-                                <label className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Status do Fluxo</label>
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Status do Agendamento</label>
                                 <div className="grid grid-cols-2 gap-3">
                                     {['Pendente', 'Confirmado', 'Finalizado', 'Cancelado', 'Expirado'].map(s => {
                                         const isSelected = filters.status.includes(s);
@@ -1210,9 +1223,9 @@ export const Agenda = () => {
                                                         status: isSelected ? prev.status.filter(x => x !== s) : [...prev.status, s]
                                                     }));
                                                 }}
-                                                className={`px-4 py-3 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all border-2 ${isSelected
-                                                    ? 'bg-primary border-primary text-white shadow-lg shadow-primary/20 scale-[1.05]'
-                                                    : 'bg-white dark:bg-slate-800 border-slate-100 dark:border-slate-800 text-slate-400 hover:border-primary/20'}`}
+                                                className={`px-3 py-2.5 rounded-xl text-xs font-medium transition-all border ${isSelected
+                                                    ? 'bg-primary border-primary text-white shadow-md shadow-primary/20'
+                                                    : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-500 hover:border-primary/30'}`}
                                             >
                                                 {s}
                                             </button>
@@ -1222,12 +1235,12 @@ export const Agenda = () => {
                             </div>
 
                             {/* Profissionais */}
-                            <div className="space-y-4">
-                                <label className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Profissionais</label>
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Profissionais Operacionais</label>
                                 <div className="grid grid-cols-1 gap-2">
                                     {!professionals || professionals.length === 0 ? (
-                                        <div className="p-8 border-2 border-dashed border-slate-100 dark:border-slate-800 text-center rounded-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum profissional operacional detectado</p>
+                                        <div className="p-6 border border-dashed border-slate-200 dark:border-slate-700 text-center rounded-xl bg-slate-50/50 dark:bg-slate-800/20">
+                                            <p className="text-xs font-medium text-slate-400">Nenhum profissional cadastrado.</p>
                                         </div>
                                     ) : (
                                         professionals.map(p => {
@@ -1242,9 +1255,9 @@ export const Agenda = () => {
                                                             professionals: isSelected ? prev.professionals.filter(x => x !== p.id) : [...prev.professionals, p.id]
                                                         }));
                                                     }}
-                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all border-2 ${isSelected
-                                                        ? 'bg-primary/10 border-primary text-primary shadow-lg shadow-primary/5'
-                                                        : 'bg-slate-50 dark:bg-slate-800/50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200 dark:hover:bg-slate-800'}`}
+                                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium transition-all border ${isSelected
+                                                        ? 'bg-primary/5 border-primary text-primary shadow-sm shadow-primary/5'
+                                                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white hover:border-slate-300 dark:hover:bg-slate-800'}`}
                                                 >
                                                     {p.name}
                                                     {isSelected && <Plus className="w-4 h-4 rotate-45" />}
@@ -1256,12 +1269,12 @@ export const Agenda = () => {
                             </div>
 
                             {/* Serviços */}
-                            <div className="space-y-4">
-                                <label className="text-[11px] font-black text-slate-950 dark:text-white uppercase tracking-[0.2em]">Serviços Ativos</label>
+                            <div className="space-y-3">
+                                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Catálogo de Serviços</label>
                                 <div className="grid grid-cols-1 gap-2">
                                     {!services || services.length === 0 ? (
-                                        <div className="p-8 border-2 border-dashed border-slate-100 dark:border-slate-800 text-center rounded-sm">
-                                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Catálogo sincronizado não encontrado</p>
+                                        <div className="p-6 border border-dashed border-slate-200 dark:border-slate-700 text-center rounded-xl bg-slate-50/50 dark:bg-slate-800/20">
+                                            <p className="text-xs font-medium text-slate-400">Nenhum serviço disponível.</p>
                                         </div>
                                     ) : (
                                         services.map(s => {
@@ -1276,12 +1289,12 @@ export const Agenda = () => {
                                                             services: isSelected ? prev.services.filter(x => x !== s.id) : [...prev.services, s.id]
                                                         }));
                                                     }}
-                                                    className={`w-full flex items-center justify-between px-5 py-4 rounded-sm text-[10px] font-black uppercase tracking-widest transition-all border-2 ${isSelected
-                                                        ? 'bg-slate-950 border-slate-950 text-white shadow-2xl'
-                                                        : 'bg-slate-50 dark:bg-slate-800/50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200 dark:hover:bg-slate-800'}`}
+                                                    className={`w-full flex items-center justify-between px-4 py-3 rounded-xl text-xs font-medium transition-all border ${isSelected
+                                                        ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                                                        : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-white hover:border-slate-300 dark:hover:bg-slate-800'}`}
                                                 >
-                                                    {s.name}
-                                                    {isSelected && <div className="w-2 h-2 rounded-none bg-primary animate-pulse" />}
+                                                    <span className="truncate">{s.name}</span>
+                                                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-primary" />}
                                                 </button>
                                             );
                                         })
@@ -1290,18 +1303,18 @@ export const Agenda = () => {
                             </div>
                         </div>
 
-                        <div className="pt-10 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-4 relative z-10 bg-white dark:bg-slate-900">
+                        <div className="pt-8 border-t border-slate-100 dark:border-slate-800 flex flex-col gap-3 relative z-10 bg-white dark:bg-slate-900">
                             <button
                                 onClick={() => {
                                     setFilters({ status: [], professionals: [], services: [] });
                                     setSearchTerm('');
                                 }}
-                                className="w-full py-4 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-red-500 transition-colors"
+                                className="w-full py-3 text-xs font-medium text-slate-400 hover:text-rose-500 transition-colors"
                             >
-                                [ Limpar Configurações ]
+                                Limpar Todos os Filtros
                             </button>
-                            <Button className="w-full py-6 rounded-sm bg-slate-950 hover:bg-primary text-xs font-black uppercase tracking-[0.2em] shadow-2xl transition-all" onClick={() => setIsFilterPanelOpen(false)}>
-                                Aplicar Consultoria
+                            <Button className="w-full py-5 rounded-xl bg-primary hover:bg-emerald-600 text-white font-medium text-base shadow-lg shadow-primary/20 transition-all" onClick={() => setIsFilterPanelOpen(false)}>
+                                Aplicar Consultas
                             </Button>
                         </div>
                     </div>

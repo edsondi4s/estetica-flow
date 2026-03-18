@@ -1,12 +1,22 @@
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @theme {
-  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Google Sans", "Product Sans", "Outfit", sans-serif;
+  
+  /* Dynamic Variables mappings */
   --color-primary: var(--primary);
   --color-primary-dark: var(--primary-dark);
   --color-primary-light: var(--primary-light);
-  --color-background-light: #fdfafb;
+  
+  /* Luxury/Premium Fixed Palette */
+  --color-secondary: #D4AF37;
+  --color-gold: #D4AF37;
+  --color-accent: #D4AF37;
+  
+  --color-background-light: #ECFDF5;
+  --color-text-luxury: #064E3B;
 
   /* Dark Mode support */
   --color-slate-900: #020617;
@@ -16,26 +26,37 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --primary: #db2777;
-  --primary-dark: #be185d;
-  --primary-light: #fce7f3;
+  /* Default Primary Fallbacks */
+  --primary: #10B981;
+  --primary-dark: #047857;
+  --primary-light: #86EFAC;
 }
 
 body {
-  font-family: "Outfit", sans-serif;
-  @apply bg-[#fdfafb] text-slate-900 transition-colors duration-300 antialiased;
+  font-family: "Inter", sans-serif;
+  @apply bg-background-light text-text-luxury transition-colors duration-300 antialiased;
 }
 
 .dark body {
   @apply bg-[#020617] text-slate-50;
 }
 
-/* Luxury Sharp Geometry */
-.rounded-luxury {
-  border-radius: 2px !important;
+h1, h2, h3, h4, h5, h6, .font-serif {
+  font-family: "Google Sans", "Product Sans", "Outfit", sans-serif;
+  font-weight: 800;
 }
 
-/* Staggered Reveal Animations */
+/* Luxury Geometry & Interaction */
+.rounded-luxury {
+  border-radius: 4px !important;
+}
+
+/* Base button and card luxury transitions */
+.luxury-hover {
+  @apply transition-all duration-300 hover:-translate-y-[2px] hover:shadow-lg cursor-pointer;
+}
+
+/* Staggered Reveal Animations (Spring physics) */
 .reveal-content {
   animation: reveal 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
   opacity: 0;
@@ -43,25 +64,21 @@ body {
 }
 
 @keyframes reveal {
-  to {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-.delay-100 {
-  animation-delay: 100ms;
-}
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
 
-.delay-200 {
-  animation-delay: 200ms;
-}
-
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-/* Custom scrollbar */
+/* Custom Luxury scrollbar */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -72,10 +89,10 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #db277744;
-  border-radius: 0px;
+  background: var(--primary-light);
+  border-radius: 2px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #db2777;
+  background: var(--primary);
 }
