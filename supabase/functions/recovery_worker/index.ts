@@ -78,12 +78,13 @@ Deno.serve(async (req) => {
                 const msgs = groups[sender_number];
                 if (msgs.length < 2) continue;
 
-                // Index 0 é a mensagem MAIS RECENTE da conversa. 
-                // Index 1 é a penúltima.
                 const lastMsg = msgs[0];
-                const prevMsg = msgs[1];
 
-                if (lastMsg.role === 'assistant' && prevMsg.role === 'user') {
+                if (lastMsg.role === 'assistant') {
+                    const userMsgIndex = msgs.findIndex(m => m.role === 'user');
+                    if (userMsgIndex === -1) continue;
+                    
+                    const prevUserMsg = msgs[userMsgIndex];
                     const lastMsgDate = new Date(lastMsg.created_at);
                     const diffMins = Math.floor((now.getTime() - lastMsgDate.getTime()) / 60000);
 
@@ -103,7 +104,7 @@ Deno.serve(async (req) => {
 Sua missão: Mande APENAS UMA ÚNICA mensagem curta (1 frase) de engajamento empático, perguntando se ele gostaria de continuar o agendamento ou se teve alguma dúvida, para reativar o atendimento. 
 Não use formalidade ou gírias extremas.
 Aqui está o final da conversa interrompida:
-Cliente: "${prevMsg.content}"
+Cliente: "${prevUserMsg.content}"
 Você: "${lastMsg.content}"
 
 (Gere APENAS o texto da mensagem que será enviada diretamente pro WhatsApp dele. Nenhuma formatação extra. Pense no cliente inativo que você está querendo trazer de volta).`;

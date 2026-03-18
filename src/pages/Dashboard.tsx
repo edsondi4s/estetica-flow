@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import {
     Calendar, Users, DollarSign, ArrowRight, Droplets, Scissors,
     MoreHorizontal, CalendarPlus, UserPlus, Loader2, Trophy,
-    Medal, TrendingUp, ChevronDown, Filter, ChevronLeft, ChevronRight, Sparkles
+    Medal, TrendingUp, ChevronDown, Filter, ChevronLeft, ChevronRight, Sparkles, X
 } from 'lucide-react';
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
@@ -39,6 +39,9 @@ interface DashboardProps {
 
 export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const [isLoading, setIsLoading] = useState(true);
+    const [userName, setUserName] = useState('');
+    const [isInsightOpen, setIsInsightOpen] = useState(false);
+    const [showWelcomeModal, setShowWelcomeModal] = useState(false);
     const [chartView, setChartView] = useState<'week' | 'month' | 'year'>('week');
     const [stats, setStats] = useState({
         appointmentsCount: 0,
@@ -59,6 +62,14 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
     useEffect(() => {
         fetchDashboardData();
+
+        // Check if welcome modal was shown in this session
+        if (!sessionStorage.getItem('insightModalShown')) {
+            setTimeout(() => {
+                setShowWelcomeModal(true);
+                sessionStorage.setItem('insightModalShown', 'true');
+            }, 1000); // Small delay to allow data to load and feel organic
+        }
     }, [chartView]);
 
     useEffect(() => {
@@ -89,6 +100,17 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
     const fetchDashboardData = async () => {
         setIsLoading(true);
         try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                const metaName = user.user_metadata?.full_name || user.user_metadata?.name || '';
+                if (metaName) {
+                    setUserName(metaName.split(' ')[0]);
+                } else if (user.email) {
+                    const emailName = user.email.split('@')[0];
+                    setUserName(emailName.charAt(0).toUpperCase() + emailName.slice(1));
+                }
+            }
+
             const today = new Date();
             const todayStr = today.toISOString().split('T')[0];
             const yesterday = new Date(today);
@@ -234,6 +256,53 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
         }
     };
 
+    const generateDynamicInsight = () => {
+        const hour = new Date().getHours();
+        let greeting = 'Boa noite';
+        if (hour >= 5 && hour < 12) greeting = 'Bom dia';
+        else if (hour >= 12 && hour < 18) greeting = 'Boa tarde';
+
+        const dayOfWeek = new Date().getDay();
+        const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+        let insight = '';
+        let tip = '';
+
+        const revTrendVal = parseFloat(stats.revenueTrend.replace('%', '').replace('+', '')) || 0;
+        const appTrendVal = parseFloat(stats.appointmentsTrend.replace('%', '').replace('+', '')) || 0;
+        const formattedRev = `R$ ${stats.revenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`;
+
+        if (stats.appointmentsCount === 0) {
+            if (isWeekend) {
+                insight = `O fim de semana chegou e não temos agendamentos marcados para hoje. A receita mensal segue acumulada em ${formattedRev}.`;
+                tip = 'Aproveite a pausa para revisar suas métricas financeiras, planejar a próxima semana ou descansar. Uma mente criativa vende mais!';
+            } else {
+                insight = `Nenhum agendamento foi registrado para hoje ainda. No acumulado deste mês, já alcançamos um total de ${formattedRev} gerados.`;
+                tip = 'Este é um excelente momento para ativar seus Agentes de IA e enviar uma campanha relâmpago para clientes que não retornam há mais de 30 dias.';
+            }
+        } else if (stats.appointmentsCount > 5) {
+            insight = `Sua agenda está bombando! Temos ${stats.appointmentsCount} agendamentos previstos para hoje. A receita somada até agora neste mês totaliza ${formattedRev}.`;
+            
+            if (revTrendVal > 0) {
+                tip = `A receita já cresceu ${stats.revenueTrend} comparada ao mês passado! Tente focar em adicionar serviços de upsell durante o atendimento local de hoje.`;
+            } else {
+                tip = 'Com a clínica cheia, fortalecer o relacionamento é a chave. Ao final dos atendimentos, não se esqueça de solicitar avaliações positivas no Google Meu Negócio.';
+            }
+        } else {
+            insight = `Sua operação segue um ritmo estável com ${stats.appointmentsCount} agendamento(s) para hoje. A receita confirmada deste mês está em ${formattedRev}.`;
+            
+            if (appTrendVal < 0) {
+                tip = `Sua média diária de agendamentos está levemente reduzida (${stats.appointmentsTrend}). Experimente reativar Lembretes Automáticos para blindar-se contra no-shows (faltas).`;
+            } else if (revTrendVal < 0) {
+                tip = `A receita demonstra uma métrica de ${stats.revenueTrend}. Como estratégia prática, vale criar promoções via WhatsApp mirando serviços de alto ticket.`;
+            } else {
+                tip = 'Seus números demonstram estabilidade brilhante. Aproveite a brecha nos horários vagos de hoje para organizar com a equipe conteúdos engajadores para o Instagram da clínica!';
+            }
+        }
+
+        return { greeting, insight, tip };
+    };
+
     if (isLoading && chartData.length === 0) {
         return (
             <div className="flex items-center justify-center min-h-[400px]">
@@ -244,6 +313,98 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
 
     return (
         <div className="flex flex-col gap-8 pb-12">
+            {/* Dynamic Insight Floating Widget */}
+            <div className={`fixed bottom-8 right-8 z-50 transition-all duration-500 ease-out transform ${isInsightOpen ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0 pointer-events-none'}`}>
+                {isInsightOpen && (
+                    <div className="w-80 sm:w-96 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-500/20 rounded-3xl shadow-[0_20px_40px_rgba(16,185,129,0.15)] flex flex-col relative overflow-hidden mb-4 animate-in fade-in slide-in-from-bottom-4">
+                        <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 blur-3xl rounded-full -mr-20 -mt-20 pointer-events-none"></div>
+                        
+                        <div className="p-6 relative z-10 border-b border-emerald-500/10 flex justify-between items-start">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 border border-emerald-500/20">
+                                    <Sparkles className="w-5 h-5 text-emerald-500" />
+                                </div>
+                                <div>
+                                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                                        {generateDynamicInsight().greeting}{userName ? `, ${userName}` : ''}!
+                                    </h3>
+                                    <p className="text-xs text-slate-500">Agente Estratégico AI</p>
+                                </div>
+                            </div>
+                            <button onClick={() => setIsInsightOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+                                <X className="w-4 h-4" />
+                            </button>
+                        </div>
+                        
+                        <div className="p-6 relative z-10 space-y-4">
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300 leading-relaxed">
+                                {generateDynamicInsight().insight}
+                            </p>
+                            <div className="bg-emerald-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-emerald-500/10">
+                                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-xs mb-2">
+                                    <span>💡</span> DICA ESTRATÉGICA
+                                </div>
+                                <p className="text-xs font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+                                    {generateDynamicInsight().tip}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Floating Toggle Button */}
+            {!isInsightOpen && !showWelcomeModal && (
+                <button
+                    onClick={() => setIsInsightOpen(true)}
+                    className="fixed bottom-8 right-8 z-50 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full p-4 shadow-[0_8px_30px_rgba(16,185,129,0.3)] transition-all hover:scale-110 hover:-translate-y-1 animate-in fade-in zoom-in group"
+                    title="Insights da IA"
+                >
+                    <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
+                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
+                </button>
+            )}
+
+            {/* Welcome Modal Overlay */}
+            {showWelcomeModal && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-300">
+                    <div className="w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-emerald-500/20 rounded-3xl shadow-[0_20px_40px_rgba(16,185,129,0.15)] flex flex-col relative overflow-hidden animate-in zoom-in-95 duration-500">
+                        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 blur-3xl rounded-full -mr-32 -mt-32 pointer-events-none"></div>
+                        
+                        <div className="p-8 relative z-10 flex flex-col items-center text-center pb-6">
+                            <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-500/20 mb-6 shadow-sm">
+                                <Sparkles className="w-8 h-8 text-emerald-500" />
+                            </div>
+                            <h3 className="text-2xl font-serif font-bold text-slate-900 dark:text-white mb-2">
+                                {generateDynamicInsight().greeting}{userName ? `, ${userName}` : ''}!
+                            </h3>
+                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium tracking-wide uppercase mb-6">
+                                Resumo Estratégico Diário
+                            </p>
+                            <p className="text-base font-medium text-slate-700 dark:text-slate-200 leading-relaxed mb-8">
+                                {generateDynamicInsight().insight}
+                            </p>
+                        </div>
+                        
+                        <div className="p-6 relative z-10 bg-emerald-50/50 dark:bg-slate-800/30 border-t border-emerald-500/10">
+                            <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-bold text-sm mb-3">
+                                <span>💡</span> DICA ESTRATÉGICA
+                            </div>
+                            <p className="text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed mb-6">
+                                {generateDynamicInsight().tip}
+                            </p>
+                            
+                            <button 
+                                onClick={() => setShowWelcomeModal(false)}
+                                className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-xl transition-all shadow-md shadow-emerald-500/20 hover:shadow-lg hover:-translate-y-0.5"
+                            >
+                                Acessar Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-12 gap-6 reveal-content delay-100">
                 <div className="md:col-span-12 lg:col-span-4">
                     <StatCard
