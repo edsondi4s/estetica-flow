@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
         const now = new Date();
         const twoHoursAgo = new Date(now.getTime() - 2 * 3600 * 1000).toISOString();
         let totalRecoveries = 0;
+        let debugLog: any[] = [];
 
         for (const st of aiSettings) {
             const recoveryMins = st.recovery_minutes || 30;
@@ -65,6 +66,8 @@ Deno.serve(async (req) => {
                 .eq('user_id', st.user_id)
                 .gte('created_at', twoHoursAgo)
                 .order('created_at', { ascending: false });
+
+            debugLog.push({ action: 'fetch_chats', count: rawChats?.length || 0, user_id: st.user_id, recoveryMins });
 
             if (!rawChats || rawChats.length === 0) continue;
 
@@ -80,19 +83,28 @@ Deno.serve(async (req) => {
 
                 const lastMsg = msgs[0];
 
+                debugLog.push({ sender: sender_number, lastRole: lastMsg.role, lastContent: lastMsg.content });
+
                 if (lastMsg.role === 'assistant') {
                     const userMsgIndex = msgs.findIndex(m => m.role === 'user');
-                    if (userMsgIndex === -1) continue;
+                    if (userMsgIndex === -1) {
+                         debugLog.push({ sender: sender_number, skip: 'No user message found' });
+                         continue;
+                    }
                     
                     const prevUserMsg = msgs[userMsgIndex];
                     const lastMsgDate = new Date(lastMsg.created_at);
                     const diffMins = Math.floor((now.getTime() - lastMsgDate.getTime()) / 60000);
+
+                    debugLog.push({ sender: sender_number, diffMins, recoveryMins });
 
                     if (diffMins >= recoveryMins && diffMins <= 120) {
                         const contentLower = lastMsg.content.toLowerCase();
                         
                         // Verifica se a última mensagem do assistente soava como uma pergunta de agendamento:
                         const isQuestionPattern = /\?/.test(contentLower) && /(agend|marc|hor[aá]|dia|data|servi[cç]|qual|quando)/.test(contentLower);
+
+                        debugLog.push({ sender: sender_number, isQuestionPattern });
 
                         if (isQuestionPattern) {
                             const ai = new OpenAI({ 
@@ -120,13 +132,23 @@ Você: "${lastMsg.content}"
                                 
                                 if (recoveryTxt) {
                                     const { data: globalSettings } = await sp.from('settings').select('*').eq('user_id', st.user_id).single();
-                                    const pType = st.provider_type || globalSettings?.whatsapp_provider_type;
-                                    const pUrl = st.provider_url || globalSettings?.whatsapp_provider_url; 
-                                    const pToken = st.provider_token || globalSettings?.whatsapp_provider_token;
-                                    const pInst = st.provider_instance || globalSettings?.whatsapp_provider_instance;
+                                    const { data: primaryAgent } = await sp.from('ai_agent_settings')
+                                        .select('provider_type, provider_url, provider_token, provider_instance')
+                                        .eq('user_id', st.user_id)
+                                        .not('provider_type', 'is', null)
+                                        .limit(1)
+                                        .single();
+
+                                    const pType = st.provider_type || primaryAgent?.provider_type || globalSettings?.whatsapp_provider_type;
+                                    const pUrl = st.provider_url || primaryAgent?.provider_url || globalSettings?.whatsapp_provider_url; 
+                                    const pToken = st.provider_token || primaryAgent?.provider_token || globalSettings?.whatsapp_provider_token;
+                                    const pInst = st.provider_instance || primaryAgent?.provider_instance || globalSettings?.whatsapp_provider_instance;
                                     
+                                    debugLog.push({ sender: sender_number, pType, pInst, sentRecovery: !!recoveryTxt });
+
                                     if (pType && pUrl && pToken && pInst) {
                                         const sent = await sendWhatsApp(sp, pType, pUrl, pInst, pToken, sender_number, recoveryTxt);
+                                        debugLog.push({ sender: sender_number, whatsappSentSuccess: sent });
                                         if (sent) {
                                             await sp.from('ai_chat_history').insert({
                                                 user_id: st.user_id,
@@ -150,7 +172,7 @@ Você: "${lastMsg.content}"
             }
         }
 
-        return new Response(JSON.stringify({ success: true, recoveries: totalRecoveries }), { headers: corsHeaders });
+        return new Response(JSON.stringify({ success: true, recoveries: totalRecoveries, debug: debugLog }), { headers: corsHeaders });
     } catch (e: any) {
         return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: corsHeaders });
     }
