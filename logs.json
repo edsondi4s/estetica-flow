@@ -1,0 +1,234 @@
+Fetching logs...
+LOGS:
+[
+  {
+    "id": "55bdd397-4a72-4233-9cf7-601a7f261da9",
+    "created_at": "2026-03-19T13:02:50.196844+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Pronto, Edson! Seu agendamento de Limpeza de pele está confirmado para hoje, dia 19/03, às 10h40 com a Julia. \n\nO endereço da clínica é Avenida Santos Dumont, 2789 (Sala 601) - Aldeota, Fortaleza - CE.\n\nAproveite seu atendimento! 😊🎉",
+      "msgs_steps": 13,
+      "allToolCalls": [
+        {
+          "args": "{}",
+          "name": "list_my_appointments"
+        },
+        {
+          "args": "{\"date\": \"2026-03-19\", \"time\": \"10:40\", \"service_id\": \"957b03a0-f312-4792-946e-1c51ed649518\", \"professional_id\": \"4800c9a8-e04f-465e-96c0-7715f3c2072a\"}",
+          "name": "book_appointment"
+        }
+      ]
+    }
+  },
+  {
+    "id": "bac4c6e7-f047-4d2e-9d70-41beab540765",
+    "created_at": "2026-03-19T13:00:09.966402+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "20594e31-a905-4357-96bd-52eadf0f2979",
+    "created_at": "2026-03-19T13:00:06.956243+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "4d9605e8-1fc9-46ea-b9a7-148424c6bfd1",
+    "created_at": "2026-03-19T12:56:01.190312+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Sim, Edson! Seu agendamento de hoje às 09h00 com a Julia para Botox está confirmado como \"Pendente\" no sistema.\n\nO que você gostaria de fazer agora? Cancelar, confirmar presença ou agendar algo novo?",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{}",
+          "name": "list_my_appointments"
+        }
+      ]
+    }
+  },
+  {
+    "id": "3bc1f40e-0536-48e0-ab64-d10d663de372",
+    "created_at": "2026-03-19T12:54:35.889961+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Entendi, Edson. O agendamento de hoje às 09h00 ainda está pendente. \n\nSe você não puder comparecer, posso cancelar esse agendamento para você. Quer que eu cancele?\n\nSe preferir, também posso tentar remarcar para um novo horário hoje (se houver disponibilidade). Me diga como você prefere proceder! 😊",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{}",
+          "name": "list_my_appointments"
+        }
+      ]
+    }
+  },
+  {
+    "id": "77d455ae-62c7-4a47-a7cd-3b565f529e6c",
+    "created_at": "2026-03-19T12:53:47.168118+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Entendi, Edson! Você já tem um agendamento confirmado para hoje às 09h00 com a Julia para Botox. \n\nSe quiser agendar um novo serviço, posso verificar a disponibilidade para outros horários ou profissionais. O que você prefere? 😊",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{}",
+          "name": "list_my_appointments"
+        }
+      ]
+    }
+  },
+  {
+    "id": "8c1d7223-2818-4fdc-81c8-95f335a46edb",
+    "created_at": "2026-03-19T12:50:06.571714+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "0cc00f54-9315-4564-8030-59e7c416975c",
+    "created_at": "2026-03-19T12:50:06.160639+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "df7bba5b-beec-4345-b959-9e9b479d3423",
+    "created_at": "2026-03-19T12:45:20.190404+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Bom dia, Edson! 🌞 Como posso ajudar você hoje?",
+      "msgs_steps": 9,
+      "allToolCalls": []
+    }
+  },
+  {
+    "id": "1813a296-2b45-4b93-bd5f-e3bb6f6d8e74",
+    "created_at": "2026-03-18T19:46:00.217395+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "🎉 Agendamento confirmado, Edson!\n\nVocê tem Botox agendado com a Julia para:\n📅 19/03/2026 (quinta-feira)\n⏰ 09h00\n\n📍 Endereço: Avenida Santos Dumont, 2789 (Sala 601) - Aldeota, Fortaleza - CE\n\nVocê receberá um lembrete antes do horário. 😊\n\nPara confirmar presença, basta responder \"sim\" ou \"confirmo\". Caso contrário, não precisa fazer nada. Até lá! ✨",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{\"date\": \"2026-03-19\", \"time\": \"09:00\", \"service_id\": \"ac281495-555f-43c8-8274-fabf5a59a5ec\", \"professional_id\": \"4800c9a8-e04f-465e-96c0-7715f3c2072a\"}",
+          "name": "book_appointment"
+        }
+      ]
+    }
+  },
+  {
+    "id": "eff75865-f236-4e04-9c48-4815945769f0",
+    "created_at": "2026-03-18T19:45:32.962871+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Edson, para agendarmos seu Botox, preciso que você me informe:\n- Qual data você prefere? (ex: 20/03)\n- Qual horário? (ex: 14h)\n\nAtendemos de segunda a sexta, das 08h às 18h. Qual melhor dia/horário pra você? 😊",
+      "msgs_steps": 9,
+      "allToolCalls": []
+    }
+  },
+  {
+    "id": "a395c9d6-a580-4354-94b8-673f7d07110c",
+    "created_at": "2026-03-18T19:45:07.07991+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "04409cbf-f6c9-4463-a414-b2566ba0dc66",
+    "created_at": "2026-03-18T19:41:38.439228+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Perfeito, Edson! Para agendarmos seu Botox, preciso saber:\n- Qual data você prefere? (ex: 20/03)\n- Qual horário? (ex: 14h)\n\nLembrando que atendemos de segunda a sexta, das 08h às 18h. ✨ Qual melhor dia/horário pra você? 😊",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{}",
+          "name": "list_my_appointments"
+        }
+      ]
+    }
+  },
+  {
+    "id": "15420193-cce5-41ec-9c50-8283d9169f49",
+    "created_at": "2026-03-18T19:36:25.415666+00:00",
+    "level": "INFO",
+    "message": "Recovery Worker enviou mensagem de resgate para 559291571034@s.whatsapp.net",
+    "payload": null
+  },
+  {
+    "id": "abc0b05c-dc2e-42c7-adf4-575cf76818fb",
+    "created_at": "2026-03-18T19:33:44.538465+00:00",
+    "level": "ERROR",
+    "message": "Recovery Worker sem credencias do WhatsApp configuradas para o usuario",
+    "payload": {
+      "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d"
+    }
+  },
+  {
+    "id": "be147c4e-74bb-43ec-b923-b3125f1adced",
+    "created_at": "2026-03-18T19:32:12.739776+00:00",
+    "level": "ERROR",
+    "message": "Recovery Worker sem credencias do WhatsApp configuradas para o usuario",
+    "payload": {
+      "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d"
+    }
+  },
+  {
+    "id": "d076f0c8-6a01-439d-8bc0-3cbe6fbc6c22",
+    "created_at": "2026-03-18T19:31:31.612633+00:00",
+    "level": "ERROR",
+    "message": "Recovery Worker sem credencias do WhatsApp configuradas para o usuario",
+    "payload": {
+      "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d"
+    }
+  },
+  {
+    "id": "22d87ec3-28f5-47a0-93fd-b58f3c6b45b3",
+    "created_at": "2026-03-18T19:29:17.743153+00:00",
+    "level": "ERROR",
+    "message": "Recovery Worker sem credencias do WhatsApp configuradas para o usuario",
+    "payload": {
+      "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d"
+    }
+  },
+  {
+    "id": "65fce046-a89a-415b-8357-aa848e7013f6",
+    "created_at": "2026-03-18T19:13:58.529117+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Perfeito, Edson! Para agendarmos seu Botox, preciso saber:\n- Qual data você prefere? (ex: 20/03)\n- Qual horário? (ex: 14h)\n\nLembrando que atendemos de segunda a sexta, das 08h às 18h. ✨ Qual melhor dia/horário pra você? 😊",
+      "msgs_steps": 11,
+      "allToolCalls": [
+        {
+          "args": "{\"name\": \"Edson Dias\"}",
+          "name": "create_client"
+        }
+      ]
+    }
+  },
+  {
+    "id": "1e44d32b-f0ec-4d35-bbf5-a81dc5e1dd64",
+    "created_at": "2026-03-18T19:13:37.663715+00:00",
+    "level": "INFO",
+    "message": "v28.5 Debug Execution",
+    "payload": {
+      "final_aTxt": "Olá, Edson! Tudo bem? 😊\nQual serviço você gostaria de agendar? Temos:\n- Limpeza de pele (60min)\n- Unhas (15min)\n- Botox (60min)\n\nE qual data/horário prefere? Lembrando que atendemos de segunda a sexta, das 08h às 18h! ✨",
+      "msgs_steps": 9,
+      "allToolCalls": []
+    }
+  }
+]
+TODAY APPS count (requires auth so maybe empty with anon key? let's see):
+0
+Invoking reminders_worker...

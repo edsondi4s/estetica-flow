@@ -591,7 +591,17 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-center">
-                                                    <StatusBadge status={row.status} />
+                                                    <StatusBadge 
+                                                        status={
+                                                            (row.status === 'Pendente' && row.appointment_date && row.appointment_time && 
+                                                            new Date(`${row.appointment_date}T${row.appointment_time.length === 5 ? row.appointment_time + ':00' : row.appointment_time}-03:00`) < new Date())
+                                                                ? 'Expirado' 
+                                                                : (row.status === 'Confirmado' && row.appointment_date && row.appointment_time && 
+                                                                new Date(new Date(`${row.appointment_date}T${row.appointment_time.length === 5 ? row.appointment_time + ':00' : row.appointment_time}-03:00`).getTime() + 60 * 60 * 1000) < new Date())
+                                                                    ? 'Finalizado'
+                                                                    : row.status
+                                                        } 
+                                                    />
                                                 </td>
                                             </tr>
                                         ))

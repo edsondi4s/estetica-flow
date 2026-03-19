@@ -109,6 +109,7 @@ Deno.serve(async (req) => {
                 .from('ai_agent_settings')
                 .select('*')
                 .eq('user_id', st.user_id)
+                .not('provider_type', 'is', null)
                 .limit(1)
                 .maybeSingle();
 
@@ -206,9 +207,11 @@ Deno.serve(async (req) => {
                             });
 
                             results.push(`Sent lembrete para ${clientName} (${jid})`);
+                            await logDb(sp, 'INFO', `Lembrete automático enviado para ${clientName}`, { app_id: app.id, phone: jid });
                         }
                     } else {
                         results.push(`Ignorado lembrete para ${clientName} (${jid}) - sem credenciais de provider ativas`);
+                        await logDb(sp, 'WARNING', `Lembrete automático ignorado (sem credenciais)`, { app_id: app.id, phone: jid });
                     }
                 }
             }

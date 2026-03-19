@@ -1,0 +1,50 @@
+[
+  {
+    "id": "d708c7f1-b047-43d4-8394-b36e252397e6",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "assistant",
+    "content": "[{'type': 'text', 'data': [{'text': 'Edson, não encontrei agendamentos ativos no momento. Seu último agendamento foi cancelado ou já foi realizado. \\ud83d\\ude10'}]}]",
+    "created_at": "2026-03-19T13:23:05.542152+00:00"
+  },
+  {
+    "id": "b74d17f2-f76b-45eb-ba83-d54989b940bb",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "user",
+    "content": "Oi?",
+    "created_at": "2026-03-19T13:22:58.754566+00:00"
+  },
+  {
+    "id": "7ba27459-0794-4551-9dcf-f817e8116cbc",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "assistant",
+    "content": "[{'type': 'text', 'data': [{'text': 'Bom dia, Edson! Tudo bem? \\ud83d\\ude0a Como posso ajudar você hoje?'}]}]",
+    "created_at": "2026-03-19T13:22:47.331617+00:00"
+  },
+  {
+    "id": "1d307cc9-4bbc-4f97-93ab-80f166a9e8d5",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "user",
+    "content": "Olá, bom dia",
+    "created_at": "2026-03-19T13:22:42.161711+00:00"
+  },
+  {
+    "id": "912b3d27-8230-48c5-9be6-ba798be46954",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "assistant",
+    "content": "Edson, você tem um agendamento agendado para hoje, dia 19/03, às 10h40 com a Julia para Limpeza de pele. O status está como \"Pendente\".",
+    "created_at": "2026-03-19T13:18:48.445159+00:00"
+  },
+  {
+    "id": "cc71bbd1-34d2-47e2-95be-415261144175",
+    "user_id": "0c64bd71-47d6-4116-a02a-af2589ecb27d",
+    "sender_number": "559291571034@s.whatsapp.net",
+    "role": "user",
+    "content": "Quais meus atuais agendamentos?",
+    "created_at": "2026-03-19T13:18:40.587184+00:00"
+  }
+]

@@ -103,6 +103,27 @@ function AppContent() {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Background trigger for Reminders & Sweep (Frontend Cron Fallback)
+  useEffect(() => {
+    if (!session?.user) return;
+
+    const pingWorker = async () => {
+      try {
+        await supabase.functions.invoke('reminders_worker');
+      } catch (err) {
+        console.error('Failed to trigger reminders worker', err);
+      }
+    };
+
+    // Ping immediately on login
+    pingWorker();
+
+    // Ping every 5 minutes to keep it alive
+    const interval = setInterval(pingWorker, 5 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [session?.user]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
