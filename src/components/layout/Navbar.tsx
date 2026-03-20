@@ -38,6 +38,18 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
     const [showResults, setShowResults] = useState(false);
     const searchRef = useRef<HTMLDivElement>(null);
     const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
+    const [clientStats, setClientStats] = useState<{ total: number, completed: number, totalValue: number } | null>(null);
+    const [isLoadingStats, setIsLoadingStats] = useState(false);
+
+    const formatPhoneNumber = (phone: string) => {
+        if (!phone) return 'Nenhum telefone registrado';
+        const cleaned = phone.replace(/\D/g, '');
+        let match = cleaned.match(/^(\d{2})(\d{2})(\d{4,5})(\d{4})$/);
+        if (match) return `+${match[1]} (${match[2]}) ${match[3]}-${match[4]}`;
+        match = cleaned.match(/^(\d{2})(\d{4,5})(\d{4})$/);
+        if (match) return `(${match[1]}) ${match[2]}-${match[3]}`;
+        return phone;
+    };
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
@@ -80,6 +92,39 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
         };
         fetchResults();
     }, [debouncedQuery]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchClientStats = async () => {
+            if (selectedItem?.type !== 'client') {
+                if (isMounted) setClientStats(null);
+                return;
+            }
+            if (isMounted) setIsLoadingStats(true);
+            try {
+                const { data, error } = await supabase
+                    .from('appointments')
+                    .select('status, services(name, price)')
+                    .eq('client_id', selectedItem.id);
+                    
+                if (error) throw error;
+                
+                if (isMounted && data) {
+                    const total = data.length;
+                    const completed = data.filter(a => a.status === 'Finalizado').length;
+                    const totalValue = data.reduce((acc, curr) => acc + (Number((curr.services as any)?.price) || 0), 0);
+                    setClientStats({ total, completed, totalValue });
+                }
+            } catch (err) {
+                console.error("Erro ao carregar stats do cliente:", err);
+            } finally {
+                if (isMounted) setIsLoadingStats(false);
+            }
+        };
+        
+        fetchClientStats();
+        return () => { isMounted = false; };
+    }, [selectedItem]);
 
     const getIconForType = (type: string) => {
         switch (type) {
@@ -190,23 +235,133 @@ export const Navbar = ({ currentPageId, user, onMenuClick, onPageChange }: Navba
             
             {/* Quick View Modal */}
             {selectedItem && (
-                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4" onClick={(e) => { if (e.target === e.currentTarget) setSelectedItem(null); }}>
-                    <div className="bg-white dark:bg-slate-800 rounded-luxury shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in-95">
-                        <div className="p-6 border-b border-slate-100 dark:border-slate-700 flex items-start justify-between">
+                <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-md z-50 flex items-center justify-center p-4 overflow-y-auto" onClick={(e) => { if (e.target === e.currentTarget) setSelectedItem(null); }}>
+                    <div className="bg-white dark:bg-slate-800 rounded-[28px] shadow-2xl w-full max-w-[28rem] overflow-hidden animate-in fade-in zoom-in-95 border border-slate-100 dark:border-slate-700/50 m-auto">
+                        {/* Header */}
+                        <div className="p-6 border-b border-slate-100 dark:border-slate-700/50 flex items-start justify-between bg-slate-50/50 dark:bg-slate-900/20">
                             <div className="flex gap-4">
-                                <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                                <div className="w-14 h-14 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 shadow-sm flex items-center justify-center text-primary mt-1 shrink-0">
                                     {getIconForType(selectedItem.type)}
                                 </div>
                                 <div>
-                                    <p className="text-xs text-primary font-medium tracking-wider uppercase mb-1">{selectedItem.type}</p>
-                                    <h3 className="text-xl font-serif text-slate-800 dark:text-white leading-tight">{selectedItem.title}</h3>
+                                    <p className="text-[10px] text-primary font-bold tracking-widest uppercase mb-1.5 opacity-80">
+                                        {selectedItem.type === 'client' ? 'Cliente da Clínica' : selectedItem.type === 'service' ? 'Serviço Oferecido' : 'Membro da Equipe'}
+                                    </p>
+                                    <h3 className="text-2xl font-serif text-slate-900 dark:text-white leading-tight font-medium tracking-tight break-words pr-4">{selectedItem.title}</h3>
                                 </div>
                             </div>
-                            <button onClick={() => setSelectedItem(null)} className="p-1.5 text-slate-400 hover:text-slate-700 bg-slate-50 dark:bg-slate-900 rounded-full"><X className="w-4 h-4" /></button>
+                            <button onClick={() => setSelectedItem(null)} className="p-2 text-slate-400 hover:text-rose-500 bg-white dark:bg-slate-800 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all border border-slate-100 dark:border-slate-700 shadow-sm shrink-0"><X className="w-4 h-4" /></button>
                         </div>
-                        <div className="p-6">
-                            <p className="text-slate-600 dark:text-slate-300 text-sm mb-4">{selectedItem.subtitle}</p>
-                            <button className="w-full py-2.5 bg-primary text-white rounded-luxury font-medium luxury-hover text-sm">Acessar Detalhes</button>
+                        
+                        {/* Body */}
+                        <div className="p-8 pb-10">
+                            {selectedItem.type === 'client' && (
+                                <div className="space-y-6 mb-8 transform transition-all duration-300">
+                                    <div className="flex flex-col gap-2">
+                                        <span className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider pl-1">Contato Principal</span>
+                                        <span className="text-[15px] font-medium text-slate-800 dark:text-slate-200 flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 w-full px-5 py-3 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-sm">
+                                            <Phone className="w-4 h-4 text-primary shrink-0 drop-shadow-[0_2px_4px_rgba(16,185,129,0.2)]" />
+                                            {formatPhoneNumber(selectedItem.raw.phone)}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Total de Agendamentos</span>
+                                            {isLoadingStats ? (
+                                                <div className="h-6 flex items-center"><Loader2 className="w-4 h-4 text-primary animate-spin" /></div>
+                                            ) : (
+                                                <span className="text-xl font-bold text-slate-800 dark:text-slate-200">{clientStats?.total || 0}</span>
+                                            )}
+                                        </div>
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-1">Serviços Feitos</span>
+                                            {isLoadingStats ? (
+                                                <div className="h-6 flex items-center"><Loader2 className="w-4 h-4 text-primary animate-spin" /></div>
+                                            ) : (
+                                                <span className="text-xl font-bold text-slate-800 dark:text-slate-200">{clientStats?.completed || 0}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="bg-amber-50/50 dark:bg-amber-900/10 p-5 rounded-[20px] border border-amber-100 dark:border-amber-900/30 relative overflow-hidden group hover:border-amber-200 dark:hover:border-amber-800/50 transition-colors">
+                                        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-bl from-amber-500/10 to-transparent rounded-bl-[100px] transition-all group-hover:scale-110"></div>
+                                        <div className="relative z-10">
+                                            <span className="text-[11px] font-bold text-amber-600/80 dark:text-amber-500/80 uppercase tracking-widest mb-2.5 block flex items-center gap-1.5"><Sparkles className="w-3 h-3" /> Anotações Especiais</span>
+                                            <p className={`text-[15px] leading-relaxed font-medium ${selectedItem.raw.notes ? 'text-amber-900/90 dark:text-amber-200/90 italic' : 'text-amber-800/60 dark:text-amber-200/60'}`}>
+                                                {selectedItem.raw.notes ? `"${selectedItem.raw.notes}"` : 'Ainda não há nenhuma observação anotada para este cliente. Quando houver, ela aparecerá aqui para te ajudar no atendimento.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedItem.type === 'service' && (
+                                <div className="space-y-6 mb-8">
+                                    <div className="flex gap-4">
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 flex-1 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 transition-colors hover:border-primary/30 group">
+                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2 pl-0.5">Tempo Médio</span>
+                                            <span className="text-xl font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2 group-hover:scale-105 transition-transform origin-left">
+                                                <Calendar className="w-5 h-5 text-primary drop-shadow-[0_2px_4px_rgba(16,185,129,0.2)]" />
+                                                {selectedItem.raw.duration_minutes}m
+                                            </span>
+                                        </div>
+                                        <div className="bg-slate-50 dark:bg-slate-900/50 flex-1 p-5 rounded-2xl border border-slate-100 dark:border-slate-800/60 transition-colors hover:border-emerald-500/30 group">
+                                            <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2 pl-0.5">Valor Base</span>
+                                            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400 font-mono tracking-tight group-hover:scale-105 transition-transform origin-left">
+                                                R$ {Number(selectedItem.raw.price).toFixed(2).replace('.', ',')}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3.5 bg-slate-50 dark:bg-slate-900/30 px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                                        <div className="relative shrink-0 flex items-center justify-center w-3 h-3">
+                                            {selectedItem.raw.is_active && <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-30"></div>}
+                                            <div className={`w-2.5 h-2.5 rounded-full relative z-10 ${selectedItem.raw.is_active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`} />
+                                        </div>
+                                        <span className="text-[15px] font-medium text-slate-700 dark:text-slate-300 leading-snug">
+                                            {selectedItem.raw.is_active ? 'Este serviço está ativo e disponível para agendamentos na clínica.' : 'Este serviço está pausado no momento.'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {selectedItem.type === 'professional' && (
+                                <div className="space-y-6 mb-8">
+                                    <div className="flex flex-col gap-2">
+                                        <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-widest pl-1">Especialidade Principal</span>
+                                        <span className="text-[15px] font-medium text-slate-800 dark:text-slate-200 flex items-center gap-3 bg-slate-50 dark:bg-slate-900/50 w-full px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-sm">
+                                            <Star className="w-5 h-5 text-amber-500 shrink-0 drop-shadow-[0_2px_4px_rgba(245,158,11,0.2)]" />
+                                            {selectedItem.raw.specialty || 'Profissional Multidisciplinar'}
+                                        </span>
+                                    </div>
+                                    
+                                    <div className="flex items-center gap-3.5 bg-slate-50 dark:bg-slate-900/30 px-5 py-4 rounded-2xl border border-slate-100 dark:border-slate-800/60">
+                                        <div className="relative shrink-0 flex items-center justify-center w-3 h-3">
+                                            {selectedItem.raw.is_active && <div className="absolute inset-0 bg-emerald-500 rounded-full animate-ping opacity-30"></div>}
+                                            <div className={`w-2.5 h-2.5 rounded-full relative z-10 ${selectedItem.raw.is_active ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-slate-400'}`} />
+                                        </div>
+                                        <span className="text-[15px] font-medium text-slate-700 dark:text-slate-300 leading-snug">
+                                            {selectedItem.raw.is_active ? 'Faz parte da equipe ativa e está aceitando horários.' : 'Perfil inativo ou afastado temporariamente.'}
+                                        </span>
+                                    </div>
+                                </div>
+                            )}
+
+                            <button
+                                className="w-full h-14 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-[20px] font-medium shadow-[0_8px_30px_rgb(0,0,0,0.12)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.2)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.12)] dark:hover:shadow-[0_8px_30px_rgb(255,255,255,0.2)] hover:-translate-y-0.5 transition-all flex items-center justify-center gap-2.5 text-[15px]"
+                                onClick={() => {
+                                    setSelectedItem(null);
+                                    if (selectedItem.type === 'client') onPageChange('clientes');
+                                    else if (selectedItem.type === 'service') onPageChange('servicos');
+                                    else if (selectedItem.type === 'professional') onPageChange('profissionais');
+                                }}
+                            >
+                                <span className="opacity-90">Ir para</span> {selectedItem.type === 'client' ? 'Clientes' : selectedItem.type === 'service' ? 'Serviços' : 'Equipe'}
+                                <div className="ml-1 w-5 h-5 bg-white/20 dark:bg-black/10 rounded-full flex items-center justify-center opacity-70">
+                                    →
+                                </div>
+                            </button>
                         </div>
                     </div>
                 </div>

@@ -427,44 +427,50 @@ export const Configuracoes = ({ onLogout }: ConfiguracoesProps) => {
                                 <p className="text-sm font-medium text-slate-500">Nenhum endereço cadastrado</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="flex flex-col gap-4">
                                 {addresses.map((addr) => (
-                                    <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-6 rounded-2xl border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all overflow-hidden flex flex-col h-full">
-                                        {addr.is_main && (
-                                            <div className="absolute top-4 right-4 bg-primary/10 text-primary text-xs font-semibold px-3 py-1 rounded-full">
-                                                Principal
+                                    <div key={addr.id} className="group relative bg-white dark:bg-slate-950 p-5 sm:p-6 rounded-[20px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:border-primary/30 hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all overflow-hidden flex flex-col lg:flex-row items-stretch lg:items-center gap-0 lg:gap-5">
+                                        
+                                        <div className="flex-1 min-w-0 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                                            <div className="w-14 h-14 bg-primary/5 rounded-2xl flex items-center justify-center shrink-0 border border-primary/10 group-hover:scale-105 transition-transform duration-300">
+                                                <MapPin className="w-6 h-6 text-primary" />
                                             </div>
-                                        )}
-                                        <div className="flex gap-4 mb-6 flex-1">
-                                            <div className="w-12 h-12 bg-primary/5 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
-                                                <MapPin className="w-5 h-5 text-primary" />
-                                            </div>
-                                            <div>
-                                                <h5 className="font-semibold text-slate-900 dark:text-white text-lg">{addr.street}, {addr.number}</h5>
-                                                <p className="text-sm text-slate-500 mt-1">
+                                            
+                                            <div className="flex-1 min-w-0 w-full mb-4 sm:mb-0">
+                                                <div className="flex flex-wrap items-center gap-3 mb-1">
+                                                    <h5 className="font-serif font-bold text-slate-900 dark:text-white text-xl truncate group-hover:text-primary transition-colors">{addr.street}, {addr.number}</h5>
+                                                    {addr.is_main && (
+                                                        <span className="bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-500 border border-amber-200/50 dark:border-amber-800/50 text-[10px] uppercase font-bold tracking-wider px-2.5 py-1 rounded-md shrink-0">
+                                                            Principal
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <p className="text-sm text-slate-500 dark:text-slate-400 font-medium truncate">
                                                     {addr.neighborhood} — {addr.city}/{addr.state}
                                                 </p>
-                                                <div className="mt-3 flex flex-wrap items-center gap-2">
-                                                    <span className="text-xs font-medium text-slate-600 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md">CEP {addr.zip_code}</span>
-                                                    {addr.complement && <span className="text-xs font-medium text-slate-500">Compl: {addr.complement}</span>}
+                                                <div className="mt-2.5 flex flex-wrap items-center gap-2">
+                                                    <span className="text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-md border border-slate-100 dark:border-slate-800">
+                                                        CEP {addr.zip_code}
+                                                    </span>
+                                                    {addr.complement && (
+                                                        <span className="text-xs font-semibold text-slate-500 bg-slate-50 dark:bg-slate-800/50 px-2.5 py-1.5 rounded-md border border-slate-100 dark:border-slate-800 flex items-center gap-1.5">
+                                                            <MapPin className="w-3 h-3 text-slate-400" /> Compl: {addr.complement}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-3 justify-end pt-5 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
+
+                                        <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-900/40 lg:bg-transparent border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/60 flex items-center gap-3 justify-start sm:justify-end shrink-0 -mx-5 -mb-5 sm:-mx-6 sm:-mb-6 lg:mx-0 lg:mb-0">
+                                            <Button variant="outline" className="h-10 px-5 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700 hover:text-primary hover:border-primary hover:bg-primary/5 shadow-sm" onClick={() => { setAddressForm(addr); setIsAddressModalOpen(true); }}>
+                                                Editar Endereço
+                                            </Button>
                                             <button
-                                                className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-primary transition-colors"
-                                                onClick={() => {
-                                                    setAddressForm(addr);
-                                                    setIsAddressModalOpen(true);
-                                                }}
-                                            >
-                                                Editar
-                                            </button>
-                                            <button
-                                                className="text-sm font-medium text-rose-500 hover:text-rose-600 transition-colors"
+                                                className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 hover:border-rose-200 dark:hover:border-rose-800/50 shadow-sm transition-all outline-none"
                                                 onClick={() => handleDeleteAddress(addr.id)}
+                                                title="Remover endereço"
                                             >
-                                                Remover
+                                                <Trash2 className="w-4 h-4" />
                                             </button>
                                         </div>
                                     </div>

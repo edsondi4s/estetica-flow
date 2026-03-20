@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Plus, Edit2, Trash2, Loader2, UserRound, Award, Check, Camera, TrendingUp, Calendar, Scissors, User, Medal, Users, CalendarDays, PieChart as PieChartIcon, BarChart3 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader2, UserRound, Award, Check, Camera, TrendingUp, Calendar, Scissors, User, Medal, Users, CalendarDays, PieChart as PieChartIcon, BarChart3, Sparkles } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, PieChart, Pie } from 'recharts';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -544,6 +544,7 @@ export const Profissionais = () => {
                                 />
                                 <Tooltip
                                     content={<CustomTooltip />}
+                                    cursor={{ fill: 'transparent' }}
                                 />
                                 <Bar dataKey="count" radius={[0, 0, 0, 0]} barSize={50}>
                                     {globalStats.chartData.map((_, index) => (
@@ -567,67 +568,68 @@ export const Profissionais = () => {
                 title={editingPro ? 'Editar Profissional' : 'Novo Profissional'}
                 description="Cadastre um novo membro para sua equipe e atribua serviços."
             >
-                <form onSubmit={handleSave} className="space-y-5 pt-2">
+                <form onSubmit={handleSave} className="space-y-6 pt-4">
+                    {/* 1. Foto de Perfil */}
+                    <div className="flex items-center gap-6 p-6 bg-slate-50 dark:bg-slate-900/50 rounded-[24px] border border-slate-100 dark:border-slate-800/60 shadow-sm transition-all hover:border-primary/20 group">
+                        <div className="w-24 h-24 rounded-full bg-white dark:bg-slate-800 flex items-center justify-center overflow-hidden border-4 border-white dark:border-slate-900 shadow-lg group-hover:scale-105 transition-transform duration-300 shrink-0">
+                            {photoUrl ? (
+                                <img src={photoUrl} alt="Preview" className="w-full h-full object-cover" />
+                            ) : (
+                                <Camera className="w-8 h-8 text-slate-300 dark:text-slate-600" />
+                            )}
+                        </div>
+                        <div className="flex-1">
+                            <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-3 pl-1">Foto de Perfil</label>
+                            <label className="inline-flex items-center justify-center gap-2 px-6 py-3 border-dashed bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold rounded-[16px] cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 border-2 border-slate-200 dark:border-slate-700 transition-all text-sm group-hover:text-primary group-hover:border-primary/40 w-full sm:w-auto">
+                                <Camera className="w-4 h-4" />
+                                {photoUrl ? 'Substituir Foto' : 'Fazer Upload'}
+                                <input
+                                    type="file"
+                                    className="hidden"
+                                    accept="image/*"
+                                    onChange={handleFileUpload}
+                                    disabled={isSaving}
+                                />
+                            </label>
+                        </div>
+                    </div>
+
+                    {/* 2. Nome */}
                     <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-700 dark:text-slate-300">Nome do Profissional</label>
+                        <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-2 px-1">Nome do Profissional</label>
                         <input
                             placeholder="Nome completo"
                             value={name}
                             onChange={(e) => setName(e.target.value)}
-                            className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
+                            className="w-full px-5 py-4 bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 rounded-[20px] text-[15px] font-medium text-slate-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all outline-none"
                             required
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">Foto de Perfil</label>
-                            <div className="flex items-center gap-4">
-                                <div className="w-20 h-20 rounded-[20px] bg-slate-50 dark:bg-slate-800 flex items-center justify-center overflow-hidden border border-slate-100 dark:border-slate-700/50 shadow-sm">
-                                    {photoUrl ? (
-                                        <img src={photoUrl} alt="Preview" className="w-full h-full object-cover" />
-                                    ) : (
-                                        <Camera className="w-8 h-8 text-slate-300 dark:text-slate-600" />
-                                    )}
-                                </div>
-                                <div className="flex-1">
-                                    <label className="inline-flex items-center gap-2 px-5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium rounded-xl cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                                        <Camera className="w-4 h-4" />
-                                        {photoUrl ? 'Substituir Foto' : 'Fazer Upload'}
-                                        <input
-                                            type="file"
-                                            className="hidden"
-                                            accept="image/*"
-                                            onChange={handleFileUpload}
-                                            disabled={isSaving}
-                                        />
-                                    </label>
-                                </div>
-                            </div>
+                    {/* 3. Especialidades */}
+                    <div>
+                        <div className="flex justify-between items-center mb-3 px-1">
+                            <label className="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Especialidades</label>
+                            <button
+                                type="button"
+                                onClick={() => setIsAddingService(!isAddingService)}
+                                className="text-xs text-primary font-bold hover:text-emerald-500 transition-colors uppercase tracking-wider bg-primary/10 px-2.5 py-1 rounded-lg"
+                            >
+                                {isAddingService ? 'Selecionar da Lista' : '+ Novo Serviço'}
+                            </button>
                         </div>
 
-                        <div className="space-y-3">
-                            <div className="flex justify-between items-center">
-                                <label className="text-sm font-medium text-slate-700 dark:text-slate-300 block">Especialidades</label>
-                                <button
-                                    type="button"
-                                    onClick={() => setIsAddingService(!isAddingService)}
-                                    className="text-xs text-primary font-medium hover:underline"
-                                >
-                                    {isAddingService ? 'Selecionar da Lista' : '+ Novo Serviço'}
-                                </button>
-                            </div>
-
-                            {!isAddingService && (
-                                <div className="max-h-32 overflow-y-auto space-y-2 pr-2 scrollbar-thin">
+                        {!isAddingService && (
+                            <div className="bg-slate-50 dark:bg-slate-900/50 rounded-[24px] border border-slate-100 dark:border-slate-800/60 p-3 h-[184px] overflow-hidden flex flex-col">
+                                <div className="flex-1 overflow-y-auto space-y-2 pr-2 custom-scrollbar">
                                     {services.map(s => {
                                         const isSelected = selectedServices.includes(s.id);
                                         return (
                                             <label
                                                 key={s.id}
-                                                className={`flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border ${isSelected
-                                                    ? 'bg-primary/5 border-primary text-primary'
-                                                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                                                className={`flex items-center justify-between p-3.5 rounded-[16px] cursor-pointer transition-all border ${isSelected
+                                                    ? 'bg-primary/10 border-primary/30 text-primary shadow-sm'
+                                                    : 'bg-white dark:bg-slate-800/50 border-slate-200 dark:border-slate-700/50 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-600'
                                                     }`}
                                             >
                                                 <input
@@ -636,39 +638,48 @@ export const Profissionais = () => {
                                                     checked={isSelected}
                                                     onChange={() => toggleServiceSelection(s.id)}
                                                 />
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-medium truncate">
-                                                        {s.name}
-                                                    </p>
+                                                <p className={`text-[14px] font-semibold truncate ${isSelected ? 'text-primary' : 'text-slate-700 dark:text-slate-300'}`}>
+                                                    {s.name}
+                                                </p>
+                                                <div className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0 ${isSelected ? 'bg-primary border-primary' : 'bg-slate-100 dark:bg-slate-900 border-slate-300 dark:border-slate-700'}`}>
+                                                    {isSelected && <Check className="w-3.5 h-3.5 text-white" />}
                                                 </div>
-                                                {isSelected && <Check className="w-4 h-4" />}
                                             </label>
                                         );
                                     })}
+                                    {services.length === 0 && (
+                                        <div className="h-full flex flex-col items-center justify-center text-center opacity-60">
+                                            <Sparkles className="w-6 h-6 text-slate-400 mb-2" />
+                                            <p className="text-xs font-semibold text-slate-500">Nenhum serviço cadastrado.</p>
+                                        </div>
+                                    )}
                                 </div>
-                            )}
+                            </div>
+                        )}
 
-                            {isAddingService && (
-                                <div className="space-y-2">
-                                    <input
-                                        className="w-full px-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-xl text-sm font-medium outline-none text-slate-900 dark:text-white placeholder:text-slate-400 transition-all"
-                                        placeholder="Nome do Serviço"
-                                        value={newServiceName}
-                                        onChange={(e) => setNewServiceName(e.target.value)}
-                                        autoFocus
-                                        required={isAddingService}
-                                    />
-                                </div>
-                            )}
-                        </div>
+                        {isAddingService && (
+                            <div className="space-y-2 animate-in fade-in zoom-in-95 mt-2">
+                                <input
+                                    className="w-full px-5 py-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 focus:ring-2 focus:ring-primary/20 focus:border-primary rounded-[20px] text-[15px] font-medium outline-none text-slate-900 dark:text-white placeholder:text-slate-400 transition-all shadow-sm"
+                                    placeholder="Nome do novo procedimento"
+                                    value={newServiceName}
+                                    onChange={(e) => setNewServiceName(e.target.value)}
+                                    autoFocus
+                                    required={isAddingService}
+                                />
+                                <p className="text-[11px] font-medium text-slate-500 px-2 mt-2">
+                                    Pressione Salvar para cadastrar o profissional e incluir este novo serviço na clínica simultaneamente.
+                                </p>
+                            </div>
+                        )}
                     </div>
 
-                    <div className="pt-6 flex gap-3 border-t border-slate-100 dark:border-slate-800/60 mt-6">
-                        <Button type="button" variant="outline" className="flex-1 rounded-xl h-11 text-slate-600 dark:text-slate-300 font-medium" onClick={() => setShowModal(false)}>
-                            Cancelar
+                    <div className="pt-6 flex gap-4 border-t border-slate-100 dark:border-slate-800/60 mt-8">
+                        <Button type="button" variant="outline" className="flex-1 rounded-[16px] h-14 text-slate-600 dark:text-slate-300 font-semibold border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-[15px]" onClick={() => setShowModal(false)}>
+                            Cancelar Operação
                         </Button>
-                        <Button type="submit" className="flex-1 bg-primary hover:bg-emerald-600 text-white border-none rounded-xl h-11 font-medium shadow-md shadow-primary/20" disabled={isSaving || (!isAddingService && selectedServices.length === 0)}>
-                            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Salvar Profissional'}
+                        <Button type="submit" className="flex-1 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100 hover:-translate-y-0.5 border-none rounded-[16px] h-14 font-semibold shadow-[0_8px_30px_rgb(0,0,0,0.12)] text-[15px] transition-all" disabled={isSaving || (!isAddingService && selectedServices.length === 0)}>
+                            {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : (editingPro ? 'Atualizar Profissional' : 'Finalizar Cadastro')}
                         </Button>
                     </div>
                 </form>

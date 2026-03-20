@@ -596,16 +596,16 @@ export const AgentesIA = () => {
                     ) : (
                         <div className="flex flex-col gap-4">
                             {agents.map((agent) => (
-                                <div key={agent.id} className="bg-white dark:bg-slate-950 rounded-[20px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] hover:border-primary/30 transition-all overflow-hidden group flex flex-col sm:flex-row items-stretch sm:items-center">
-                                    <div className="p-5 flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                                <div key={agent.id} className="bg-white dark:bg-slate-950 rounded-[20px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] hover:border-primary/30 transition-all overflow-hidden group flex flex-col lg:flex-row items-stretch lg:items-center">
+                                    <div className="p-5 flex-1 min-w-0 flex flex-col sm:flex-row items-start sm:items-center gap-5">
                                         <div className={`w-14 h-14 flex items-center justify-center rounded-2xl border transition-all shrink-0 group-hover:scale-105 duration-300 ${agent.is_active ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
                                             <Bot className="w-6 h-6" />
                                         </div>
                                         
-                                        <div className="flex-1 min-w-0">
+                                        <div className="flex-1 min-w-0 w-full">
                                             <div className="flex items-center gap-3">
                                                 <h5 className="font-serif text-xl font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{agent.name}</h5>
-                                                <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border flex items-center gap-1.5 ${agent.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/50' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}`}>
+                                                <span className={`px-2.5 py-1 text-[10px] shrink-0 font-bold uppercase tracking-wider rounded-lg border flex items-center gap-1.5 ${agent.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/50' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}`}>
                                                     <span className={`w-1.5 h-1.5 rounded-full ${agent.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
                                                     {agent.is_active ? 'Ativo' : 'Pausado'}
                                                 </span>
@@ -625,21 +625,21 @@ export const AgentesIA = () => {
                                         </div>
                                     </div>
 
-                                    <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-900/40 sm:bg-transparent border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800/60 flex items-center gap-3 justify-end shrink-0">
+                                    <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-900/40 lg:bg-transparent border-t lg:border-t-0 lg:border-l border-slate-100 dark:border-slate-800/60 flex items-center gap-3 justify-start sm:justify-end shrink-0 flex-wrap">
                                         <button
                                             onClick={() => handleToggleAgent(agent)}
-                                            className={`w-12 h-6.5 rounded-full relative transition-all border mr-2 flex items-center px-0.5 outline-none ${agent.is_active ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
+                                            className={`w-12 h-6.5 rounded-full relative transition-all border mr-2 flex items-center px-0.5 outline-none shrink-0 ${agent.is_active ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
                                             title={agent.is_active ? "Pausar agente" : "Ativar agente"}
                                             style={{ height: '26px' }}
                                         >
                                             <div className={`w-5 h-5 rounded-full bg-white transition-all shadow-sm ${agent.is_active ? 'ml-6' : 'ml-0'}`} />
                                         </button>
-                                        <Button variant="outline" className="h-10 px-5 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700 hover:text-primary hover:border-primary hover:bg-primary/5 shadow-sm" onClick={() => handleOpenAgentModal(agent)}>
+                                        <Button variant="outline" className="h-10 px-5 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700 hover:text-primary hover:border-primary hover:bg-primary/5 shadow-sm shrink-0" onClick={() => handleOpenAgentModal(agent)}>
                                             Personalizar
                                         </Button>
                                         <button
                                             onClick={() => setAgentToDelete(agent)}
-                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 hover:border-rose-200 dark:hover:border-rose-800/50 shadow-sm transition-all outline-none"
+                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 hover:border-rose-200 dark:hover:border-rose-800/50 shadow-sm transition-all outline-none shrink-0"
                                             title="Excluir agente"
                                         >
                                             <Trash2 className="w-4 h-4" />
