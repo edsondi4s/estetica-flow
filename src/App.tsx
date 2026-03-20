@@ -1,16 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { AppLayout } from './components/layout/AppLayout';
 import { Login } from './pages/Login';
-import { Dashboard } from './pages/Dashboard';
-import { Clientes } from './pages/Clientes';
-import { Agenda } from './pages/Agenda';
-import { Servicos } from './pages/Servicos';
-import { Financeiro } from './pages/Financeiro';
-import { Configuracoes } from './pages/Configuracoes';
-import { AgentesIA } from './pages/AgentesIA';
-import { Profissionais } from './pages/Profissionais';
-import { Chat } from './pages/Chat';
-import { BotFlows } from './pages/BotFlows';
+const Dashboard = lazy(() => import('./pages/Dashboard').then(m => ({ default: m.Dashboard })));
+const Clientes = lazy(() => import('./pages/Clientes').then(m => ({ default: m.Clientes })));
+const Agenda = lazy(() => import('./pages/Agenda').then(m => ({ default: m.Agenda })));
+const Servicos = lazy(() => import('./pages/Servicos').then(m => ({ default: m.Servicos })));
+const Financeiro = lazy(() => import('./pages/Financeiro').then(m => ({ default: m.Financeiro })));
+const Configuracoes = lazy(() => import('./pages/Configuracoes').then(m => ({ default: m.Configuracoes })));
+const AgentesIA = lazy(() => import('./pages/AgentesIA').then(m => ({ default: m.AgentesIA })));
+const Profissionais = lazy(() => import('./pages/Profissionais').then(m => ({ default: m.Profissionais })));
+const Chat = lazy(() => import('./pages/Chat').then(m => ({ default: m.Chat })));
+const BotFlows = lazy(() => import('./pages/BotFlows').then(m => ({ default: m.BotFlows })));
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -165,7 +165,9 @@ function AppContent() {
       user={session.user}
       onLogout={handleLogout}
     >
-      {renderPage()}
+      <Suspense fallback={<div className="flex flex-1 items-center justify-center p-12"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin"></div></div>}>
+        {renderPage()}
+      </Suspense>
     </AppLayout>
   );
 }

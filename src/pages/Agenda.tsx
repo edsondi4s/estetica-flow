@@ -629,29 +629,29 @@ export const Agenda = () => {
         switch (status) {
             case 'Pendente':
                 return isMonthView
-                    ? "bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20 shadow-sm"
-                    : "bg-white dark:bg-slate-900 border-l-[6px] border-amber-500 text-slate-900 dark:text-white shadow-xl shadow-amber-500/5";
+                    ? "bg-amber-50 dark:bg-amber-500/10 text-amber-900 dark:text-amber-400 border border-amber-200/50 dark:border-amber-500/20"
+                    : "bg-amber-50/90 dark:bg-amber-950 border border-amber-300 dark:border-amber-700/80 text-amber-950 dark:text-amber-100 shadow-sm";
             case 'Confirmado':
                 return isMonthView
-                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-900 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20 shadow-sm"
-                    : "bg-white dark:bg-slate-900 border-l-[6px] border-emerald-500 text-slate-900 dark:text-white shadow-xl shadow-emerald-500/5";
+                    ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-900 dark:text-emerald-400 border border-emerald-200/50 dark:border-emerald-500/20"
+                    : "bg-emerald-50/90 dark:bg-emerald-950 border border-emerald-400 dark:border-emerald-700/80 text-emerald-950 dark:text-emerald-100 shadow-sm";
             case 'Concluído':
             case 'Finalizado':
                 return isMonthView
-                    ? "bg-sky-50 dark:bg-sky-500/10 text-sky-900 dark:text-sky-400 border border-sky-200/50 dark:border-sky-500/20 shadow-sm"
-                    : "bg-white dark:bg-slate-900 border-l-[6px] border-sky-500 text-slate-900 dark:text-white shadow-xl shadow-sky-500/5";
+                    ? "bg-sky-50 dark:bg-sky-500/10 text-sky-900 dark:text-sky-400 border border-sky-200/50 dark:border-sky-500/20"
+                    : "bg-sky-50/90 dark:bg-sky-950 border border-sky-300 dark:border-sky-700/80 text-sky-950 dark:text-sky-100 shadow-sm";
             case 'Cancelado':
                 return isMonthView
                     ? "bg-red-50 dark:bg-red-500/10 text-red-900 dark:text-red-400 border border-red-200/50 dark:border-red-500/20 opacity-60"
-                    : "bg-red-50 dark:bg-slate-950 border-l-[6px] border-red-500 text-red-900 dark:text-red-100 opacity-60 grayscale";
+                    : "bg-red-50/90 dark:bg-red-950 border border-red-300 dark:border-red-700/80 text-red-950 dark:text-red-100 opacity-60";
             case 'Expirado':
                 return isMonthView
                     ? "bg-slate-100 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 border border-slate-200/50 dark:border-slate-700/50 opacity-60"
-                    : "bg-slate-50 dark:bg-slate-950 border-l-[6px] border-slate-300 dark:border-slate-800 text-slate-500 dark:text-slate-400 opacity-60 grayscale shadow-none";
+                    : "bg-slate-100/90 dark:bg-slate-900 border border-slate-300 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 opacity-60";
             default:
                 return isMonthView
-                    ? "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 shadow-sm"
-                    : "bg-white dark:bg-slate-900 border-l-[6px] border-primary text-slate-900 dark:text-white shadow-xl";
+                    ? "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200"
+                    : "bg-primary/5 dark:bg-primary/10 border border-primary/50 text-slate-900 dark:text-white shadow-sm";
         }
     };
 
@@ -682,8 +682,8 @@ export const Agenda = () => {
             <div className="flex flex-col lg:flex-row items-center justify-between p-4 lg:p-6 gap-4 lg:gap-6 bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800/60 shadow-sm z-20">
                 <div className="flex items-center justify-between w-full lg:w-auto gap-4">
                     <div className="flex items-center bg-slate-50 dark:bg-slate-900 rounded-xl border border-slate-200/50 dark:border-slate-700/50 p-1">
-                        <Button variant="ghost" size="icon" onClick={() => navigateDate(-1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500"><ChevronLeft className="w-4 h-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => navigateDate(1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500"><ChevronRight className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => navigateDate(-1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500" aria-label="Data anterior"><ChevronLeft className="w-4 h-4" /></Button>
+                        <Button variant="ghost" size="icon" onClick={() => navigateDate(1)} className="hover:bg-white dark:hover:bg-slate-800 rounded-lg h-8 w-8 text-slate-500" aria-label="Próxima data"><ChevronRight className="w-4 h-4" /></Button>
                     </div>
                     <div className="flex flex-col items-center lg:items-start flex-1 px-2">
                         <h2 className="text-2xl font-serif font-bold text-slate-900 dark:text-white leading-none capitalize">
@@ -712,6 +712,7 @@ export const Agenda = () => {
                             className={`relative h-10 w-10 flex-shrink-0 rounded-xl border transition-all flex items-center justify-center gap-2 group ${activeFilterCount > 0
                                 ? "bg-primary border-primary text-white shadow-md shadow-primary/20"
                                 : "bg-white dark:bg-slate-900 border-slate-200/50 dark:border-slate-700/50 text-slate-500 hover:border-primary/30 hover:text-primary"}`}
+                            aria-label="Abrir filtros"
                         >
                             <Filter className={`w-4 h-4 ${activeFilterCount > 0 ? "scale-110" : "group-hover:scale-110"} transition-transform`} />
                             {activeFilterCount > 0 && (
@@ -784,9 +785,9 @@ export const Agenda = () => {
                                                 onDragStart={(e) => handleDragStart(e, a)}
                                                 onDragEnd={handleDragEnd}
                                                 onClick={() => setSelectedAppointment(a)}
-                                                className={`text-[11px] font-medium p-1.5 rounded-md truncate cursor-pointer transition-all ${getStatusStyles(a.status, true)}`}
+                                                className={`text-[11px] font-bold p-1.5 rounded-[4px] truncate cursor-pointer transition-all ${getStatusStyles(a.status, true)}`}
                                             >
-                                                {a.appointment_time.substring(0, 5)} {a.services?.name}
+                                                {a.appointment_time.substring(0, 5)} {a.clients?.name} - {a.services?.name}
                                             </div>
                                         ))}
                                         {dayAppointments.length > 3 && (
@@ -872,25 +873,38 @@ export const Agenda = () => {
                                                 >
                                                     <div className={`
                                                         ${getStatusStyles(appt.status)} 
-                                                        border-l-4 p-2.5 rounded-xl shadow-sm h-full flex flex-col justify-between overflow-hidden hover:scale-[1.02] hover:shadow-md hover:z-30 transition-all duration-300 group/item
+                                                        ${hasConflicts ? 'ring-2 ring-white dark:ring-slate-950' : ''}
+                                                        p-2.5 rounded-[4px] h-full flex flex-col overflow-hidden hover:-translate-y-0.5 hover:shadow-md hover:z-30 transition-all duration-300 group/item relative
                                                     `}>
                                                         {hasConflicts && (
-                                                            <div className="absolute top-1.5 right-1.5 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full z-20 shadow-sm">
+                                                            <div className="absolute top-1 right-1 bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-[2px] z-20 shadow-sm">
                                                                 +{group.length - 1}
                                                             </div>
                                                         )}
-                                                        <div className="min-w-0">
-                                                            <p className="font-semibold text-[13px] text-slate-900 dark:text-white truncate leading-tight mb-1 group-hover/item:text-primary transition-colors">{appt.services?.name}</p>
+                                                        
+                                                        {/* Header: Time and Pro */}
+                                                        <div className="flex items-center justify-between mb-1.5 opacity-80">
+                                                            <div className="flex items-center gap-1.5 text-current">
+                                                                <Clock className="w-3 h-3 flex-shrink-0" />
+                                                                <span className="text-[11px] font-bold tracking-tight">{appt.appointment_time.substring(0, 5)}</span>
+                                                            </div>
                                                             {appt.services?.duration_minutes >= 30 && (
-                                                                <div className="flex flex-col gap-0.5 mt-1">
-                                                                    <p className="text-xs text-slate-600 dark:text-slate-400 truncate">{appt.clients?.name}</p>
-                                                                    <p className="text-[10px] font-medium text-primary/80 truncate">{appt.professionals?.name}</p>
-                                                                </div>
+                                                                <span className="text-[9px] font-bold uppercase tracking-wider text-current truncate max-w-[50%]">
+                                                                    {appt.professionals?.name}
+                                                                </span>
                                                             )}
                                                         </div>
-                                                        <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 mt-2">
-                                                            <Clock className="w-3 h-3 flex-shrink-0" />
-                                                            <span className="text-[11px] font-medium">{appt.appointment_time.substring(0, 5)}</span>
+
+                                                        {/* Body: Client and Service */}
+                                                        <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                                            <p className="font-extrabold text-[13px] text-current truncate leading-tight group-hover/item:opacity-80 transition-opacity">
+                                                                {appt.clients?.name}
+                                                            </p>
+                                                            {appt.services?.duration_minutes >= 30 && (
+                                                                <p className="font-medium text-[11px] text-current/80 truncate mt-0.5">
+                                                                    {appt.services?.name}
+                                                                </p>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -1032,69 +1046,75 @@ export const Agenda = () => {
             {/* Modal de Detalhes do Agendamento */}
             {
                 selectedAppointment && createPortal(
-                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[110] flex items-center justify-center p-4">
-                        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100 dark:border-slate-800">
-                            <div className="p-6 border-b border-slate-50 dark:border-slate-800 flex items-center justify-between bg-slate-50/50 dark:bg-slate-800/50">
-                                <div>
-                                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">Detalhes do Agendamento</h3>
-                                    <p className="text-xs text-slate-500 mt-1">ID: #{selectedAppointment.id.substring(0, 8)}</p>
+                    <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+                        <div className="bg-white dark:bg-slate-950 rounded-[4px] shadow-2xl w-full max-w-sm border border-slate-200 dark:border-slate-800 animate-in zoom-in-95 duration-200 overflow-hidden relative">
+                            {/* Header Ticket Top */}
+                            <div className="p-8 pb-6 border-b border-slate-100 dark:border-slate-800/80 flex items-start justify-between relative bg-slate-50/30 dark:bg-slate-900/40">
+                                <div className="z-10 relative pr-4">
+                                    <p className="text-[10px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-2">Reserva #{selectedAppointment.id.substring(0, 8)}</p>
+                                    <h3 className="text-2xl font-serif font-black text-slate-900 dark:text-white leading-[1.1] tracking-tight break-words">
+                                        {selectedAppointment.clients?.name}
+                                    </h3>
+                                    {selectedAppointment.clients?.phone && (
+                                        <p className="text-xs font-medium text-slate-500 mt-2 tracking-wide">{selectedAppointment.clients.phone}</p>
+                                    )}
                                 </div>
-                                <button onClick={() => setSelectedAppointment(null)} className="p-2 hover:bg-white dark:hover:bg-slate-800 rounded-full transition-colors shadow-sm">
-                                    <X className="w-5 h-5 text-slate-400" />
+                                <button onClick={() => setSelectedAppointment(null)} className="p-2 -mr-4 -mt-4 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-bl-xl transition-colors z-10 text-slate-400 hover:text-slate-900 dark:hover:text-white" aria-label="Fechar detalhes">
+                                    <X className="w-5 h-5" />
                                 </button>
                             </div>
-                            <div className="p-6 space-y-6">
-                                <div className="flex items-start gap-4">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0">
-                                        <Clock className="w-6 h-6 text-primary" />
-                                    </div>
+
+                            {/* Body */}
+                            <div className="p-8 space-y-6 bg-white dark:bg-slate-950">
+                                {/* Info Row 1 */}
+                                <div className="flex items-end justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
                                     <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Data e Horário</p>
-                                        <p className="text-base font-bold text-slate-900 dark:text-white">
-                                            {new Date(selectedAppointment.appointment_date + 'T12:00:00').toLocaleDateString()} às {selectedAppointment.appointment_time.substring(0, 5)}
+                                        <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-1.5">Serviço</p>
+                                        <p className="text-base font-semibold text-slate-900 dark:text-white max-w-[170px] leading-snug">
+                                            {selectedAppointment.services?.name}
                                         </p>
+                                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">{selectedAppointment.services?.duration_minutes}m • R$ {selectedAppointment.services?.price}</p>
                                     </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Cliente</p>
-                                        <p className="text-base font-bold text-slate-900 dark:text-white">{selectedAppointment.clients?.name}</p>
-                                        {selectedAppointment.clients?.phone && <p className="text-xs text-slate-400 dark:text-slate-500">{selectedAppointment.clients.phone}</p>}
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Serviço</p>
-                                        <p className="text-base font-bold text-slate-900 dark:text-white">{selectedAppointment.services?.name}</p>
-                                        <p className="text-xs text-slate-400 dark:text-slate-500">{selectedAppointment.services?.duration_minutes} min • R$ {selectedAppointment.services?.price}</p>
-                                    </div>
-                                </div>
-                                <div className="grid grid-cols-2 gap-6">
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Profissional</p>
-                                        <p className="text-base font-bold text-slate-900 dark:text-white">{selectedAppointment.professionals?.name || 'Não atribuído'}</p>
-                                    </div>
-                                    <div>
-                                        <p className="text-sm font-medium text-slate-500 dark:text-slate-400">Status</p>
-                                        <select
-                                            className={`w-full mt-1 px-3 py-2 rounded-lg text-xs font-semibold border transition-all outline-none cursor-pointer
-                                            ${selectedAppointment.status === 'Pendente' ? 'bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-900/20 dark:border-amber-500/30 dark:text-amber-400' :
-                                                    selectedAppointment.status === 'Confirmado' ? 'bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-900/20 dark:border-emerald-500/30 dark:text-emerald-400' :
-                                                        (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'bg-sky-50 border-sky-200 text-sky-700 dark:bg-sky-900/20 dark:border-sky-500/30 dark:text-sky-400' :
-                                                            selectedAppointment.status === 'Expirado' ? 'bg-slate-100 border-slate-300 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-400 grayscale' :
-                                                                'bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-500/30 dark:text-red-400'}`}
-                                            value={selectedAppointment.status}
-                                            onChange={(e) => handleStatusUpdate(selectedAppointment.id, e.target.value)}
-                                            disabled={isSaving}
-                                        >
-                                            <option value="Pendente">Pendente</option>
-                                            <option value="Confirmado">Confirmado</option>
-                                            <option value="Finalizado">Finalizado</option>
-                                            <option value="Cancelado">Cancelado</option>
-                                            <option value="Expirado">Expirado</option>
-                                        </select>
+                                    <div className="text-right">
+                                        <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-1.5">Horário</p>
+                                        <p className="text-3xl font-black text-primary tracking-tighter leading-none">{selectedAppointment.appointment_time.substring(0, 5)}</p>
+                                        <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 mt-1">{new Date(selectedAppointment.appointment_date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('.', '')}</p>
                                     </div>
                                 </div>
 
-                                {/* Link de WhatsApp Humanizado */}
+                                {/* Info Row 2 */}
+                                <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-4">
+                                    <div>
+                                        <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-1.5">Profissional</p>
+                                        <p className="text-sm font-semibold text-slate-900 dark:text-white">{selectedAppointment.professionals?.name || 'Não atribuído'}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-[9px] uppercase font-bold tracking-[0.15em] text-slate-400 dark:text-slate-500 mb-1.5">Status</p>
+                                        <div className="relative">
+                                            <select
+                                                className={`appearance-none bg-transparent text-right font-black text-sm uppercase tracking-wider outline-none cursor-pointer transition-colors hover:opacity-75
+                                                ${selectedAppointment.status === 'Pendente' ? 'text-amber-500' :
+                                                    selectedAppointment.status === 'Confirmado' ? 'text-emerald-500' :
+                                                        (selectedAppointment.status === 'Concluído' || selectedAppointment.status === 'Finalizado') ? 'text-sky-500' :
+                                                            selectedAppointment.status === 'Expirado' ? 'text-slate-400 dark:text-slate-500' :
+                                                                'text-red-500'}`}
+                                                style={{ textAlignLast: 'right' }}
+                                                value={selectedAppointment.status}
+                                                onChange={(e) => handleStatusUpdate(selectedAppointment.id, e.target.value)}
+                                                disabled={isSaving}
+                                                aria-label="Alterar status do agendamento"
+                                            >
+                                                <option value="Pendente" className="text-slate-900 dark:text-white bg-white dark:bg-slate-900">PENDENTE</option>
+                                                <option value="Confirmado" className="text-slate-900 dark:text-white bg-white dark:bg-slate-900">CONFIRMADO</option>
+                                                <option value="Finalizado" className="text-slate-900 dark:text-white bg-white dark:bg-slate-900">FINALIZADO</option>
+                                                <option value="Cancelado" className="text-slate-900 dark:text-white bg-white dark:bg-slate-900">CANCELADO</option>
+                                                <option value="Expirado" className="text-slate-900 dark:text-white bg-white dark:bg-slate-900">EXPIRADO</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Link de WhatsApp Brutalist */}
                                 {selectedAppointment.clients?.phone && (
                                     <div className="pt-2">
                                         <a
@@ -1103,26 +1123,30 @@ export const Agenda = () => {
                                             )}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="w-full flex items-center justify-center gap-2 py-3.5 px-6 bg-slate-900 hover:bg-emerald-600 text-white font-medium rounded-xl transition-all shadow-md active:scale-95 text-sm"
+                                            className="w-full flex items-center justify-center gap-3 py-4 bg-transparent border-[1.5px] border-slate-900 dark:border-white text-slate-900 dark:text-white hover:bg-slate-900 hover:text-white dark:hover:bg-white dark:hover:text-slate-900 font-bold uppercase tracking-[0.1em] text-[10px] transition-all"
                                         >
-                                            <MessageCircle className="w-4 h-4" />
-                                            Enviar Lembrete por WhatsApp
+                                            <MessageCircle className="w-4 h-4 text-emerald-500" />
+                                            Lembrete WhatsApp
                                         </a>
                                     </div>
                                 )}
                             </div>
-                            <div className="p-6 bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800 flex gap-3">
-                                <Button variant="outline" className="flex-1" onClick={() => setSelectedAppointment(null)}>Fechar</Button>
-                                <Button
-                                    variant="outline"
-                                    className="flex-1 text-red-500 hover:text-red-600 border-red-100 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20"
+
+                            {/* Actions Ticket Bottom - Sem Fechar button */}
+                            <div className="flex bg-slate-50 dark:bg-slate-900/50 border-t border-slate-100 dark:border-slate-800">
+                                <button 
+                                    className="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex justify-center items-center gap-2" 
                                     onClick={() => setConfirmDelete({ isOpen: true, id: selectedAppointment.id })}
                                 >
-                                    <Trash2 className="w-4 h-4 mr-2" /> Excluir
-                                </Button>
-                                <Button className="flex-1" onClick={() => handleOpenEditModal(selectedAppointment)}>
-                                    <Edit2 className="w-4 h-4 mr-2" /> Editar
-                                </Button>
+                                    <Trash2 className="w-3.5 h-3.5" /> Excluir
+                                </button>
+                                <div className="w-px bg-slate-100 dark:bg-slate-800" />
+                                <button 
+                                    className="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest text-slate-900 dark:text-white hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors flex justify-center items-center gap-2" 
+                                    onClick={() => handleOpenEditModal(selectedAppointment)}
+                                >
+                                    <Edit2 className="w-3.5 h-3.5" /> Editar
+                                </button>
                             </div>
                         </div>
                     </div>,

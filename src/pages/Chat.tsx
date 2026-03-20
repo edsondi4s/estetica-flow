@@ -498,7 +498,7 @@ export function Chat() {
             </div>
 
             {/* RIGHT: Chat Area */}
-            <div className={`flex-1 flex flex-col h-full ${selectedContact && showMobileChat ? 'flex' : 'hidden md:flex'}`}>
+            <div className={`flex-1 flex flex-col h-full overflow-hidden ${selectedContact && showMobileChat ? 'flex' : 'hidden md:flex'}`}>
                 {!selectedContact ? (
                     <div className="flex-1 flex flex-col items-center justify-center text-center p-8 bg-slate-50 dark:bg-slate-800/20">
                         <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-3xl flex items-center justify-center mb-5 shadow-inner">
@@ -514,7 +514,7 @@ export function Chat() {
                 ) : (
                     <>
                         {/* Chat Header */}
-                        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+                        <div className="flex items-center gap-3 px-5 py-3.5 border-b border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.1)] z-20 shrink-0 relative">
                             <button
                                 onClick={() => { setShowMobileChat(false); setSelectedContact(null); }}
                                 className="md:hidden p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"
@@ -630,7 +630,7 @@ export function Chat() {
                         </div>
 
                         {/* Footer - Read-only notice */}
-                        <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3">
+                        <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-3 z-20 shrink-0 relative">
                             <div className="flex-1 flex items-center gap-2 px-4 py-2.5 bg-slate-50 dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
                                 <Send className="w-4 h-4 text-slate-300 dark:text-slate-600 shrink-0" />
                                 <span className="text-sm text-slate-400 dark:text-slate-500 select-none">

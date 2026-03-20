@@ -594,49 +594,56 @@ export const AgentesIA = () => {
                             </Button>
                         </div>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="flex flex-col gap-4">
                             {agents.map((agent) => (
-                                <div key={agent.id} className="h-full">
-                                    <div className="bg-white dark:bg-slate-950 rounded-[24px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] transition-all flex flex-col h-full overflow-hidden group">
-                                    <div className="p-6 flex-1">
-                                        <div className="flex items-center gap-4 mb-6">
-                                            <div className={`w-12 h-12 flex items-center justify-center rounded-2xl border transition-all ${agent.is_active ? 'bg-primary/5 border-primary/20 text-primary' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
-                                                <Bot className="w-6 h-6" />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h5 className="font-serif text-lg text-slate-900 dark:text-white truncate">{agent.name}</h5>
-                                                <span className="text-xs font-medium text-slate-500 mt-1 inline-block">
-                                                    {agent.agent_role === 'vendas' ? 'Vendas & Agendamento' :
-                                                     agent.agent_role === 'recuperacao' ? 'Recuperação de Inativos' :
-                                                     agent.agent_role === 'confirmacao' ? 'Confirmação de Retorno' :
-                                                     'Atendimento Geral'
-                                                    }
+                                <div key={agent.id} className="bg-white dark:bg-slate-950 rounded-[20px] border border-slate-100 dark:border-slate-800/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(255,255,255,0.02)] hover:shadow-[0_8px_30px_rgba(16,185,129,0.08)] hover:border-primary/30 transition-all overflow-hidden group flex flex-col sm:flex-row items-stretch sm:items-center">
+                                    <div className="p-5 flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                                        <div className={`w-14 h-14 flex items-center justify-center rounded-2xl border transition-all shrink-0 group-hover:scale-105 duration-300 ${agent.is_active ? 'bg-primary/5 border-primary/30 text-primary' : 'bg-slate-50 dark:bg-slate-800/50 border-slate-100 dark:border-slate-800 text-slate-400'}`}>
+                                            <Bot className="w-6 h-6" />
+                                        </div>
+                                        
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center gap-3">
+                                                <h5 className="font-serif text-xl font-bold text-slate-900 dark:text-white truncate group-hover:text-primary transition-colors">{agent.name}</h5>
+                                                <span className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-lg border flex items-center gap-1.5 ${agent.is_active ? 'bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/50 dark:border-emerald-800/50' : 'bg-slate-50 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'}`}>
+                                                    <span className={`w-1.5 h-1.5 rounded-full ${agent.is_active ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                    {agent.is_active ? 'Ativo' : 'Pausado'}
                                                 </span>
                                             </div>
-                                            <button
-                                                onClick={() => handleToggleAgent(agent)}
-                                                className={`w-11 h-6 rounded-full relative transition-all border ${agent.is_active ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
-                                            >
-                                                <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all shadow-sm ${agent.is_active ? 'left-6' : 'left-0.5'}`} />
-                                            </button>
+                                            
+                                            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed mt-1.5 line-clamp-1 italic">
+                                                "{agent.system_prompt}"
+                                            </p>
+                                            
+                                            <span className="text-[11px] font-semibold text-slate-400 dark:text-slate-500 mt-2.5 inline-flex items-center gap-1.5 px-2 py-1 bg-slate-50 dark:bg-slate-800/50 rounded-md border border-slate-100 dark:border-slate-800">
+                                                🛠️ Função: {agent.agent_role === 'vendas' ? 'Vendas & Agendamento' :
+                                                 agent.agent_role === 'recuperacao' ? 'Recuperação de Inativos' :
+                                                 agent.agent_role === 'confirmacao' ? 'Confirmação de Retorno' :
+                                                 'Atendimento Geral'
+                                                }
+                                            </span>
                                         </div>
-
-                                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium leading-relaxed mb-4 line-clamp-3 italic">
-                                            "{agent.system_prompt}"
-                                        </p>
                                     </div>
 
-                                    <div className="p-4 bg-slate-50 dark:bg-slate-800/20 flex gap-3 border-t border-slate-100 dark:border-slate-800/50">
-                                        <Button variant="outline" className="flex-1 h-11 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700" onClick={() => handleOpenAgentModal(agent)}>
+                                    <div className="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-900/40 sm:bg-transparent border-t sm:border-t-0 sm:border-l border-slate-100 dark:border-slate-800/60 flex items-center gap-3 justify-end shrink-0">
+                                        <button
+                                            onClick={() => handleToggleAgent(agent)}
+                                            className={`w-12 h-6.5 rounded-full relative transition-all border mr-2 flex items-center px-0.5 outline-none ${agent.is_active ? 'bg-emerald-500 border-emerald-500' : 'bg-slate-200 dark:bg-slate-700 border-slate-300 dark:border-slate-600'}`}
+                                            title={agent.is_active ? "Pausar agente" : "Ativar agente"}
+                                            style={{ height: '26px' }}
+                                        >
+                                            <div className={`w-5 h-5 rounded-full bg-white transition-all shadow-sm ${agent.is_active ? 'ml-6' : 'ml-0'}`} />
+                                        </button>
+                                        <Button variant="outline" className="h-10 px-5 rounded-xl text-sm font-medium border-slate-200 dark:border-slate-700 hover:text-primary hover:border-primary hover:bg-primary/5 shadow-sm" onClick={() => handleOpenAgentModal(agent)}>
                                             Personalizar
                                         </Button>
                                         <button
                                             onClick={() => setAgentToDelete(agent)}
-                                            className="w-11 h-11 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 transition-all"
+                                            className="w-10 h-10 flex items-center justify-center rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10 hover:border-rose-200 dark:hover:border-rose-800/50 shadow-sm transition-all outline-none"
+                                            title="Excluir agente"
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
-                                    </div>
                                     </div>
                                 </div>
                             ))}

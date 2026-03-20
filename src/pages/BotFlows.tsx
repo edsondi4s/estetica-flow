@@ -177,31 +177,29 @@ export const BotFlows = () => {
 
                                     <div className="pt-5 flex items-center justify-between gap-3 border-t border-slate-50 dark:border-slate-800/50">
                                         <div className="flex items-center gap-2">
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className={`w-9 h-9 p-0 rounded-xl border-slate-200 dark:border-slate-700 ${flow.is_active ? 'hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200' : 'hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200'}`}
+                                            <button
+                                                className={`flex items-center justify-center w-11 h-11 p-0 rounded-xl border transition-all duration-200 outline-none
+                                                ${flow.is_active ? 'border-slate-200 dark:border-slate-700 hover:bg-amber-50 hover:text-amber-600 hover:border-amber-200 dark:hover:bg-amber-900/20 dark:hover:border-amber-500/30 text-amber-500' : 'border-slate-200 dark:border-slate-700 hover:bg-emerald-50 hover:text-emerald-600 hover:border-emerald-200 dark:hover:bg-emerald-900/20 dark:hover:border-emerald-500/30 text-emerald-500'}`}
                                                 onClick={() => toggleFlowStatus(flow)}
+                                                aria-label={flow.is_active ? "Pausar fluxo" : "Ativar fluxo"}
                                             >
-                                                {flow.is_active ? <Pause className="w-4 h-4 text-amber-500" /> : <Play className="w-4 h-4 text-emerald-500" />}
-                                            </Button>
-                                            <Button
-                                                size="sm"
-                                                variant="outline"
-                                                className="w-9 h-9 p-0 rounded-xl border-slate-200 dark:border-slate-700 hover:text-primary hover:bg-emerald-50 dark:hover:bg-emerald-900/10 hover:border-emerald-200"
+                                                {flow.is_active ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+                                            </button>
+                                            <button
+                                                className="flex items-center justify-center w-11 h-11 p-0 rounded-xl border border-slate-200 dark:border-slate-700 hover:text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:border-emerald-200 dark:hover:border-emerald-500/30 text-slate-500 dark:text-slate-400 transition-all duration-200 outline-none"
                                                 onClick={() => handleEditFlow(flow)}
+                                                aria-label="Editar fluxo"
                                             >
-                                                <Edit2 className="w-4 h-4" />
-                                            </Button>
+                                                <Edit2 className="w-5 h-5" />
+                                            </button>
                                         </div>
-                                        <Button
-                                            size="sm"
-                                            variant="ghost"
-                                            className="w-9 h-9 p-0 rounded-xl text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/10"
+                                        <button
+                                            className="flex items-center justify-center w-11 h-11 p-0 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 hover:border hover:border-rose-200 dark:hover:border-rose-500/30 transition-all duration-200 outline-none border border-transparent"
                                             onClick={() => handleDeleteFlow(flow.id)}
+                                            aria-label="Excluir fluxo"
                                         >
-                                            <Trash2 className="w-4 h-4" />
-                                        </Button>
+                                            <Trash2 className="w-5 h-5" />
+                                        </button>
                                     </div>
                                 </div>
                             </div>

@@ -331,7 +331,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                     <p className="text-xs text-slate-500">Agente Estratégico AI</p>
                                 </div>
                             </div>
-                            <button onClick={() => setIsInsightOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors">
+                            <button onClick={() => setIsInsightOpen(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 transition-colors" aria-label="Fechar insight">
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
@@ -359,6 +359,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     onClick={() => setIsInsightOpen(true)}
                     className="fixed bottom-8 right-8 z-50 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full p-4 shadow-[0_8px_30px_rgba(16,185,129,0.3)] transition-all hover:scale-110 hover:-translate-y-1 animate-in fade-in zoom-in group"
                     title="Insights da IA"
+                    aria-label="Abrir Insights da IA"
                 >
                     <Sparkles className="w-6 h-6 group-hover:animate-pulse" />
                     <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white dark:border-slate-900 rounded-full"></span>
@@ -622,6 +623,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                 <span className="text-xs text-slate-500">Registros:</span>
                                 <select
                                     value={itemsPerPage}
+                                    aria-label="Registros por página"
                                     onChange={(e) => {
                                         setItemsPerPage(Number(e.target.value));
                                         setCurrentPage(1);
@@ -642,6 +644,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
+                                        aria-label="Página anterior"
                                         className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"
                                     >
                                         <ChevronLeft className="w-5 h-5" />
@@ -649,6 +652,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(recentAppointments.length / itemsPerPage)))}
                                         disabled={currentPage === Math.ceil(recentAppointments.length / itemsPerPage)}
+                                        aria-label="Próxima página"
                                         className="p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 disabled:opacity-30 transition-colors"
                                     >
                                         <ChevronRight className="w-5 h-5" />
@@ -713,7 +717,7 @@ export const Dashboard = ({ onPageChange }: DashboardProps) => {
                     </div>
                 </Card>
 
-                <Card title="Procedimentos Populares" extra={<button className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
+                <Card title="Procedimentos Populares" extra={<button aria-label="Mais opções" className="text-slate-400 hover:text-primary transition-all"><MoreHorizontal className="w-5 h-5" /></button>}>
                     <div className="space-y-6 pt-2">
                         {popularServices.length > 0 ? (
                             popularServices.map((service, i) => (
