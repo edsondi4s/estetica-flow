@@ -388,7 +388,7 @@ Deno.serve(async (req) => {
         const matrix = (services.data || []).map(s => {
             const pIds = (mapping.data || []).filter(m => m.service_id === s.id).map(m => m.professional_id);
             const pNames = (pros.data || []).filter(p => pIds.includes(p.id)).map(p => `${p.name} (ID: ${p.id})`).join(' OU ');
-            return `- ${s.name} (${s.duration_minutes}min, ID: ${s.id}). Profissionais: ${pNames}`;
+            return `- ${s.name} (${s.duration_minutes}min, R$ ${s.price || 0}, ID: ${s.id}). Profissionais: ${pNames}`;
         }).join('\n');
 
         const bizSummary = (bizHours.data || []).map(b => `${DAYS[b.day_of_week]}: ${b.is_working_day ? `${b.start_time.slice(0,5)}-${b.end_time.slice(0,5)}` : 'FECHADO'}`).join('\n');
@@ -421,7 +421,7 @@ Deno.serve(async (req) => {
 1. NUNCA REAPROVEITE DADOS: Se o cliente pedir um NOVO agendamento, OBRIGATORIAMENTE PERGUNTE qual o Serviço, Profissional, Data e Horário. NÃO USE dados de agendamentos citados no histórico.
 2. NUNCA INVENTE OU CHUTE NADA: Se faltar UM ÚNICO DOS 4 DADOS acima para o agendamento, NÃO CHAME a tool 'book_appointment'. Envie uma mensagem perguntando o que falta. (NUNCA presuma que o usuário quer agendar para "hoje" ou "agora", sempre pergunte a data e horário).
 3. RESPEITE O HORÁRIO DE FUNCIONAMENTO. Nunca agende fora do horário ou em dias fechados.
-4. CLIENTE SEM NOME: Use 'create_client' IMEDIATAMENTE antes de responder.
+4. CLIENTE NÃO CADASTRADO: Se o cliente for "NÃO CADASTRADO", você DEVE PERGUNTAR o nome dele primeiro. Use a tool 'create_client' SOMENTE DEPOIS que ele informar o nome. NUNCA invente um nome.
 5. DÚVIDAS E MANIPULAÇÕES: Sempre use 'list_my_appointments' antes de cancelar ou reagendar para obter o UUID exato do agendamento.
 6. CANCELAR TUDO: Use 'cancel_all_my_appointments'.
 7. OBRIGATÓRIO: Sempre verifique se os parâmetros exigidos pelas tools estão corretos antes de enviá-los. Nunca chute o ID de um agendamento.

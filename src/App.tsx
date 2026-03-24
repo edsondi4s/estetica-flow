@@ -11,6 +11,7 @@ const AgentesIA = lazy(() => import('./pages/AgentesIA').then(m => ({ default: m
 const Profissionais = lazy(() => import('./pages/Profissionais').then(m => ({ default: m.Profissionais })));
 const Chat = lazy(() => import('./pages/Chat').then(m => ({ default: m.Chat })));
 const BotFlows = lazy(() => import('./pages/BotFlows').then(m => ({ default: m.BotFlows })));
+const Marketing = lazy(() => import('./pages/Marketing').then(m => ({ default: m.Marketing })));
 import { supabase } from './lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ThemeProvider } from './contexts/ThemeContext';
@@ -150,6 +151,7 @@ function AppContent() {
       case 'financeiro': return <Financeiro />;
       case 'chat': return <Chat />;
       case 'fluxos': return <BotFlows />;
+      case 'marketing': return <Marketing />;
       case 'configuracoes':
         return <Configuracoes onLogout={handleLogout} />;
       case 'agentes_ia':

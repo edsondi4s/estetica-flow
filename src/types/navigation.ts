@@ -10,6 +10,7 @@ import {
     Zap,
     Cpu,
     Bot,
+    Megaphone,
     LucideIcon
 } from 'lucide-react';
 
@@ -29,6 +30,7 @@ export const menuItems: MenuItem[] = [
     { id: 'agentes_ia', label: 'Agentes de IA', icon: Bot, description: 'Gestão de assistentes virtuais e automação livre' },
     { id: 'servicos', label: 'Serviços', icon: Scissors, description: 'Especialidades e procedimentos' },
     { id: 'profissionais', label: 'Profissionais', icon: UserRound, description: 'Membros da equipe' },
+    { id: 'marketing', label: 'Marketing', icon: Megaphone, description: 'Campanhas e promoções para clientes' },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign, description: 'Receitas, despesas e relatórios' },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, description: 'Regras de negócio e ajustes globais' },
 ];

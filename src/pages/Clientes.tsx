@@ -191,7 +191,12 @@ export const Clientes = () => {
         e.preventDefault();
         setIsSaving(true);
         try {
-            const clientData = { name, phone, email, notes };
+            const clientData = { 
+                name, 
+                phone: phone ? phone : null, 
+                email: email ? email : null, 
+                notes 
+            };
 
             if (editingClient) {
                 const { error } = await supabase
